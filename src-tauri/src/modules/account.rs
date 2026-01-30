@@ -152,7 +152,7 @@ pub fn list_accounts() -> Result<Vec<Account>, String> {
                 accounts.push(account);
             },
             Err(e) => {
-                modules::logger::log_error(&format!("加载账号 {} 失败: {}", summary.id, e));
+                modules::logger::log_error(&format!("加载账号失败: {}", e));
             }
         }
     }
@@ -225,7 +225,7 @@ pub fn upsert_account(email: String, name: Option<String>, token: TokenData) -> 
                 return Ok(account);
             }
             Err(e) => {
-                modules::logger::log_warn(&format!("Account {} file missing ({}), recreating...", account_id, e));
+                modules::logger::log_warn(&format!("账号文件缺失，正在重建: {}", e));
                 let mut account = Account::new(account_id.clone(), email.clone(), token);
                 account.name = name.clone();
                 let fingerprint = crate::modules::fingerprint::generate_fingerprint(email.clone())?;
@@ -383,7 +383,7 @@ fn save_current_account_file(email: &str) -> Result<(), String> {
     file.write_all(json.as_bytes())
         .map_err(|e| format!("写入文件失败: {}", e))?;
     
-    modules::logger::log_info(&format!("已保存当前账号: {}", email));
+    modules::logger::log_info("已保存当前账号");
     Ok(())
 }
 
@@ -396,8 +396,7 @@ pub fn update_account_quota(account_id: &str, quota: QuotaData) -> Result<(), St
         if let Some(ref existing_quota) = account.quota {
             if !existing_quota.models.is_empty() {
                 modules::logger::log_warn(&format!(
-                    "⚠️ [{}] 新配额 models 为空，保留原有 {} 个模型数据",
-                    account.email,
+                    "⚠️ 新配额 models 为空，保留原有 {} 个模型数据",
                     existing_quota.models.len()
                 ));
                 // 只更新非 models 字段（subscription_tier, is_forbidden 等）
@@ -547,12 +546,12 @@ pub async fn refresh_all_quotas_logic() -> Result<RefreshStats, String> {
         .into_iter()
         .filter(|account| {
             if account.disabled {
-                modules::logger::log_info(&format!("  - Skipping {} (Disabled)", account.email));
+                modules::logger::log_info("  - Skipping Disabled account");
                 return false;
             }
             if let Some(ref q) = account.quota {
                 if q.is_forbidden {
-                    modules::logger::log_info(&format!("  - Skipping {} (Forbidden)", account.email));
+                    modules::logger::log_info("  - Skipping Forbidden account");
                     return false;
                 }
             }
@@ -647,11 +646,11 @@ pub async fn fetch_quota_with_retry(account: &mut Account) -> crate::error::AppR
 pub async fn switch_account_internal(account_id: &str) -> Result<Account, String> {
     use std::fs;
     
-    modules::logger::log_info(&format!("[Switch] 开始切换账号: {}", account_id));
+    modules::logger::log_info("[Switch] 开始切换账号");
     
     // 1. 加载并验证账号存在
     let mut account = load_account(account_id)?;
-    modules::logger::log_info(&format!("[Switch] 正在切换到账号: {} (ID: {})", account.email, account.id));
+    modules::logger::log_info("[Switch] 正在切换到账号");
     
     // 2. 确保 Token 有效（自动刷新过期的 Token）
     let fresh_token = modules::oauth::ensure_fresh_token(&account.token).await
@@ -659,7 +658,7 @@ pub async fn switch_account_internal(account_id: &str) -> Result<Account, String
     
     // 如果 Token 更新了，保存回账号文件
     if fresh_token.access_token != account.token.access_token {
-        modules::logger::log_info(&format!("[Switch] Token 已刷新: {}", account.email));
+        modules::logger::log_info("[Switch] Token 已刷新");
         account.token = fresh_token.clone();
         save_account(&account)?;
     }
@@ -675,11 +674,7 @@ pub async fn switch_account_internal(account_id: &str) -> Result<Account, String
         if let Some(ref fp_id) = account.fingerprint_id {
             // 优先使用绑定的指纹
             if let Ok(fingerprint) = modules::fingerprint::get_fingerprint(fp_id) {
-                modules::logger::log_info(&format!(
-                    "[Switch] 写入设备指纹: machineId={}, serviceMachineId={}",
-                    fingerprint.profile.machine_id,
-                    fingerprint.profile.service_machine_id
-                ));
+                modules::logger::log_info("[Switch] 写入设备指纹");
                 let _ = modules::device::write_profile(&storage_path, &fingerprint.profile);
                 let _ = modules::db::write_service_machine_id(&fingerprint.profile.service_machine_id);
             }
@@ -720,6 +715,6 @@ pub async fn switch_account_internal(account_id: &str) -> Result<Account, String
         // 不中断流程，允许用户手动启动
     }
     
-    modules::logger::log_info(&format!("[Switch] 账号切换完成: {}", account.email));
+    modules::logger::log_info("[Switch] 账号切换完成");
     Ok(account)
 }

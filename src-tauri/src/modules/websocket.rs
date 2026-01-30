@@ -239,7 +239,7 @@ pub fn broadcast_account_switched(account_id: &str, email: &str) {
         account_id: account_id.to_string(),
         email: email.to_string(),
     });
-    crate::modules::logger::log_info(&format!("[WS] 广播账号切换: {}", email));
+    crate::modules::logger::log_info("[WS] 广播账号切换");
 }
 
 /// 广播唤醒互斥开关
@@ -473,7 +473,7 @@ async fn handle_client_message(
         }
         
         WsMessage::SwitchAccount { account_id } => {
-            crate::modules::logger::log_info(&format!("[WS] 收到切换请求: {}", account_id));
+            crate::modules::logger::log_info("[WS] 收到切换请求");
             
             // 异步执行切换
             let server_clone = server.tx.clone();
@@ -519,7 +519,7 @@ async fn handle_client_message(
         }
         
         WsMessage::AddAccount { request_id, email, refresh_token, access_token, expires_at } => {
-            crate::modules::logger::log_info(&format!("[WS] 收到添加账号请求: {}", email));
+            crate::modules::logger::log_info("[WS] 收到添加账号请求");
             
             let response = match handle_add_account(&email, &refresh_token, access_token.as_deref(), expires_at) {
                 Ok(msg) => {
@@ -545,7 +545,7 @@ async fn handle_client_message(
         }
         
         WsMessage::DeleteAccountByEmail { request_id, email } => {
-            crate::modules::logger::log_info(&format!("[WS] 收到删除账号请求: {}", email));
+            crate::modules::logger::log_info("[WS] 收到删除账号请求");
             
             let response = match handle_delete_account_by_email(&email) {
                 Ok(msg) => {
@@ -685,7 +685,7 @@ fn handle_add_account(
     // 使用 upsert_account 添加或更新账号
     account::upsert_account(email.to_string(), None, token)?;
     
-    crate::modules::logger::log_info(&format!("[WS] 账号已同步: {}", email));
+    crate::modules::logger::log_info("[WS] 账号已同步");
     Ok(format!("账号已同步: {}", email))
 }
 
@@ -700,12 +700,12 @@ fn handle_delete_account_by_email(email: &str) -> Result<String, String> {
     match target {
         Some(acc) => {
             account::delete_account(&acc.id)?;
-            crate::modules::logger::log_info(&format!("[WS] 账号已删除: {}", email));
+            crate::modules::logger::log_info("[WS] 账号已删除");
             Ok(format!("账号已删除: {}", email))
         }
         None => {
             // 账号不存在不算错误，可能本来就没有
-            crate::modules::logger::log_info(&format!("[WS] 账号不存在，无需删除: {}", email));
+            crate::modules::logger::log_info("[WS] 账号不存在，无需删除");
             Ok(format!("账号不存在: {}", email))
         }
     }
