@@ -1913,10 +1913,18 @@ fn normalize_path_for_compare(raw: &str) -> String {
     #[cfg(target_os = "windows")]
     fn normalize_windows_extended_path(raw: &str) -> String {
         let mut value = raw.trim().trim_matches('"').replace('/', "\\");
-        if value.len() >= 8 && value[..8].eq_ignore_ascii_case("\\\\?\\UNC\\") {
-            value = format!("\\\\{}", &value[8..]);
-        } else if value.len() >= 4 && value[..4].eq_ignore_ascii_case("\\\\?\\") {
-            value = value[4..].to_string();
+        let lower = value.to_ascii_lowercase();
+        if lower.starts_with("\\\\?\\unc\\") {
+            let rest = value
+                .chars()
+                .skip("\\\\?\\UNC\\".chars().count())
+                .collect::<String>();
+            value = format!("\\\\{}", rest);
+        } else if lower.starts_with("\\\\?\\") {
+            value = value
+                .chars()
+                .skip("\\\\?\\".chars().count())
+                .collect::<String>();
         }
         value
     }
