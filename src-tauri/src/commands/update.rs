@@ -1,10 +1,4 @@
-use crate::modules::update_checker::{self, UpdateInfo, UpdateSettings, VersionJumpInfo};
-
-/// Check for updates from GitHub
-#[tauri::command]
-pub async fn check_for_updates() -> Result<UpdateInfo, String> {
-    update_checker::check_for_updates().await
-}
+use crate::modules::update_checker::{self, UpdateSettings, VersionJumpInfo};
 
 /// Check if we should check for updates (based on interval settings)
 #[tauri::command]
@@ -31,8 +25,18 @@ pub fn save_update_settings(settings: UpdateSettings) -> Result<(), String> {
     update_checker::save_update_settings(&settings)
 }
 
+/// Save release notes for a downloaded/pending update
+#[tauri::command]
+pub fn save_pending_update_notes(
+    version: String,
+    release_notes: String,
+    release_notes_zh: String,
+) -> Result<(), String> {
+    update_checker::save_pending_update_notes(version, release_notes, release_notes_zh)
+}
+
 /// Check if a version jump occurred (for post-update changelog display)
 #[tauri::command]
-pub async fn check_version_jump() -> Result<Option<VersionJumpInfo>, String> {
-    update_checker::check_version_jump().await
+pub fn check_version_jump() -> Result<Option<VersionJumpInfo>, String> {
+    update_checker::check_version_jump()
 }

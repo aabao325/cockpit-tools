@@ -7,6 +7,16 @@ All notable changes to Cockpit Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.9.13] - 2026-03-03
+
+### Added
+- **Pending update notes local cache for post-restart changelog**: Added persisted `pending_update_notes.json` storage so downloaded update notes can be shown after restart without requiring online changelog fetch.
+
+### Changed
+- **Update check source is now fully unified to Tauri Updater metadata**: Removed backend GitHub Releases API polling for version detection; update availability now comes from updater endpoint metadata (`latest.json`) only.
+- **Manual/silent update note rendering now reads updater release body**: Update dialog and silent-update pre-cache now parse bilingual sections directly from updater `notes`, while keeping browser-download fallback only for updater failures.
+
+---
 ## [0.9.12] - 2026-03-03
 
 ### Added

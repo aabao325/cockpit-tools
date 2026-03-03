@@ -7,6 +7,16 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)。
 
 ---
+## [0.9.13] - 2026-03-03
+
+### 新增
+- **升级后更新说明本地缓存**：新增 `pending_update_notes.json` 持久化缓存，已下载更新的说明可在重启后离线展示，不再依赖在线 changelog 拉取。
+
+### 变更
+- **更新检查来源完全统一到 Tauri Updater 元数据**：移除后端 GitHub Releases API 轮询版本判断，更新可用性仅基于 updater 端点（`latest.json`）返回结果。
+- **手动/静默更新说明统一读取 updater 发布内容**：更新弹窗与静默下载前缓存改为直接解析 updater `notes` 中的双语分段；仅在 updater 流程失败时保留浏览器下载兜底。
+
+---
 ## [0.9.12] - 2026-03-03
 
 ### 新增

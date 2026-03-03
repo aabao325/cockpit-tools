@@ -2,24 +2,9 @@ use crate::modules::logger;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const GITHUB_API_URL: &str = "https://api.github.com/repos/jlcodes99/cockpit-tools/releases/latest";
-const CHANGELOG_EN_URL: &str =
-    "https://raw.githubusercontent.com/jlcodes99/cockpit-tools/main/CHANGELOG.md";
-const CHANGELOG_ZH_URL: &str =
-    "https://raw.githubusercontent.com/jlcodes99/cockpit-tools/main/CHANGELOG.zh-CN.md";
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_CHECK_INTERVAL_HOURS: u64 = 24;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateInfo {
-    pub current_version: String,
-    pub latest_version: String,
-    pub has_update: bool,
-    pub download_url: String,
-    pub release_notes: String,
-    pub release_notes_zh: String,
-    pub published_at: String,
-}
+const PENDING_UPDATE_NOTES_FILE: &str = "pending_update_notes.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateSettings {
@@ -58,132 +43,13 @@ pub struct VersionJumpInfo {
     pub release_notes_zh: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct GitHubRelease {
-    tag_name: String,
-    html_url: String,
-    published_at: String,
-}
-
-/// Check for updates from GitHub releases
-pub async fn check_for_updates() -> Result<UpdateInfo, String> {
-    let client = reqwest::Client::builder()
-        .user_agent("Antigravity-Cockpit-Tools")
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| {
-            let err_msg = format!("Failed to create HTTP client: {}", e);
-            logger::log_error(&err_msg);
-            err_msg
-        })?;
-
-    logger::log_info("正在从 GitHub 检查新版本...");
-
-    let response = client.get(GITHUB_API_URL).send().await.map_err(|e| {
-        let err_msg = format!("Failed to fetch release info: {}", e);
-        logger::log_error(&err_msg);
-        err_msg
-    })?;
-
-    if !response.status().is_success() {
-        return Err(format!("GitHub API returned status: {}", response.status()));
-    }
-
-    let release: GitHubRelease = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse release info: {}", e))?;
-
-    // Remove 'v' prefix if present
-    let latest_version = release.tag_name.trim_start_matches('v').to_string();
-    let current_version = CURRENT_VERSION.to_string();
-
-    let has_update = compare_versions(&latest_version, &current_version);
-
-    if has_update {
-        logger::log_info(&format!(
-            "发现新版本: {} (当前版本: {})",
-            latest_version, current_version
-        ));
-    } else {
-        logger::log_info(&format!(
-            "已是最新版本: {} (与远程版本 {} 一致)",
-            current_version, latest_version
-        ));
-    }
-
-    // Fetch changelog content for release notes
-    let (release_notes, release_notes_zh) = if has_update {
-        let notes_en =
-            fetch_changelog_for_version(&client, CHANGELOG_EN_URL, &latest_version).await;
-        let notes_zh =
-            fetch_changelog_for_version(&client, CHANGELOG_ZH_URL, &latest_version).await;
-        (notes_en, notes_zh)
-    } else {
-        (String::new(), String::new())
-    };
-
-    Ok(UpdateInfo {
-        current_version,
-        latest_version,
-        has_update,
-        download_url: release.html_url,
-        release_notes,
-        release_notes_zh,
-        published_at: release.published_at,
-    })
-}
-
-/// Fetch changelog content for a specific version
-async fn fetch_changelog_for_version(client: &reqwest::Client, url: &str, version: &str) -> String {
-    match client.get(url).send().await {
-        Ok(response) if response.status().is_success() => {
-            if let Ok(content) = response.text().await {
-                extract_version_notes(&content, version)
-            } else {
-                String::new()
-            }
-        }
-        _ => String::new(),
-    }
-}
-
-/// Extract release notes for a specific version from CHANGELOG content
-fn extract_version_notes(changelog: &str, version: &str) -> String {
-    let mut result = Vec::new();
-    let mut in_target_version = false;
-    let version_header = format!("## [{}]", version);
-
-    for line in changelog.lines() {
-        if line.starts_with("## [") {
-            if line.contains(&version_header) || line.starts_with(&version_header) {
-                in_target_version = true;
-                continue; // Skip the version header itself
-            } else if in_target_version {
-                // Next version section, stop
-                break;
-            }
-        }
-
-        if in_target_version {
-            // Skip empty lines at start
-            if result.is_empty() && line.trim().is_empty() {
-                continue;
-            }
-            // Skip separator lines
-            if line.trim() == "---" {
-                continue;
-            }
-            result.push(line);
-        }
-    }
-
-    // Trim trailing empty lines
-    while result.last().map(|s| s.trim().is_empty()).unwrap_or(false) {
-        result.pop();
-    }
-
-    result.join("\n")
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct PendingUpdateNotes {
+    pub version: String,
+    #[serde(default)]
+    pub release_notes: String,
+    #[serde(default)]
+    pub release_notes_zh: String,
 }
 
 /// Compare two semantic versions (e.g., "0.2.0" vs "0.1.0")
@@ -219,7 +85,7 @@ pub fn should_check_for_updates(settings: &UpdateSettings) -> bool {
         .unwrap()
         .as_secs();
 
-    let elapsed_hours = (now - settings.last_check_time) / 3600;
+    let elapsed_hours = now.saturating_sub(settings.last_check_time) / 3600;
     let interval = if settings.check_interval_hours > 0 {
         settings.check_interval_hours
     } else {
@@ -233,6 +99,81 @@ fn get_data_dir() -> Result<std::path::PathBuf, String> {
     dirs::data_local_dir()
         .map(|d| d.join("cockpit-tools"))
         .ok_or_else(|| "Failed to get data directory".to_string())
+}
+
+fn ensure_data_dir() -> Result<std::path::PathBuf, String> {
+    let data_dir = get_data_dir()?;
+    if !data_dir.exists() {
+        std::fs::create_dir_all(&data_dir)
+            .map_err(|e| format!("Failed to create data dir: {}", e))?;
+    }
+    Ok(data_dir)
+}
+
+fn pending_update_notes_path() -> Result<std::path::PathBuf, String> {
+    Ok(get_data_dir()?.join(PENDING_UPDATE_NOTES_FILE))
+}
+
+fn load_pending_update_notes() -> Result<Option<PendingUpdateNotes>, String> {
+    let path = pending_update_notes_path()?;
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to read pending update notes: {}", e))?;
+    let pending: PendingUpdateNotes = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse pending update notes: {}", e))?;
+    Ok(Some(pending))
+}
+
+fn remove_pending_update_notes_file() {
+    match pending_update_notes_path() {
+        Ok(path) => {
+            if path.exists() {
+                if let Err(err) = std::fs::remove_file(&path) {
+                    logger::log_error(&format!(
+                        "删除待安装更新说明文件失败: path={}, error={}",
+                        path.display(),
+                        err
+                    ));
+                }
+            }
+        }
+        Err(err) => {
+            logger::log_error(&format!("解析待安装更新说明路径失败: {}", err));
+        }
+    }
+}
+
+pub fn save_pending_update_notes(
+    version: String,
+    release_notes: String,
+    release_notes_zh: String,
+) -> Result<(), String> {
+    let version = version.trim().to_string();
+    if version.is_empty() {
+        return Err("Version cannot be empty".to_string());
+    }
+
+    let data_dir = ensure_data_dir()?;
+    let path = data_dir.join(PENDING_UPDATE_NOTES_FILE);
+    let payload = PendingUpdateNotes {
+        version: version.clone(),
+        release_notes,
+        release_notes_zh,
+    };
+    let content = serde_json::to_string_pretty(&payload)
+        .map_err(|e| format!("Failed to serialize pending update notes: {}", e))?;
+    std::fs::write(&path, content)
+        .map_err(|e| format!("Failed to write pending update notes: {}", e))?;
+
+    logger::log_info(&format!(
+        "已保存待安装更新说明: version={}, path={}",
+        version,
+        path.display()
+    ));
+    Ok(())
 }
 
 /// Load update settings from config file
@@ -252,13 +193,7 @@ pub fn load_update_settings() -> Result<UpdateSettings, String> {
 
 /// Save update settings to config file
 pub fn save_update_settings(settings: &UpdateSettings) -> Result<(), String> {
-    let data_dir = get_data_dir()?;
-
-    // Ensure directory exists
-    if !data_dir.exists() {
-        std::fs::create_dir_all(&data_dir)
-            .map_err(|e| format!("Failed to create data dir: {}", e))?;
-    }
+    let data_dir = ensure_data_dir()?;
 
     let settings_path = data_dir.join("update_settings.json");
 
@@ -281,7 +216,7 @@ pub fn update_last_check_time() -> Result<(), String> {
 
 /// Check if a version jump occurred (app was updated since last run)
 /// Returns Some(VersionJumpInfo) if the current version is higher than the last recorded version
-pub async fn check_version_jump() -> Result<Option<VersionJumpInfo>, String> {
+pub fn check_version_jump() -> Result<Option<VersionJumpInfo>, String> {
     let mut settings = load_update_settings()?;
     let current = CURRENT_VERSION.to_string();
 
@@ -303,17 +238,24 @@ pub async fn check_version_jump() -> Result<Option<VersionJumpInfo>, String> {
         return Ok(None);
     }
 
-    // Fetch release notes for the current (new) version
-    let client = reqwest::Client::builder()
-        .user_agent("Antigravity-Cockpit-Tools")
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
-
-    let release_notes =
-        fetch_changelog_for_version(&client, CHANGELOG_EN_URL, &current).await;
-    let release_notes_zh =
-        fetch_changelog_for_version(&client, CHANGELOG_ZH_URL, &current).await;
+    let mut release_notes = String::new();
+    let mut release_notes_zh = String::new();
+    match load_pending_update_notes() {
+        Ok(Some(pending)) => {
+            if pending.version == current {
+                release_notes = pending.release_notes;
+                release_notes_zh = pending.release_notes_zh;
+                remove_pending_update_notes_file();
+            } else if compare_versions(&current, &pending.version) {
+                // 当前版本已经超过缓存版本，缓存内容过期，直接清理。
+                remove_pending_update_notes_file();
+            }
+        }
+        Ok(None) => {}
+        Err(err) => {
+            logger::log_error(&format!("读取待安装更新说明失败: {}", err));
+        }
+    }
 
     // Update the stored version
     settings.last_run_version = current.clone();
@@ -358,5 +300,11 @@ mod tests {
 
         settings.auto_check = false;
         assert!(!should_check_for_updates(&settings));
+    }
+
+    #[test]
+    fn test_compare_versions_handles_longer_version_segments() {
+        assert!(compare_versions("1.0.0.1", "1.0.0"));
+        assert!(!compare_versions("1.0.0", "1.0.0.1"));
     }
 }

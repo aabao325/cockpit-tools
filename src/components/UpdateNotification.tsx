@@ -1,12 +1,17 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { X, Download, Sparkles, RefreshCw, Check } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
+import type { Update as UpdaterUpdate } from '@tauri-apps/plugin-updater';
 import { useTranslation } from 'react-i18next';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import {
+  parseUpdaterReleaseNotes,
+  resolveUpdaterDownloadUrl,
+} from '../utils/updaterReleaseNotes';
 import './UpdateNotification.css';
 
 interface UpdateInfo {
-  has_update: boolean;
   latest_version: string;
   current_version: string;
   download_url: string;
@@ -40,31 +45,53 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const updateRef = useRef<UpdaterUpdate | null>(null);
   const [downloadState, setDownloadState] = useState<DownloadState>('idle');
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
-    checkForUpdates();
+    void checkForUpdates();
+    return () => {
+      const pendingUpdate = updateRef.current;
+      if (pendingUpdate) {
+        void pendingUpdate.close();
+        updateRef.current = null;
+      }
+    };
   }, []);
 
   const checkForUpdates = async () => {
     try {
-      const info = await invoke<UpdateInfo>('check_for_updates');
-      if (info.has_update) {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const update = await check();
+      if (update) {
+        if (updateRef.current) {
+          await updateRef.current.close();
+        }
+        updateRef.current = update;
+        const { releaseNotes, releaseNotesZh } = parseUpdaterReleaseNotes(update.body);
+        const currentVersion = update.currentVersion || (await getVersion());
         onResult?.({
           source,
           status: 'has_update',
-          currentVersion: info.current_version,
-          latestVersion: info.latest_version,
+          currentVersion,
+          latestVersion: update.version,
         });
-        setUpdateInfo(info);
+        setUpdateInfo({
+          current_version: currentVersion,
+          latest_version: update.version,
+          download_url: resolveUpdaterDownloadUrl(update.version, update.rawJson),
+          release_notes: releaseNotes,
+          release_notes_zh: releaseNotesZh,
+        });
       } else {
+        const currentVersion = await getVersion();
         onResult?.({
           source,
           status: 'up_to_date',
-          currentVersion: info.current_version,
-          latestVersion: info.latest_version,
+          currentVersion,
+          latestVersion: currentVersion,
         });
         onClose();
       }
@@ -87,14 +114,29 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({
     setDownloadError('');
 
     try {
-      const { check } = await import('@tauri-apps/plugin-updater');
-      const update = await check();
+      let update = updateRef.current;
+      if (!update) {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        update = await check();
+        if (update) {
+          updateRef.current = update;
+        }
+      }
       
       if (!update) {
         setDownloadState('error');
         setDownloadError('No update available from updater plugin');
         return;
       }
+
+      const { releaseNotes, releaseNotesZh } = parseUpdaterReleaseNotes(update.body);
+      await invoke('save_pending_update_notes', {
+        version: update.version,
+        releaseNotes,
+        releaseNotesZh,
+      }).catch((error) => {
+        console.error('Failed to cache updater release notes:', error);
+      });
 
       let downloaded = 0;
       let contentLength = 0;
@@ -123,7 +165,8 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({
       // Auto relaunch after a short delay
       const { relaunch } = await import('@tauri-apps/plugin-process');
       setTimeout(() => {
-        relaunch();
+        void update.close().catch(() => {});
+        void relaunch();
       }, 1500);
     } catch (error) {
       console.error('In-app update failed:', error);

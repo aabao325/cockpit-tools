@@ -21,6 +21,7 @@ import { useWindsurfAccountStore } from './stores/useWindsurfAccountStore';
 import { useKiroAccountStore } from './stores/useKiroAccountStore';
 import type { UpdateCheckResult } from './components/UpdateNotification';
 import type { Update as UpdaterUpdate } from '@tauri-apps/plugin-updater';
+import { parseUpdaterReleaseNotes } from './utils/updaterReleaseNotes';
 
 const DashboardPage = lazy(() =>
   import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })),
@@ -441,6 +442,14 @@ function App() {
             const update = await check();
             if (update) {
               console.log('[App] Update found, downloading silently...');
+              const { releaseNotes, releaseNotesZh } = parseUpdaterReleaseNotes(update.body);
+              await invoke('save_pending_update_notes', {
+                version: update.version,
+                releaseNotes,
+                releaseNotesZh,
+              }).catch((error) => {
+                console.error('[App] Failed to cache silent update notes:', error);
+              });
               await update.download();
               if (pendingSilentUpdateRef.current) {
                 await pendingSilentUpdateRef.current.close();

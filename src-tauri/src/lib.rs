@@ -233,11 +233,11 @@ pub fn run() {
             commands::wakeup::wakeup_verification_delete_history,
             commands::wakeup::wakeup_verification_run_batch,
             // Update Commands
-            commands::update::check_for_updates,
             commands::update::should_check_updates,
             commands::update::update_last_check_time,
             commands::update::get_update_settings,
             commands::update::save_update_settings,
+            commands::update::save_pending_update_notes,
             commands::update::check_version_jump,
             // Announcement Commands
             commands::announcement::announcement_get_state,
