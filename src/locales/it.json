@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Controlla la visibilità dell’icona del Dock in modo indipendente dal comportamento di minimizzazione della finestra",
       "hideDockIconOff": "No (Mostra icona del Dock)",
       "hideDockIconOn": "Sì (Nascondi icona del Dock)",
-      "storageTitle": "Directory e archiviazione",
       "dataDir": "Directory dati",
       "dataDirDesc": "Posizione di archiviazione per account e file di configurazione.",
       "fpDir": "Archiviazione Antigravity",
@@ -520,21 +519,7 @@
       "download": "Scarica",
       "checkFailed": "Controllo fallito"
     },
-    "saveSettings": "Salva Impostazioni",
-    "storage": {
-      "category": {
-        "accountData": "Dati account",
-        "logs": "Log",
-        "cacheQuota": "Cache e quota",
-        "systemConfig": "Configurazione di sistema",
-        "other": "Altro"
-      },
-      "primarySource": "Fonte principale",
-      "instancePlatforms": "Piattaforme istanza",
-      "rootEntries": "Dettaglio directory",
-      "categoriesTitle": "Categorie operative",
-      "scanTime": "Ultima scansione: {{time}}"
-    }
+    "saveSettings": "Salva Impostazioni"
   },
   "appPath": {
     "missing": {

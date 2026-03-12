@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Независимо управляет отображением значка Dock, без привязки к поведению сворачивания окна",
       "hideDockIconOff": "Нет (Показывать значок Dock)",
       "hideDockIconOn": "Да (Скрывать значок Dock)",
-      "storageTitle": "Каталоги и хранилище",
       "dataDir": "Каталог данных",
       "dataDirDesc": "Место хранения аккаунтов и конфигурационных файлов.",
       "fpDir": "Хранилище Antigravity",
@@ -520,21 +519,7 @@
       "download": "Скачать",
       "checkFailed": "Ошибка проверки обновлений"
     },
-    "saveSettings": "Сохранить настройки",
-    "storage": {
-      "category": {
-        "accountData": "Данные аккаунта",
-        "logs": "Логи",
-        "cacheQuota": "Кэш и квоты",
-        "systemConfig": "Системная конфигурация",
-        "other": "Прочее"
-      },
-      "primarySource": "Основной источник",
-      "instancePlatforms": "Платформы экземпляров",
-      "rootEntries": "Структура каталога",
-      "categoriesTitle": "Категории данных",
-      "scanTime": "Последнее сканирование: {{time}}"
-    }
+    "saveSettings": "Сохранить настройки"
   },
   "appPath": {
     "missing": {

@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Điều khiển hiển thị biểu tượng Dock độc lập, không phụ thuộc vào hành vi thu nhỏ cửa sổ",
       "hideDockIconOff": "Không (Hiện biểu tượng Dock)",
       "hideDockIconOn": "Có (Ẩn biểu tượng Dock)",
-      "storageTitle": "Thư mục & Lưu trữ",
       "dataDir": "Thư mục dữ liệu",
       "dataDirDesc": "Vị trí lưu trữ tài khoản và cấu hình.",
       "fpDir": "Thư mục lưu trữ Antigravity",
@@ -520,21 +519,7 @@
       "download": "Tải về",
       "checkFailed": "Kiểm tra cập nhật thất bại, vui lòng thử lại sau"
     },
-    "saveSettings": "Lưu cài đặt",
-    "storage": {
-      "category": {
-        "accountData": "Dữ liệu tài khoản",
-        "logs": "Nhật ký",
-        "cacheQuota": "Bộ đệm và hạn mức",
-        "systemConfig": "Cấu hình hệ thống",
-        "other": "Khác"
-      },
-      "primarySource": "Nguồn chính",
-      "instancePlatforms": "Nền tảng phiên bản",
-      "rootEntries": "Chi tiết thư mục",
-      "categoriesTitle": "Danh mục nghiệp vụ",
-      "scanTime": "Lần quét gần nhất: {{time}}"
-    }
+    "saveSettings": "Lưu cài đặt"
   },
   "appPath": {
     "missing": {

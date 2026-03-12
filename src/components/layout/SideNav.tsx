@@ -253,7 +253,7 @@ export function SideNav({
 
       <div className="nav-footer">
         <button
-          className={`nav-item ${page === 'settings' || page === 'storage' ? 'active' : ''}`}
+          className={`nav-item ${page === 'settings' ? 'active' : ''}`}
           onClick={() => setPage('settings')}
           title={t('nav.settings')}
         >

@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Control Dock icon visibility independently; not affected by window minimize behavior",
       "hideDockIconOff": "No (Show Dock icon)",
       "hideDockIconOn": "Yes (Hide Dock icon)",
-      "storageTitle": "Directories & Storage",
       "dataDir": "Data Directory",
       "dataDirDesc": "Storage location for accounts and configuration files.",
       "fpDir": "Antigravity Storage",
@@ -520,21 +519,7 @@
       "download": "Download",
       "checkFailed": "Failed to check updates, please try again"
     },
-    "saveSettings": "Save Settings",
-    "storage": {
-      "category": {
-        "accountData": "Account Data",
-        "logs": "Logs",
-        "cacheQuota": "Cache & Quota",
-        "systemConfig": "System Config",
-        "other": "Other"
-      },
-      "primarySource": "Primary source",
-      "instancePlatforms": "Instance platforms",
-      "rootEntries": "Directory breakdown",
-      "categoriesTitle": "Business categories",
-      "scanTime": "Last scan: {{time}}"
-    }
+    "saveSettings": "Save Settings"
   },
   "appPath": {
     "missing": {

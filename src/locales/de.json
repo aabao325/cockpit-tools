@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Steuert die Sichtbarkeit des Dock-Symbols unabhängig vom Minimierungsverhalten des Fensters",
       "hideDockIconOff": "Nein (Dock-Symbol anzeigen)",
       "hideDockIconOn": "Ja (Dock-Symbol ausblenden)",
-      "storageTitle": "Verzeichnisse und Speicher",
       "dataDir": "Datenverzeichnis",
       "dataDirDesc": "Speicherort für Konten und Konfigurationsdateien.",
       "fpDir": "Antigravity-Speicher",
@@ -520,21 +519,7 @@
       "download": "Herunterladen",
       "checkFailed": "Fehler bei der Update-Suche"
     },
-    "saveSettings": "Einstellungen speichern",
-    "storage": {
-      "category": {
-        "accountData": "Kontodaten",
-        "logs": "Protokolle",
-        "cacheQuota": "Cache und Kontingente",
-        "systemConfig": "Systemkonfiguration",
-        "other": "Sonstiges"
-      },
-      "primarySource": "Hauptquelle",
-      "instancePlatforms": "Instanz-Plattformen",
-      "rootEntries": "Verzeichnisübersicht",
-      "categoriesTitle": "Geschäftskategorien",
-      "scanTime": "Letzter Scan: {{time}}"
-    }
+    "saveSettings": "Einstellungen speichern"
   },
   "appPath": {
     "missing": {

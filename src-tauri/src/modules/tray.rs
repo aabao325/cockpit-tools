@@ -1013,11 +1013,21 @@ fn build_codebuddy_display_info(lang: &str) -> AccountDisplayInfo {
     let resource = extract_codebuddy_resource_quota(&account);
     if let Some(res) = &resource {
         // Fixed short label: 配额 / Credits (don't use the long package name as prefix)
-        let quota_label = if lang == "zh" || lang == "zh-CN" { "配额" } else { "Credits" };
+        let quota_label = if lang == "zh" || lang == "zh-CN" {
+            "配额"
+        } else {
+            "Credits"
+        };
         let quota_text = if res.total > 0.0 {
             let remain_pct = ((res.remain / res.total) * 100.0).round().clamp(0.0, 100.0) as i32;
-            format!("{}: {:.2} / {:.2} ({}% {})",
-                quota_label, res.remain, res.total, remain_pct, get_text("left", lang))
+            format!(
+                "{}: {:.2} / {:.2} ({}% {})",
+                quota_label,
+                res.remain,
+                res.total,
+                remain_pct,
+                get_text("left", lang)
+            )
         } else {
             format!("{}: {:.2} / {:.2}", quota_label, res.remain, res.total)
         };
@@ -1028,8 +1038,15 @@ fn build_codebuddy_display_info(lang: &str) -> AccountDisplayInfo {
     let extra = extract_codebuddy_extra_credit(&account);
     // Always show 加量包/Extra line (even if 0/0), matching the dashboard card
     {
-        let extra_label = if lang == "zh" || lang == "zh-CN" { "加量包" } else { "Extra" };
-        quota_lines.push(format!("{}: {:.0} / {:.0}", extra_label, extra.remain, extra.total));
+        let extra_label = if lang == "zh" || lang == "zh-CN" {
+            "加量包"
+        } else {
+            "Extra"
+        };
+        quota_lines.push(format!(
+            "{}: {:.0} / {:.0}",
+            extra_label, extra.remain, extra.total
+        ));
     }
 
     // Dosage notification status (fallback if no resource quota)
@@ -1095,11 +1112,15 @@ struct CodebuddyExtraCredit {
 
 fn json_as_f64(value: &serde_json::Value) -> Option<f64> {
     if let Some(v) = value.as_f64() {
-        if v.is_finite() { return Some(v); }
+        if v.is_finite() {
+            return Some(v);
+        }
     }
     if let Some(s) = value.as_str() {
         if let Ok(v) = s.trim().parse::<f64>() {
-            if v.is_finite() { return Some(v); }
+            if v.is_finite() {
+                return Some(v);
+            }
         }
     }
     None
@@ -1145,30 +1166,41 @@ fn extract_codebuddy_resource_quota(
 ) -> Option<CodebuddyResourceQuota> {
     // Only available if quota_binding cookie is present
     let cookie = account.quota_binding.as_ref()?.cookie_header.trim();
-    if cookie.is_empty() { return None; }
+    if cookie.is_empty() {
+        return None;
+    }
 
     let all = extract_codebuddy_resource_accounts(account);
-    let active: Vec<_> = all.iter()
+    let active: Vec<_> = all
+        .iter()
         .filter(|a| is_codebuddy_active_resource(a) && !is_codebuddy_extra_package(a))
         .collect();
 
-    if active.is_empty() { return None; }
+    if active.is_empty() {
+        return None;
+    }
 
     let mut total_agg: f64 = 0.0;
     let mut remain_agg: f64 = 0.0;
 
     for a in &active {
-        let cap = a.get("CapacitySizePrecise").and_then(json_as_f64)
+        let cap = a
+            .get("CapacitySizePrecise")
+            .and_then(json_as_f64)
             .or_else(|| a.get("CapacitySize").and_then(json_as_f64))
             .unwrap_or(0.0);
-        let rem = a.get("CapacityRemainPrecise").and_then(json_as_f64)
+        let rem = a
+            .get("CapacityRemainPrecise")
+            .and_then(json_as_f64)
             .or_else(|| a.get("CapacityRemain").and_then(json_as_f64))
             .unwrap_or(0.0);
         total_agg += cap;
         remain_agg += rem;
     }
 
-    if total_agg <= 0.0 { return None; }
+    if total_agg <= 0.0 {
+        return None;
+    }
 
     Some(CodebuddyResourceQuota {
         remain: remain_agg,
@@ -1180,17 +1212,22 @@ fn extract_codebuddy_extra_credit(
     account: &crate::models::codebuddy::CodebuddyAccount,
 ) -> CodebuddyExtraCredit {
     let all = extract_codebuddy_resource_accounts(account);
-    let extras: Vec<_> = all.iter()
+    let extras: Vec<_> = all
+        .iter()
         .filter(|a| is_codebuddy_active_resource(a) && is_codebuddy_extra_package(a))
         .collect();
 
     let mut total_agg: f64 = 0.0;
     let mut remain_agg: f64 = 0.0;
     for a in &extras {
-        let cap = a.get("CapacitySizePrecise").and_then(json_as_f64)
+        let cap = a
+            .get("CapacitySizePrecise")
+            .and_then(json_as_f64)
             .or_else(|| a.get("CapacitySize").and_then(json_as_f64))
             .unwrap_or(0.0);
-        let rem = a.get("CapacityRemainPrecise").and_then(json_as_f64)
+        let rem = a
+            .get("CapacityRemainPrecise")
+            .and_then(json_as_f64)
             .or_else(|| a.get("CapacityRemain").and_then(json_as_f64))
             .unwrap_or(0.0);
         total_agg += cap;
@@ -1250,40 +1287,90 @@ fn build_qoder_display_info(lang: &str) -> AccountDisplayInfo {
     }
 
     // Parse userQuota from auth_credit_usage_raw / auth_user_plan_raw / auth_user_info_raw
-    let user_quota = parse_qoder_quota_bucket(&[
-        json_nested_obj(&account.auth_credit_usage_raw, &["userQuota"]),
-        json_nested_obj(&account.auth_user_plan_raw, &["userQuota"]),
-        json_nested_obj(&account.auth_user_info_raw, &["userQuota"]),
-    ], Some((&account.credits_used, &account.credits_total, &account.credits_remaining)));
+    let user_quota = parse_qoder_quota_bucket(
+        &[
+            json_nested_obj(&account.auth_credit_usage_raw, &["userQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["userQuota"]),
+            json_nested_obj(&account.auth_user_info_raw, &["userQuota"]),
+        ],
+        Some((
+            &account.credits_used,
+            &account.credits_total,
+            &account.credits_remaining,
+        )),
+    );
 
-    let credits_label = if lang == "zh" || lang == "zh-CN" { "套餐内 Credits" } else { "Credits" };
-    quota_lines.push(format_qoder_quota_line(lang, credits_label, &plan_tag, &user_quota));
+    let credits_label = if lang == "zh" || lang == "zh-CN" {
+        "套餐内 Credits"
+    } else {
+        "Credits"
+    };
+    quota_lines.push(format_qoder_quota_line(
+        lang,
+        credits_label,
+        &plan_tag,
+        &user_quota,
+    ));
 
     // Parse addOnQuota
-    let addon_quota = parse_qoder_quota_bucket(&[
-        json_nested_obj(&account.auth_credit_usage_raw, &["addOnQuota"]),
-        json_nested_obj(&account.auth_credit_usage_raw, &["addonQuota"]),
-        json_nested_obj(&account.auth_credit_usage_raw, &["add_on_quota"]),
-        json_nested_obj(&account.auth_user_plan_raw, &["addOnQuota"]),
-        json_nested_obj(&account.auth_user_plan_raw, &["addonQuota"]),
-        json_nested_obj(&account.auth_user_plan_raw, &["add_on_quota"]),
-    ], None);
+    let addon_quota = parse_qoder_quota_bucket(
+        &[
+            json_nested_obj(&account.auth_credit_usage_raw, &["addOnQuota"]),
+            json_nested_obj(&account.auth_credit_usage_raw, &["addonQuota"]),
+            json_nested_obj(&account.auth_credit_usage_raw, &["add_on_quota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["addOnQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["addonQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["add_on_quota"]),
+        ],
+        None,
+    );
 
-    let addon_label = if lang == "zh" || lang == "zh-CN" { "附加 Credits" } else { "Add-on Credits" };
-    quota_lines.push(format_qoder_quota_line(lang, addon_label, &None, &addon_quota));
+    let addon_label = if lang == "zh" || lang == "zh-CN" {
+        "附加 Credits"
+    } else {
+        "Add-on Credits"
+    };
+    quota_lines.push(format_qoder_quota_line(
+        lang,
+        addon_label,
+        &None,
+        &addon_quota,
+    ));
 
     // Parse shared credit package
     let shared_used = json_first_f64(&[
-        json_nested_f64(&account.auth_credit_usage_raw, &["orgResourcePackage", "used"]),
-        json_nested_f64(&account.auth_credit_usage_raw, &["orgResourcePackage", "usage"]),
-        json_nested_f64(&account.auth_credit_usage_raw, &["orgResourcePackage", "consumed"]),
-        json_nested_f64(&account.auth_credit_usage_raw, &["orgResourcePackage", "count"]),
-        json_nested_f64(&account.auth_credit_usage_raw, &["organizationResourcePackage", "used"]),
-        json_nested_f64(&account.auth_credit_usage_raw, &["sharedCreditPackage", "used"]),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "used"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "usage"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "consumed"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "count"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["organizationResourcePackage", "used"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["sharedCreditPackage", "used"],
+        ),
         json_nested_f64(&account.auth_credit_usage_raw, &["resourcePackage", "used"]),
         json_nested_f64(&account.auth_user_plan_raw, &["orgResourcePackage", "used"]),
     ]);
-    let shared_label = if lang == "zh" || lang == "zh-CN" { "共享资源包" } else { "Shared Package" };
+    let shared_label = if lang == "zh" || lang == "zh-CN" {
+        "共享资源包"
+    } else {
+        "Shared Package"
+    };
     if let Some(used) = shared_used {
         quota_lines.push(format!("{}: {:.0}", shared_label, used));
     } else {
@@ -1318,46 +1405,63 @@ fn parse_qoder_quota_bucket(
 ) -> QoderQuotaBucket {
     let raw = sources.iter().find_map(|s| s.clone());
 
-    let used = raw.as_ref()
-        .and_then(|r| json_first_f64(&[
-            r.get("used").and_then(json_as_f64),
-            r.get("usage").and_then(json_as_f64),
-            r.get("consumed").and_then(json_as_f64),
-        ]))
+    let used = raw
+        .as_ref()
+        .and_then(|r| {
+            json_first_f64(&[
+                r.get("used").and_then(json_as_f64),
+                r.get("usage").and_then(json_as_f64),
+                r.get("consumed").and_then(json_as_f64),
+            ])
+        })
         .or_else(|| fallback.and_then(|(u, _, _)| *u));
 
-    let total = raw.as_ref()
-        .and_then(|r| json_first_f64(&[
-            r.get("total").and_then(json_as_f64),
-            r.get("quota").and_then(json_as_f64),
-            r.get("limit").and_then(json_as_f64),
-        ]))
+    let total = raw
+        .as_ref()
+        .and_then(|r| {
+            json_first_f64(&[
+                r.get("total").and_then(json_as_f64),
+                r.get("quota").and_then(json_as_f64),
+                r.get("limit").and_then(json_as_f64),
+            ])
+        })
         .or_else(|| fallback.and_then(|(_, t, _)| *t));
 
-    let remaining = raw.as_ref()
-        .and_then(|r| json_first_f64(&[
-            r.get("remaining").and_then(json_as_f64),
-            r.get("available").and_then(json_as_f64),
-            r.get("left").and_then(json_as_f64),
-        ]))
+    let remaining = raw
+        .as_ref()
+        .and_then(|r| {
+            json_first_f64(&[
+                r.get("remaining").and_then(json_as_f64),
+                r.get("available").and_then(json_as_f64),
+                r.get("left").and_then(json_as_f64),
+            ])
+        })
         .or_else(|| fallback.and_then(|(_, _, rem)| *rem))
         .or_else(|| match (total, used) {
             (Some(t), Some(u)) => Some(t - u),
             _ => None,
         });
 
-    let percentage = raw.as_ref()
-        .and_then(|r| json_first_f64(&[
-            r.get("percentage").and_then(json_as_f64),
-            r.get("usagePercent").and_then(json_as_f64),
-            r.get("usage_percentage").and_then(json_as_f64),
-        ]))
+    let percentage = raw
+        .as_ref()
+        .and_then(|r| {
+            json_first_f64(&[
+                r.get("percentage").and_then(json_as_f64),
+                r.get("usagePercent").and_then(json_as_f64),
+                r.get("usage_percentage").and_then(json_as_f64),
+            ])
+        })
         .or_else(|| match (total, used) {
             (Some(t), Some(u)) if t > 0.0 => Some((u / t) * 100.0),
             _ => None,
         });
 
-    QoderQuotaBucket { used, total, remaining, percentage }
+    QoderQuotaBucket {
+        used,
+        total,
+        remaining,
+        percentage,
+    }
 }
 
 /// Format a Qoder quota line like "套餐内 Credits [Free]: 0% 0 / 0"
@@ -1367,14 +1471,24 @@ fn format_qoder_quota_line(
     plan_tag: &Option<String>,
     bucket: &QoderQuotaBucket,
 ) -> String {
-    let pct_text = bucket.percentage
+    let pct_text = bucket
+        .percentage
         .map(|p| format!("{:.0}%", p.clamp(0.0, 100.0)))
         .unwrap_or_else(|| "0%".to_string());
-    let used_text = bucket.used.map(|v| format!("{:.0}", v)).unwrap_or_else(|| "0".to_string());
-    let total_text = bucket.total.map(|v| format!("{:.0}", v)).unwrap_or_else(|| "0".to_string());
+    let used_text = bucket
+        .used
+        .map(|v| format!("{:.0}", v))
+        .unwrap_or_else(|| "0".to_string());
+    let total_text = bucket
+        .total
+        .map(|v| format!("{:.0}", v))
+        .unwrap_or_else(|| "0".to_string());
 
     if let Some(tag) = plan_tag {
-        format!("{} [{}]: {} {} / {}", label, tag, pct_text, used_text, total_text)
+        format!(
+            "{} [{}]: {} {} / {}",
+            label, tag, pct_text, used_text, total_text
+        )
     } else {
         format!("{}: {} {} / {}", label, pct_text, used_text, total_text)
     }
@@ -1394,7 +1508,11 @@ fn json_nested_obj(root: &Option<serde_json::Value>, path: &[&str]) -> Option<se
     for key in path {
         current = current.get(*key)?;
     }
-    if current.is_object() { Some(current.clone()) } else { None }
+    if current.is_object() {
+        Some(current.clone())
+    } else {
+        None
+    }
 }
 
 fn json_nested_f64(root: &Option<serde_json::Value>, path: &[&str]) -> Option<f64> {
@@ -1406,7 +1524,9 @@ fn json_nested_f64(root: &Option<serde_json::Value>, path: &[&str]) -> Option<f6
 }
 
 fn json_first_string(values: &[Option<String>]) -> Option<String> {
-    values.iter().find_map(|v| v.as_ref().filter(|s| !s.trim().is_empty()).cloned())
+    values
+        .iter()
+        .find_map(|v| v.as_ref().filter(|s| !s.trim().is_empty()).cloned())
 }
 
 fn json_first_f64(values: &[Option<f64>]) -> Option<f64> {
@@ -1436,21 +1556,35 @@ fn build_trae_display_info(lang: &str) -> AccountDisplayInfo {
 
         // Usage percentage + USD amounts
         if usage.total_usd > 0.0 {
-            let used_pct = ((usage.spent_usd / usage.total_usd) * 100.0).round().clamp(0.0, 100.0) as i32;
-            let reset_text = usage.reset_at.map(|ts| format_reset_time_from_ts(lang, Some(ts)));
+            let used_pct = ((usage.spent_usd / usage.total_usd) * 100.0)
+                .round()
+                .clamp(0.0, 100.0) as i32;
+            let reset_text = usage
+                .reset_at
+                .map(|ts| format_reset_time_from_ts(lang, Some(ts)));
             quota_lines.push(format_quota_line(
                 lang,
-                if lang == "zh" || lang == "zh-CN" { "配额" } else { "Quota" },
+                if lang == "zh" || lang == "zh-CN" {
+                    "配额"
+                } else {
+                    "Quota"
+                },
                 &format!("{}%", used_pct),
                 reset_text.as_deref(),
             ));
             quota_lines.push(format!("${:.2} / ${:.2}", usage.spent_usd, usage.total_usd));
         } else {
             // total_usd is 0 — show 0% with $0 / $0
-            let reset_text = usage.reset_at.map(|ts| format_reset_time_from_ts(lang, Some(ts)));
+            let reset_text = usage
+                .reset_at
+                .map(|ts| format_reset_time_from_ts(lang, Some(ts)));
             quota_lines.push(format_quota_line(
                 lang,
-                if lang == "zh" || lang == "zh-CN" { "配额" } else { "Quota" },
+                if lang == "zh" || lang == "zh-CN" {
+                    "配额"
+                } else {
+                    "Quota"
+                },
                 "0%",
                 reset_text.as_deref(),
             ));
@@ -1507,20 +1641,23 @@ struct TraeUsageSummary {
     reset_at: Option<i64>,
 }
 
-fn extract_trae_usage(
-    account: &crate::models::trae::TraeAccount,
-) -> Option<TraeUsageSummary> {
+fn extract_trae_usage(account: &crate::models::trae::TraeAccount) -> Option<TraeUsageSummary> {
     let usage_root = account.trae_usage_raw.as_ref()?.as_object()?;
 
     // Check API code
     if let Some(code) = usage_root.get("code").and_then(|v| v.as_i64()) {
-        if code != 0 { return None; }
+        if code != 0 {
+            return None;
+        }
     }
 
-    let packs = usage_root.get("user_entitlement_pack_list")
+    let packs = usage_root
+        .get("user_entitlement_pack_list")
         .and_then(|v| v.as_array())?;
 
-    if packs.is_empty() { return None; }
+    if packs.is_empty() {
+        return None;
+    }
 
     // Product type constants (matching frontend trae.ts exactly)
     const PRODUCT_FREE: i64 = 0;
@@ -1544,15 +1681,21 @@ fn extract_trae_usage(
     };
 
     // Filter out promo code packs
-    let valid_packs: Vec<_> = packs.iter()
+    let valid_packs: Vec<_> = packs
+        .iter()
         .filter(|p| get_product_type(p) != PRODUCT_PROMO_CODE)
         .collect();
 
-    if valid_packs.is_empty() { return None; }
+    if valid_packs.is_empty() {
+        return None;
+    }
 
     // Find best pack (priority: ultra > pro_plus > pro > trial > lite > free)
     let find_by_type = |product_type: i64| -> Option<&serde_json::Value> {
-        valid_packs.iter().find(|p| get_product_type(p) == product_type).copied()
+        valid_packs
+            .iter()
+            .find(|p| get_product_type(p) == product_type)
+            .copied()
     };
 
     let selected_pack = find_by_type(PRODUCT_ULTRA)
@@ -1588,7 +1731,11 @@ fn extract_trae_usage(
         })
         .filter(|ts| *ts > 0)
         .map(|ts| {
-            let normalized = if ts > 1_000_000_000_000 { ts / 1000 } else { ts };
+            let normalized = if ts > 1_000_000_000_000 {
+                ts / 1000
+            } else {
+                ts
+            };
             normalized + 1
         });
 

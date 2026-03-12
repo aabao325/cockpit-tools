@@ -156,13 +156,6 @@ pub async fn open_data_folder() -> Result<(), String> {
     Ok(())
 }
 
-#[tauri::command]
-pub async fn get_storage_overview() -> Result<modules::storage_stats::StorageOverview, String> {
-    tauri::async_runtime::spawn_blocking(modules::storage_stats::collect_storage_overview)
-        .await
-        .map_err(|e| format!("统计存储空间失败: {}", e))?
-}
-
 /// 保存文本文件
 #[tauri::command]
 pub async fn save_text_file(path: String, content: String) -> Result<(), String> {

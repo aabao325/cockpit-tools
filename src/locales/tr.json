@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Dock simgesinin görünürlüğünü pencere küçültme davranışından bağımsız olarak kontrol eder",
       "hideDockIconOff": "Hayır (Dock simgesini göster)",
       "hideDockIconOn": "Evet (Dock simgesini gizle)",
-      "storageTitle": "Dizinler ve Depolama",
       "dataDir": "Veri dizini",
       "dataDirDesc": "Hesaplar ve yapılandırma dosyaları için depolama konumu.",
       "fpDir": "Antigravity Depolama",
@@ -520,21 +519,7 @@
       "download": "İndir",
       "checkFailed": "Güncelleme kontrolü başarısız oldu"
     },
-    "saveSettings": "Ayarları Kaydet",
-    "storage": {
-      "category": {
-        "accountData": "Hesap verileri",
-        "logs": "Günlükler",
-        "cacheQuota": "Önbellek ve kota",
-        "systemConfig": "Sistem yapılandırması",
-        "other": "Diğer"
-      },
-      "primarySource": "Ana kaynak",
-      "instancePlatforms": "Örnek platformları",
-      "rootEntries": "Dizin dökümü",
-      "categoriesTitle": "İş kategorileri",
-      "scanTime": "Son tarama: {{time}}"
-    }
+    "saveSettings": "Ayarları Kaydet"
   },
   "appPath": {
     "missing": {

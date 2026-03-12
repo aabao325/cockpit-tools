@@ -410,7 +410,6 @@
       "hideDockIconDesc": "창 최소화 동작과 무관하게 Dock 아이콘 표시 상태를 독립적으로 제어합니다",
       "hideDockIconOff": "아니요 (Dock 아이콘 표시)",
       "hideDockIconOn": "예 (Dock 아이콘 숨기기)",
-      "storageTitle": "디렉터리 및 저장소",
       "dataDir": "데이터 디렉터리",
       "dataDirDesc": "계정 및 구성 파일 저장 위치.",
       "fpDir": "Antigravity 저장소",
@@ -520,21 +519,7 @@
       "download": "다운로드",
       "checkFailed": "업데이트 확인에 실패했습니다. 나중에 다시 시도해 주세요."
     },
-    "saveSettings": "설정 저장",
-    "storage": {
-      "category": {
-        "accountData": "계정 데이터",
-        "logs": "로그",
-        "cacheQuota": "캐시 및 할당량",
-        "systemConfig": "시스템 설정",
-        "other": "기타"
-      },
-      "primarySource": "주요 점유 원인",
-      "instancePlatforms": "인스턴스 플랫폼",
-      "rootEntries": "디렉터리 상세",
-      "categoriesTitle": "업무 카테고리",
-      "scanTime": "최근 스캔: {{time}}"
-    }
+    "saveSettings": "설정 저장"
   },
   "appPath": {
     "missing": {

@@ -7,11 +7,11 @@
 [![GitHub release](https://img.shields.io/github/v/release/jlcodes99/cockpit-tools?style=flat)](https://github.com/jlcodes99/cockpit-tools/releases)
 [![GitHub issues](https://img.shields.io/github/issues/jlcodes99/cockpit-tools)](https://github.com/jlcodes99/cockpit-tools/issues)
 
-一款**通用的 AI IDE 账号管理工具**，目前支持 **Antigravity**、**Codex**、**GitHub Copilot**、**Windsurf**、**Kiro**、**Cursor**、**Gemini**、**CodeBuddy**、**Qoder** 和 **Trae**，并支持多账号多实例并行运行。
+一款**通用的 AI IDE 账号管理工具**，目前支持 **Antigravity**、**Codex**、**GitHub Copilot**、**Windsurf**、**Kiro**、**Cursor**、**Gemini Cli**、**CodeBuddy**、**Qoder** 和 **Trae**，并支持多账号多实例并行运行。
 
 > 本工具旨在帮助用户高效管理多个 AI IDE 账号，支持一键切换、配额监控、自动唤醒与多开实例并行运行，助您充分利用不同账号的资源。
 
-**功能**：一键切号 · 多账号管理 · 多开实例 · 配额监控 · 唤醒任务 · 设备指纹 · 插件联动 · GitHub Copilot 管理 · Windsurf 管理 · Kiro 管理 · Cursor 管理 · Gemini 管理 · CodeBuddy 管理 · Qoder 管理 · Trae 管理
+**功能**：一键切号 · 多账号管理 · 多开实例 · 配额监控 · 唤醒任务 · 设备指纹 · 插件联动 · GitHub Copilot 管理 · Windsurf 管理 · Kiro 管理 · Cursor 管理 · Gemini Cli 管理 · CodeBuddy 管理 · Qoder 管理 · Trae 管理
 
 **语言**：支持 17 种语言
 
@@ -25,7 +25,7 @@
 
 全新的可视化仪表盘，为您提供一站式的状态概览：
 
-- **十平台支持**：同时展示 Antigravity、Codex、GitHub Copilot、Windsurf、Kiro、Cursor、Gemini、CodeBuddy、Qoder 与 Trae 的账号状态
+- **十平台支持**：同时展示 Antigravity、Codex、GitHub Copilot、Windsurf、Kiro、Cursor、Gemini Cli、CodeBuddy、Qoder 与 Trae 的账号状态
 - **配额监控**：实时查看各模型剩余配额、重置时间
 - **快捷操作**：一键刷新、一键唤醒
 - **可视化进度**：直观的进度条展示配额消耗情况
@@ -133,13 +133,13 @@ Codex 同样支持多账号多实例并行运行。比如同时打开两个 Code
 - **快速启停**：一键启动/停止/强制关闭实例
 - **窗口管理**：支持打开实例窗口与批量关闭
 
-### 8. Gemini 账号管理
+### 8. Gemini Cli 账号管理
 
 - **账号导入**：支持 OAuth 授权、Token/JSON 导入与本地导入
 - **配额视图**：展示 Total Usage、Auto + Composer、API Usage、On-Demand 与周期信息
 - **批量管理**：支持标签与批量操作
-- **切号注入**：支持切号后注入 Gemini 本地凭证（`~/.gemini`）
-- **平台限制**：暂不支持多开实例管理
+- **切号注入**：支持切号后注入 Gemini Cli 本地凭证（`~/.gemini`）
+- **平台限制**：Gemini Cli 暂不支持多开实例管理
 
 ### 9. CodeBuddy 账号管理
 
@@ -189,6 +189,7 @@ Codex 同样支持多账号多实例并行运行。比如同时打开两个 Code
 ### 12. 通用设置
 
 - **个性化设置**：主题切换、语言设置、自动刷新间隔
+- **平台配置**：统一管理 Qoder / Trae 等平台的启动路径与配额预警
 
 > ![Settings](docs/images/settings_page.png)
 
@@ -202,8 +203,8 @@ Codex 同样支持多账号多实例并行运行。比如同时打开两个 Code
 - **数据主要保存在本机**：
   - `~/.antigravity_cockpit`：Antigravity 账号、配置、WebSocket 状态等
   - `~/.codex`：Codex 官方当前登录 `auth.json`
-  - `~/.gemini`：Gemini 本地会话文件（如 `oauth_creds.json`、`google_accounts.json`、`settings.json`）
-  - 系统本地应用数据目录下 `com.antigravity.cockpit-tools`：Codex / GitHub Copilot / Windsurf / Kiro / Cursor / Gemini / CodeBuddy / Qoder / Trae 多账号索引等
+  - `~/.gemini`：Gemini Cli 本地会话文件（如 `oauth_creds.json`、`google_accounts.json`、`settings.json`）
+  - 系统本地应用数据目录下 `com.antigravity.cockpit-tools`：Codex / GitHub Copilot / Windsurf / Kiro / Cursor / Gemini Cli / CodeBuddy / Qoder / Trae 多账号索引等
 - **WebSocket 默认仅本机访问**：监听 `127.0.0.1`，默认端口 `19528`，可在设置中关闭或改端口。
 - **什么时候会联网**：OAuth 登录、Token 刷新、配额查询、版本更新检查等官方接口请求。
 - **实用安全建议**：
@@ -228,12 +229,12 @@ Codex 同样支持多账号多实例并行运行。比如同时打开两个 Code
 | Windsurf 自动刷新配额 | 后台定时更新 Windsurf 配额 | 5~10 分钟 | 同上 |
 | Kiro 自动刷新配额 | 后台定时更新 Kiro 配额 | 5~10 分钟 | 同上 |
 | Cursor 自动刷新配额 | 后台定时更新 Cursor 配额 | 5~10 分钟 | 同上 |
-| Gemini 自动刷新配额 | 后台定时更新 Gemini 配额 | 5~10 分钟 | 同上 |
+| Gemini Cli 自动刷新配额 | 后台定时更新 Gemini Cli 配额 | 5~10 分钟 | 同上 |
 | CodeBuddy 自动刷新配额 | 后台定时更新 CodeBuddy 配额 | 5~10 分钟 | 同上 |
 | Qoder 自动刷新配额 | 后台定时更新 Qoder 配额 | 5~10 分钟 | 同上 |
 | Trae 自动刷新配额 | 后台定时更新 Trae 配额 | 5~10 分钟 | 同上 |
 | 数据目录 | 存账号与配置文件的位置 | 默认即可 | 仅用于排查、备份 |
-| Antigravity/Codex/VS Code/Windsurf/Kiro/Cursor/Gemini/CodeBuddy/Qoder/Trae/OpenCode 启动路径 | 指定应用可执行文件位置 | 留空（自动检测） | 自动检测失败、或你装在自定义路径时 |
+| Antigravity/Codex/VS Code/Windsurf/Kiro/Cursor/Gemini Cli/CodeBuddy/Qoder/Trae/OpenCode 启动路径 | 指定应用可执行文件位置 | 留空（自动检测） | 自动检测失败、或你装在自定义路径时 |
 | 切换 Codex 时自动重启 OpenCode | 切换 Codex 后自动同步 OpenCode 账号信息 | 使用 OpenCode 就开启；不用就关闭 | 频繁切号且需要 OpenCode 同步时开启 |
 
 补充说明：
@@ -253,8 +254,6 @@ Codex 同样支持多账号多实例并行运行。比如同时打开两个 Code
 1. **稳定省心**：自动刷新 10 分钟 + WebSocket 关闭（不用插件时）+ 路径保持默认。  
 2. **高频切号**：自动刷新 2~5 分钟 + 需要联动时开启 WebSocket + OpenCode 联动开启。  
 3. **安全优先**：WebSocket 关闭 + 不共享用户目录 + 定期清理不再使用的账号。  
-
----
 
 ---
 

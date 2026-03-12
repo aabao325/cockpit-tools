@@ -995,7 +995,12 @@ fn payload_from_storage_root(storage_root: &Value) -> Result<TraeImportPayload, 
                 &[
                     &["entitlementInfo", "detail", "subscription_renew_time"],
                     &["entitlementInfo", "detail", "subscriptionRenewTime"],
-                    &["data", "entitlementInfo", "detail", "subscription_renew_time"],
+                    &[
+                        "data",
+                        "entitlementInfo",
+                        "detail",
+                        "subscription_renew_time",
+                    ],
                 ],
             )
         }),
@@ -1228,10 +1233,7 @@ fn payload_from_import_value(raw: Value) -> Result<TraeImportPayload, String> {
     let plan_reset_at = normalize_timestamp(
         pick_i64(
             Some(&raw),
-            &[
-                &["plan_reset_at"],
-                &["detail", "subscription_renew_time"],
-            ],
+            &[&["plan_reset_at"], &["detail", "subscription_renew_time"]],
         )
         .or_else(|| {
             pick_i64(
@@ -1669,7 +1671,11 @@ fn ensure_auth_raw_for_inject(account: &TraeAccount, existing_auth_raw: Option<&
 
     let scope = pick_string_multi(
         &roots,
-        &[&["account", "scope"], &["scope"], &["callbackQuery", "scope"]],
+        &[
+            &["account", "scope"],
+            &["scope"],
+            &["callbackQuery", "scope"],
+        ],
     )
     .unwrap_or_else(|| "marscode".to_string());
     let login_scope = pick_string_multi(
@@ -2025,7 +2031,8 @@ async fn parse_trae_response_body(response: reqwest::Response, url: &str) -> Res
         return Ok(Value::Object(Map::new()));
     }
 
-    serde_json::from_str::<Value>(&body_text).map_err(|e| format!("解析 Trae 响应 JSON 失败({}): {}", url, e))
+    serde_json::from_str::<Value>(&body_text)
+        .map_err(|e| format!("解析 Trae 响应 JSON 失败({}): {}", url, e))
 }
 
 async fn request_trae_json(
@@ -2162,7 +2169,10 @@ fn usage_identity_from_product_type(product_type: i64) -> Option<&'static str> {
 fn usage_pack_product_type(pack: &Value) -> Option<i64> {
     pick_i64(
         Some(pack),
-        &[&["entitlement_base_info", "product_type"], &["product_type"]],
+        &[
+            &["entitlement_base_info", "product_type"],
+            &["product_type"],
+        ],
     )
 }
 
@@ -2175,13 +2185,9 @@ fn apply_entitlement_response(account: &mut TraeAccount, response: &Value) {
 
     account.trae_entitlement_raw = Some(response.clone());
 
-    if let Some(plan_type) = normalize_non_empty(
-        pick_string(
-            Some(response),
-            &[&["user_pay_identity_str"]],
-        )
-        .as_deref(),
-    ) {
+    if let Some(plan_type) =
+        normalize_non_empty(pick_string(Some(response), &[&["user_pay_identity_str"]]).as_deref())
+    {
         account.plan_type = Some(plan_type);
     }
 

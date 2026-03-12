@@ -410,7 +410,6 @@
       "hideDockIconDesc": "独立控制程序坞图标显示状态，不受窗口最小化行为影响",
       "hideDockIconOff": "否（显示Dock图标）",
       "hideDockIconOn": "是（隐藏Dock图标）",
-      "storageTitle": "目录与存储",
       "dataDir": "数据目录",
       "dataDirDesc": "账号与配置文件的存储位置。",
       "fpDir": "Antigravity存储目录",
@@ -520,21 +519,7 @@
       "download": "下载",
       "checkFailed": "检查更新失败，请稍后重试"
     },
-    "saveSettings": "保存设置",
-    "storage": {
-      "category": {
-        "accountData": "账号数据",
-        "logs": "日志",
-        "cacheQuota": "缓存与配额",
-        "systemConfig": "系统配置",
-        "other": "其他"
-      },
-      "primarySource": "主要占用来源",
-      "instancePlatforms": "实例平台",
-      "rootEntries": "目录明细",
-      "categoriesTitle": "业务分类",
-      "scanTime": "最近扫描：{{time}}"
-    }
+    "saveSettings": "保存设置"
   },
   "appPath": {
     "missing": {

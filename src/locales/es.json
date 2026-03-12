@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Controla la visibilidad del icono del Dock de forma independiente, sin depender del comportamiento de minimización de la ventana",
       "hideDockIconOff": "No (Mostrar icono del Dock)",
       "hideDockIconOn": "Sí (Ocultar icono del Dock)",
-      "storageTitle": "Directorios y almacenamiento",
       "dataDir": "Directorio de datos",
       "dataDirDesc": "Ubicación de almacenamiento para cuentas y archivos de configuración.",
       "fpDir": "Almacenamiento de Antigravity",
@@ -520,21 +519,7 @@
       "download": "Descargar",
       "checkFailed": "Error al buscar actualizaciones"
     },
-    "saveSettings": "Guardar Ajustes",
-    "storage": {
-      "category": {
-        "accountData": "Datos de cuenta",
-        "logs": "Registros",
-        "cacheQuota": "Caché y cuota",
-        "systemConfig": "Configuración del sistema",
-        "other": "Otros"
-      },
-      "primarySource": "Origen principal",
-      "instancePlatforms": "Plataformas de instancias",
-      "rootEntries": "Desglose del directorio",
-      "categoriesTitle": "Categorías operativas",
-      "scanTime": "Último escaneo: {{time}}"
-    }
+    "saveSettings": "Guardar Ajustes"
   },
   "appPath": {
     "missing": {

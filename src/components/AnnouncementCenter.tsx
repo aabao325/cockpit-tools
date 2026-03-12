@@ -23,7 +23,6 @@ const TAB_TARGET_PAGE_MAP: Partial<Record<string, Page>> = {
   wakeup: 'wakeup',
   fingerprints: 'fingerprints',
   instances: 'instances',
-  storage: 'storage',
   settings: 'settings',
 };
 

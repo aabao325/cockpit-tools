@@ -11,7 +11,7 @@ import { usePlatformLayoutStore } from '../stores/usePlatformLayoutStore';
 import { ALL_PLATFORM_IDS, PlatformId } from '../types/platform';
 import './settings/Settings.css';
 import { 
-  Github, User, Rocket, Save, FolderOpen, HardDrive,
+  Github, User, Rocket, Save, FolderOpen,
   AlertCircle, RefreshCw, Heart, MessageSquare
 } from 'lucide-react';
 
@@ -1058,12 +1058,6 @@ export function SettingsPage() {
                 <div className="row-control">
                   <button className="btn btn-secondary" onClick={() => accountService.openDataFolder()}>
                     <FolderOpen size={16} />{t('common.open')}
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => window.dispatchEvent(new CustomEvent('app-request-navigate', { detail: 'storage' }))}
-                  >
-                    <HardDrive size={16} />{t('settings.general.storageTitle')}
                   </button>
                 </div>
               </div>

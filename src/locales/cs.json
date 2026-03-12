@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Nezávisle řídí viditelnost ikony v Docku bez vlivu chování minimalizace okna",
       "hideDockIconOff": "Ne (Zobrazit ikonu v Docku)",
       "hideDockIconOn": "Ano (Skrýt ikonu v Docku)",
-      "storageTitle": "Adresáře a úložiště",
       "dataDir": "Datový adresář",
       "dataDirDesc": "Umístění pro uložení účtů a konfiguračních souborů.",
       "fpDir": "Úložiště Antigravity",
@@ -520,21 +519,7 @@
       "download": "Stáhnout",
       "checkFailed": "Kontrola aktualizací selhala"
     },
-    "saveSettings": "Uložit nastavení",
-    "storage": {
-      "category": {
-        "accountData": "Data účtu",
-        "logs": "Protokoly",
-        "cacheQuota": "Mezipaměť a kvóty",
-        "systemConfig": "Konfigurace systému",
-        "other": "Ostatní"
-      },
-      "primarySource": "Hlavní zdroj",
-      "instancePlatforms": "Platformy instancí",
-      "rootEntries": "Přehled adresářů",
-      "categoriesTitle": "Obchodní kategorie",
-      "scanTime": "Poslední sken: {{time}}"
-    }
+    "saveSettings": "Uložit nastavení"
   },
   "appPath": {
     "missing": {

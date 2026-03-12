@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Contrôle l’affichage de l’icône du Dock indépendamment du comportement de minimisation de la fenêtre",
       "hideDockIconOff": "Non (Afficher l’icône du Dock)",
       "hideDockIconOn": "Oui (Masquer l’icône du Dock)",
-      "storageTitle": "Répertoires et stockage",
       "dataDir": "Répertoire de données",
       "dataDirDesc": "Emplacement de stockage des comptes et fichiers de configuration.",
       "fpDir": "Stockage Antigravity",
@@ -520,21 +519,7 @@
       "download": "Télécharger",
       "checkFailed": "Échec de la vérification"
     },
-    "saveSettings": "Enregistrer les paramètres",
-    "storage": {
-      "category": {
-        "accountData": "Données du compte",
-        "logs": "Journaux",
-        "cacheQuota": "Cache et quotas",
-        "systemConfig": "Configuration système",
-        "other": "Autres"
-      },
-      "primarySource": "Source principale",
-      "instancePlatforms": "Plateformes d'instance",
-      "rootEntries": "Répartition des répertoires",
-      "categoriesTitle": "Catégories métier",
-      "scanTime": "Dernière analyse : {{time}}"
-    }
+    "saveSettings": "Enregistrer les paramètres"
   },
   "appPath": {
     "missing": {

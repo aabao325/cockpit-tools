@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Dockアイコンの表示状態を独立して制御します。ウィンドウの最小化動作の影響を受けません",
       "hideDockIconOff": "いいえ（Dockアイコンを表示）",
       "hideDockIconOn": "はい（Dockアイコンを隠す）",
-      "storageTitle": "ディレクトリとストレージ",
       "dataDir": "データディレクトリ",
       "dataDirDesc": "アカウントと設定ファイルの保存場所。",
       "fpDir": "Antigravityストレージ",
@@ -520,21 +519,7 @@
       "download": "ダウンロード",
       "checkFailed": "アップデートの確認に失敗しました。後でもう一度お試しください"
     },
-    "saveSettings": "設定を保存",
-    "storage": {
-      "category": {
-        "accountData": "アカウントデータ",
-        "logs": "ログ",
-        "cacheQuota": "キャッシュとクォータ",
-        "systemConfig": "システム設定",
-        "other": "その他"
-      },
-      "primarySource": "主な占有元",
-      "instancePlatforms": "インスタンスプラットフォーム",
-      "rootEntries": "ディレクトリ内訳",
-      "categoriesTitle": "業務カテゴリ",
-      "scanTime": "最終スキャン: {{time}}"
-    }
+    "saveSettings": "設定を保存"
   },
   "appPath": {
     "missing": {

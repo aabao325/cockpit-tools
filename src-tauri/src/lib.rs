@@ -215,7 +215,6 @@ pub fn run() {
             commands::import::export_accounts,
             // System Commands
             commands::system::open_data_folder,
-            commands::system::get_storage_overview,
             commands::system::save_text_file,
             commands::system::get_downloads_dir,
             commands::system::get_network_config,

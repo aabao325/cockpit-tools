@@ -410,7 +410,6 @@
       "hideDockIconDesc": "Niezależnie steruje widocznością ikony Docka, bez wpływu zachowania minimalizacji okna",
       "hideDockIconOff": "Nie (Pokaż ikonę Docka)",
       "hideDockIconOn": "Tak (Ukryj ikonę Docka)",
-      "storageTitle": "Katalogi i pamięć",
       "dataDir": "Katalog danych",
       "dataDirDesc": "Lokalizacja przechowywania kont i plików konfiguracji.",
       "fpDir": "Magazyn Antigravity",
@@ -520,21 +519,7 @@
       "download": "Pobierz",
       "checkFailed": "Błąd sprawdzania aktualizacji"
     },
-    "saveSettings": "Zapisz ustawienia",
-    "storage": {
-      "category": {
-        "accountData": "Dane konta",
-        "logs": "Logi",
-        "cacheQuota": "Pamięć podręczna i limity",
-        "systemConfig": "Konfiguracja systemu",
-        "other": "Inne"
-      },
-      "primarySource": "Główne źródło",
-      "instancePlatforms": "Platformy instancji",
-      "rootEntries": "Szczegóły katalogów",
-      "categoriesTitle": "Kategorie operacyjne",
-      "scanTime": "Ostatnie skanowanie: {{time}}"
-    }
+    "saveSettings": "Zapisz ustawienia"
   },
   "appPath": {
     "missing": {

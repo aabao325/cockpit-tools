@@ -86,9 +86,6 @@ const WakeupVerificationPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
-const StoragePage = lazy(() =>
-  import('./pages/StoragePage').then((module) => ({ default: module.StoragePage })),
-);
 const ManualPage = lazy(() =>
   import('./pages/ManualPage').then((module) => ({ default: module.ManualPage })),
 );
@@ -1829,7 +1826,6 @@ function App() {
             case 'qoder':
             case 'trae':
             case 'manual':
-            case 'storage':
             case 'settings':
               setPage(target as Page);
               break;
@@ -2163,7 +2159,6 @@ function App() {
               onOpenPlatformLayout={() => setShowPlatformLayoutModal(true)}
             />
           )}
-          {page === 'storage' && <StoragePage />}
           {page === 'settings' && <SettingsPage />}
         </Suspense>
       </div>

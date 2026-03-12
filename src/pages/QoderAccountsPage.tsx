@@ -1142,11 +1142,6 @@ export function QoderAccountsPage() {
               <div className="quota-header">
                 <span className="qoder-usage-label-wrap">
                   <span className="quota-label qoder-usage-label">{item.label}</span>
-                  {item.key === 'included' && (
-                    <span className={`tier-badge ${quota.planClass} raw-value qoder-inline-plan-badge`}>
-                      {quota.planTag}
-                    </span>
-                  )}
                 </span>
               </div>
               {item.showProgress && (
@@ -1333,11 +1328,6 @@ export function QoderAccountsPage() {
                     <div className="qoder-usage-summary-row">
                       <span className="qoder-usage-label-wrap">
                         <span className="quota-name qoder-usage-label">{item.label}</span>
-                        {item.key === 'included' && (
-                          <span className={`tier-badge raw-value ${quota.planClass} qoder-inline-plan-badge`}>
-                            {quota.planTag}
-                          </span>
-                        )}
                       </span>
                       {item.percentageText && (
                         <span className={`quota-value qoder-table-quota-pct ${item.quotaClass}`}>

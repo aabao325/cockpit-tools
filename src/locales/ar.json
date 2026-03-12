@@ -410,7 +410,6 @@
       "hideDockIconDesc": "تحكم مستقل في ظهور أيقونة Dock دون التأثر بسلوك تصغير النافذة",
       "hideDockIconOff": "لا (إظهار أيقونة Dock)",
       "hideDockIconOn": "نعم (إخفاء أيقونة Dock)",
-      "storageTitle": "المجلدات والتخزين",
       "dataDir": "مجلد البيانات",
       "dataDirDesc": "موقع تخزين الحسابات وملفات التكوين.",
       "fpDir": "مجلد تخزين Antigravity",
@@ -520,21 +519,7 @@
       "download": "تنزيل",
       "checkFailed": "فشل التحقق من التحديثات"
     },
-    "saveSettings": "حفظ الإعدادات",
-    "storage": {
-      "category": {
-        "accountData": "بيانات الحساب",
-        "logs": "السجلات",
-        "cacheQuota": "التخزين المؤقت والحصص",
-        "systemConfig": "إعدادات النظام",
-        "other": "أخرى"
-      },
-      "primarySource": "المصدر الرئيسي",
-      "instancePlatforms": "منصات المثيلات",
-      "rootEntries": "تفاصيل الدليل",
-      "categoriesTitle": "فئات الأعمال",
-      "scanTime": "آخر فحص: {{time}}"
-    }
+    "saveSettings": "حفظ الإعدادات"
   },
   "appPath": {
     "missing": {

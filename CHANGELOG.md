@@ -7,6 +7,23 @@ All notable changes to Cockpit Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.13.0] - 2026-03-12
+
+### Added
+- **Qoder platform full integration across backend and frontend**: Added Qoder models, commands, modules, official CLI device-login flow, local/JSON import, account pages, services, stores, icons, navigation, dashboard/tray wiring, and raw-plan/quota presentation.
+- **Qoder account switching and multi-instance management**: Added Qoder credential injection, default-instance binding, isolated multi-instance profiles, start/stop/open-window/close-all controls, and launch-path detection for macOS, Windows, and Linux.
+- **Trae platform full integration across backend and frontend**: Added Trae models, commands, modules, OAuth flow, local/JSON import, account pages, services, stores, icons, navigation, dashboard/tray wiring, and plan/usage presentation.
+- **Trae account switching and multi-instance management**: Added Trae local auth write-back using the client's actual on-disk rules, default-instance binding, isolated multi-instance profiles, start/stop/open-window/close-all controls, and launch-path detection for macOS, Windows, and Linux.
+
+### Changed
+- **Shared runtime surfaces now cover ten platforms**: Dashboard, tray, settings, quick settings, auto-refresh scheduling, quota-alert preferences, navigation, and README/docs now include Qoder and Trae consistently.
+- **Settings now expose Qoder/Trae path and quota controls**: General settings now cover Qoder/Trae auto-refresh, launch paths, and quota alerts in one place.
+- **Gemini platform wording is now aligned as Gemini Cli**: Shared navigation, settings, and account-management labels now consistently use `Gemini Cli`.
+
+### Fixed
+- **Pending OAuth sessions are now cancelled when dialogs or pages close**: Provider OAuth flows now cancel in-flight authorization sessions on modal close, tab switch, or page unload to avoid stale pending sessions.
+
+---
 ## [0.12.3] - 2026-03-11
 
 ### Fixed
