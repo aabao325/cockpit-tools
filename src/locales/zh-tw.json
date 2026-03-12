@@ -31,7 +31,9 @@
         "email": "電子郵件",
         "promptCredits": "User Prompt 點數",
         "creditPackage": "附加 Credits",
-        "sharedCreditPackage": "共享資源包"
+        "sharedCreditPackage": "共享資源包",
+        "account": "帳號",
+        "createdAt": "建立時間"
       },
       "empty": {
         "title": "暫無帳號"
@@ -595,7 +597,9 @@
       "byGroupReset": "按 {{group}} 重置時間",
       "descTooltip": "當前：降序，點擊切換為昇序",
       "ascTooltip": "當前：昇序，點擊切換為降序",
-      "toggleDirection": "切換排序方向"
+      "toggleDirection": "切換排序方向",
+      "plan": "按方案",
+      "quota": "按配額"
     },
     "filterTags": "標籤篩選",
     "filterTagsCount": "標籤",
@@ -2173,6 +2177,12 @@
       "desc": "目前支援官方授權登入（回調）、本機匯入、JSON 匯入、切號注入、多開實例綁定與配額概覽。登入流程沿用 Qoder 用戶端真實落盤資料。",
       "permission": "權限範圍：讀取 Qoder 本地認證儲存（auth 憑證與使用者資訊），用於帳號切換與工作階段注入；所有資料僅在本機處理。",
       "network": "網路範圍：OAuth 授權登入需連網請求 Qoder 官方服務完成回調；配額查詢透過 Qoder API 取得用量資料。不會上傳本地金鑰或憑證。"
+    },
+    "addModal": {
+      "title": "新增 Qoder 帳號"
+    },
+    "import": {
+      "localDesc": "從本機 Qoder 用戶端讀取目前登入狀態（包含使用者資訊、方案與 Credits 使用情況）。"
     }
   },
   "trae": {

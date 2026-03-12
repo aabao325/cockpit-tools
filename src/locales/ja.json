@@ -31,7 +31,9 @@
         "email": "メール",
         "promptCredits": "プロンプトクレジット",
         "creditPackage": "追加 Credits",
-        "sharedCreditPackage": "共有 Credits パッケージ"
+        "sharedCreditPackage": "共有 Credits パッケージ",
+        "account": "アカウント",
+        "createdAt": "作成日時"
       },
       "empty": {
         "title": "アカウントなし"
@@ -595,7 +597,9 @@
       "byGroupReset": "{{group}} リセット時間順",
       "descTooltip": "降順（クリックで昇順へ）",
       "ascTooltip": "昇順（クリックで降順へ）",
-      "toggleDirection": "並べ替え順序を切り替え"
+      "toggleDirection": "並べ替え順序を切り替え",
+      "plan": "プラン順",
+      "quota": "クォータ順"
     },
     "filterTags": "タグで絞り込み",
     "filterTagsCount": "タグ",
@@ -2173,6 +2177,12 @@
       "desc": "公式 OAuth ログイン（コールバック）、ローカルインポート、JSON インポート、アカウント切り替え注入、マルチインスタンス関連付け、クォータ概要に対応しています。ログインフローは Qoder クライアントの実際の保存データ形式に従います。",
       "permission": "権限範囲: Qoder のローカル認証ストレージ（auth 資格情報とユーザー情報）を読み取り、アカウント切り替えとセッション注入に使用します。すべてのデータはローカル端末上で処理されます。",
       "network": "ネットワーク範囲: OAuth ログインではコールバック処理のために Qoder 公式サービスへの接続が必要です。クォータ照会は Qoder API を使用します。ローカルの鍵や資格情報はアップロードされません。"
+    },
+    "addModal": {
+      "title": "Qoder アカウントを追加"
+    },
+    "import": {
+      "localDesc": "ローカルの Qoder クライアントから現在のログイン状態を読み込みます。ユーザー情報、プラン、クレジットの利用状況を含みます。"
     }
   },
   "trae": {

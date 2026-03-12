@@ -31,7 +31,9 @@
         "email": "이메일",
         "promptCredits": "프롬프트 크레딧",
         "creditPackage": "추가 Credits",
-        "sharedCreditPackage": "공유 Credits 패키지"
+        "sharedCreditPackage": "공유 Credits 패키지",
+        "account": "계정",
+        "createdAt": "생성 시간"
       },
       "empty": {
         "title": "계정 없음"
@@ -595,7 +597,9 @@
       "byGroupReset": "{{group}} 재설정 시간",
       "descTooltip": "내림차순, 오름차순으로 전환 클릭",
       "ascTooltip": "오름차순, 내림차순으로 전환 클릭",
-      "toggleDirection": "정렬 방향 전환"
+      "toggleDirection": "정렬 방향 전환",
+      "plan": "플랜순",
+      "quota": "할당량순"
     },
     "filterTags": "태그 필터",
     "filterTagsCount": "태그",
@@ -2173,6 +2177,12 @@
       "desc": "공식 OAuth 로그인(콜백), 로컬 가져오기, JSON 가져오기, 계정 전환 주입, 멀티 인스턴스 바인딩 및 할당량 개요를 지원합니다. 로그인 흐름은 Qoder 클라이언트의 실제 저장 데이터 형식을 따릅니다.",
       "permission": "권한 범위: 계정 전환과 세션 주입을 위해 Qoder 로컬 인증 저장소(auth 자격 증명 및 사용자 정보)를 읽습니다. 모든 데이터는 사용자 기기에서만 처리됩니다.",
       "network": "네트워크 범위: OAuth 로그인은 콜백 처리를 위해 Qoder 공식 서비스 연결이 필요하며, 할당량 조회는 Qoder API 를 사용합니다. 로컬 키나 자격 증명은 업로드되지 않습니다."
+    },
+    "addModal": {
+      "title": "Qoder 계정 추가"
+    },
+    "import": {
+      "localDesc": "로컬 Qoder 클라이언트에서 현재 로그인 상태를 읽어옵니다. 사용자 정보, 플랜, 크레딧 사용량이 포함됩니다."
     }
   },
   "trae": {

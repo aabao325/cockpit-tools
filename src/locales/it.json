@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Crediti prompt",
         "creditPackage": "Pacchetto crediti",
-        "sharedCreditPackage": "Pacchetto crediti condiviso"
+        "sharedCreditPackage": "Pacchetto crediti condiviso",
+        "account": "Account",
+        "createdAt": "Data di creazione"
       },
       "empty": {
         "title": "Nessun account"
@@ -595,7 +597,9 @@
       "byGroupReset": "Per ora di reset {{group}}",
       "descTooltip": "Decrescente, clicca per Ascendente",
       "ascTooltip": "Ascendente, clicca per Decrescente",
-      "toggleDirection": "Inverti ordine"
+      "toggleDirection": "Inverti ordine",
+      "plan": "Per piano",
+      "quota": "Per quota"
     },
     "filterTags": "Filtra tag",
     "filterTagsCount": "Tag",
@@ -2173,6 +2177,12 @@
       "desc": "Supporta accesso OAuth ufficiale (callback), importazione locale, importazione JSON, iniezione per cambio account, associazione multiistanza e panoramica quota. Il flusso di accesso segue i dati realmente salvati dal client Qoder.",
       "permission": "Ambito permessi: legge lo storage di autenticazione locale di Qoder (credenziali auth e informazioni utente) per cambio account e iniezione della sessione; tutti i dati vengono elaborati localmente sul dispositivo.",
       "network": "Ambito rete: il login OAuth richiede accesso ai servizi ufficiali di Qoder per completare il callback; le richieste di quota usano la Qoder API. Nessuna chiave o credenziale locale viene caricata."
+    },
+    "addModal": {
+      "title": "Aggiungi account Qoder"
+    },
+    "import": {
+      "localDesc": "Legge lo stato di accesso corrente dal client Qoder locale, incluse le informazioni utente, il piano e l’utilizzo dei crediti."
     }
   },
   "trae": {

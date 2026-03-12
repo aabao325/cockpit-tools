@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Créditos de prompt",
         "creditPackage": "Pacote de créditos",
-        "sharedCreditPackage": "Pacote de créditos compartilhado"
+        "sharedCreditPackage": "Pacote de créditos compartilhado",
+        "account": "Conta",
+        "createdAt": "Data de criação"
       },
       "empty": {
         "title": "Sem contas"
@@ -595,7 +597,9 @@
       "byGroupReset": "Por horário de redefinição de {{group}}",
       "descTooltip": "Decrescente, clique para Ascendente",
       "ascTooltip": "Ascendente, clique para Decrescente",
-      "toggleDirection": "Alternar direção"
+      "toggleDirection": "Alternar direção",
+      "plan": "Por plano",
+      "quota": "Por cota"
     },
     "filterTags": "Filtrar tags",
     "filterTagsCount": "Etiquetas",
@@ -2173,6 +2177,12 @@
       "desc": "Suporta login oficial via OAuth (callback), importacao local, importacao JSON, injecao para troca de conta, vinculacao multi-instancia e visao geral de cota. O fluxo de login segue os dados reais gravados pelo cliente Qoder.",
       "permission": "Escopo de permissao: le o armazenamento local de autenticacao do Qoder (credenciais auth e informacoes do usuario) para troca de conta e injecao de sessao; todos os dados sao processados localmente no seu dispositivo.",
       "network": "Escopo de rede: o login OAuth requer acesso aos servicos oficiais do Qoder para concluir o callback; as consultas de cota usam a API do Qoder. Nenhuma chave ou credencial local e enviada."
+    },
+    "addModal": {
+      "title": "Adicionar conta Qoder"
+    },
+    "import": {
+      "localDesc": "Lê o estado atual de login do cliente local do Qoder, incluindo informações do usuário, plano e uso de créditos."
     }
   },
   "trae": {

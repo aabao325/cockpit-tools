@@ -1429,12 +1429,12 @@ export function QoderAccountsPage() {
                 <th>
                   <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
                 </th>
-                <th>{t('common.shared.columns.account', '账号')}</th>
+                <th>{t('common.shared.columns.account')}</th>
                 <th>{t('common.shared.columns.userId', '用户 ID')}</th>
                 <th>{t('common.shared.columns.plan', '套餐')}</th>
                 <th>{t('instances.labels.quota', '配额')}</th>
-                <th>{t('accounts.createdAt', '创建时间')}</th>
-                <th>{t('accounts.actions.label', '操作')}</th>
+                <th>{t('common.shared.columns.createdAt')}</th>
+                <th>{t('common.shared.columns.actions')}</th>
               </tr>
             </thead>
             <tbody>{renderListRows(filteredAccounts)}</tbody>
@@ -1463,12 +1463,12 @@ export function QoderAccountsPage() {
                       <th>
                         <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
                       </th>
-                      <th>{t('common.shared.columns.account', '账号')}</th>
+                      <th>{t('common.shared.columns.account')}</th>
                       <th>{t('common.shared.columns.userId', '用户 ID')}</th>
                       <th>{t('common.shared.columns.plan', '套餐')}</th>
                       <th>{t('instances.labels.quota', '配额')}</th>
-                      <th>{t('accounts.createdAt', '创建时间')}</th>
-                      <th>{t('accounts.actions.label', '操作')}</th>
+                      <th>{t('common.shared.columns.createdAt')}</th>
+                      <th>{t('common.shared.columns.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>{renderListRows(items, groupKey)}</tbody>
@@ -1540,7 +1540,7 @@ export function QoderAccountsPage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  placeholder={t('common.shared.search', '搜索账号...')}
+                  placeholder={t('common.shared.search')}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </div>
@@ -1637,9 +1637,9 @@ export function QoderAccountsPage() {
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value as SortBy)}
                 >
-                  <option value="created_at">{t('accounts.sort.createdAt', '按创建时间')}</option>
-                  <option value="plan">{t('accounts.sort.plan', '按套餐')}</option>
-                  <option value="quota">{t('accounts.sort.quota', '按配额')}</option>
+                  <option value="created_at">{t('accounts.sort.createdAt')}</option>
+                  <option value="plan">{t('accounts.sort.plan')}</option>
+                  <option value="quota">{t('accounts.sort.quota')}</option>
                 </select>
               </div>
               <button
@@ -1659,7 +1659,7 @@ export function QoderAccountsPage() {
               <button
                 className="btn btn-primary icon-only"
                 onClick={() => openAddModal('oauth')}
-                title={t('common.shared.actions.addAccount', '添加账号')}
+                title={t('common.shared.addAccount')}
               >
                 <Plus size={14} />
               </button>
@@ -1729,7 +1729,7 @@ export function QoderAccountsPage() {
                 onClick={() => openAddModal('oauth')}
               >
                 <Plus size={16} />
-                {t('common.shared.actions.addAccount', '添加账号')}
+                {t('common.shared.addAccount')}
               </button>
             </div>
           ) : filteredAccounts.length === 0 ? (
@@ -1747,7 +1747,7 @@ export function QoderAccountsPage() {
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal-content codex-add-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>{t('qoder.addModal.title', '添加 Qoder 账号')}</h2>
+              <h2>{t('qoder.addModal.title')}</h2>
               <button className="modal-close" onClick={() => setShowAddModal(false)} aria-label={t('common.close', '关闭')}>
                 <X />
               </button>
@@ -1842,14 +1842,11 @@ export function QoderAccountsPage() {
               ) : (
                 <div className="add-section">
                   <p className="section-desc">
-                    {t(
-                      'qoder.import.localDesc',
-                      '从本机 Qoder 客户端读取当前登录状态（包含用户信息、套餐与 Credits 使用情况）。',
-                    )}
+                    {t('qoder.import.localDesc')}
                   </p>
                   <button className="btn btn-secondary btn-full" onClick={() => void handleImportLocal()} disabled={addStatus === 'loading'}>
                     {addStatus === 'loading' ? <RefreshCw size={16} className="loading-spinner" /> : <Database size={16} />}
-                    {t('accounts.add.importLocal', '从本机导入')}
+                    {t('common.shared.addModal.import')}
                   </button>
                   <div className="oauth-hint" style={{ margin: '8px 0 4px' }}>
                     {t('common.shared.import.orJson', '或从 JSON 文件导入')}

@@ -31,7 +31,9 @@
         "email": "邮箱",
         "promptCredits": "User Prompt credits",
         "creditPackage": "附加 Credits",
-        "sharedCreditPackage": "共享资源包"
+        "sharedCreditPackage": "共享资源包",
+        "account": "账号",
+        "createdAt": "创建时间"
       },
       "empty": {
         "title": "暂无账号"
@@ -595,7 +597,9 @@
       "byGroupReset": "按 {{group}} 重置时间",
       "descTooltip": "当前：降序，点击切换为升序",
       "ascTooltip": "当前：升序，点击切换为降序",
-      "toggleDirection": "切换排序方向"
+      "toggleDirection": "切换排序方向",
+      "plan": "按套餐",
+      "quota": "按配额"
     },
     "filterTags": "标签筛选",
     "filterTagsCount": "标签",
@@ -2173,6 +2177,12 @@
       "unsupported": {
         "descPlatform": "Qoder 多开实例仅支持 macOS、Windows 和 Linux。"
       }
+    },
+    "addModal": {
+      "title": "添加 Qoder 账号"
+    },
+    "import": {
+      "localDesc": "从本机 Qoder 客户端读取当前登录状态（包含用户信息、套餐与 Credits 使用情况）。"
     }
   },
   "trae": {

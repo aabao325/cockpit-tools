@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Crédits de prompts",
         "creditPackage": "Pack de crédits",
-        "sharedCreditPackage": "Pack de crédits partagé"
+        "sharedCreditPackage": "Pack de crédits partagé",
+        "account": "Compte",
+        "createdAt": "Date de création"
       },
       "empty": {
         "title": "Aucun compte"
@@ -595,7 +597,9 @@
       "byGroupReset": "Par heure de réinitialisation de {{group}}",
       "descTooltip": "Descendant, cliquer pour Ascendant",
       "ascTooltip": "Ascendant, cliquer pour Descendant",
-      "toggleDirection": "Changer la direction"
+      "toggleDirection": "Changer la direction",
+      "plan": "Par forfait",
+      "quota": "Par quota"
     },
     "filterTags": "Filtrer les tags",
     "filterTagsCount": "Balises",
@@ -2173,6 +2177,12 @@
       "desc": "Prend en charge la connexion OAuth officielle (callback), l'import local, l'import JSON, l'injection pour changer de compte, l'association multi-instance et la vue d'ensemble du quota. Le flux de connexion suit les donnees reellement stockees par le client Qoder.",
       "permission": "Portee des autorisations : lit le stockage d'authentification local de Qoder (identifiants auth et informations utilisateur) pour le changement de compte et l'injection de session ; toutes les donnees sont traitees localement sur votre machine.",
       "network": "Portee reseau : la connexion OAuth requiert l'acces aux services officiels de Qoder pour terminer le callback ; les requetes de quota utilisent l'API Qoder. Aucune cle ni aucun identifiant local n'est televerse."
+    },
+    "addModal": {
+      "title": "Ajouter un compte Qoder"
+    },
+    "import": {
+      "localDesc": "Lit l’état de connexion actuel depuis le client Qoder local, y compris les informations utilisateur, le forfait et l’utilisation des crédits."
     }
   },
   "trae": {

@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Tín dụng prompt",
         "creditPackage": "Gói credit",
-        "sharedCreditPackage": "Gói credit dùng chung"
+        "sharedCreditPackage": "Gói credit dùng chung",
+        "account": "Tài khoản",
+        "createdAt": "Thời gian tạo"
       },
       "empty": {
         "title": "Chưa có tài khoản"
@@ -595,7 +597,9 @@
       "byGroupReset": "Theo thời gian đặt lại {{group}}",
       "descTooltip": "Giảm dần, nhấn để chuyển Tăng dần",
       "ascTooltip": "Tăng dần, nhấn để chuyển Giảm dần",
-      "toggleDirection": "Đổi hướng sắp xếp"
+      "toggleDirection": "Đổi hướng sắp xếp",
+      "plan": "Theo gói",
+      "quota": "Theo hạn mức"
     },
     "filterTags": "Lọc thẻ",
     "filterTagsCount": "Thẻ",
@@ -2173,6 +2177,12 @@
       "desc": "Ho tro dang nhap OAuth chinh thuc (callback), nhap cuc bo, nhap JSON, tiem chuyen tai khoan, gan nhieu instance va tong quan han muc. Luong dang nhap su dung dung du lieu luu tru thuc te cua Qoder client.",
       "permission": "Pham vi quyen: doc kho xac thuc cuc bo cua Qoder (thong tin auth va thong tin nguoi dung) de phuc vu chuyen tai khoan va tiem phien; moi du lieu deu duoc xu ly cuc bo tren may cua ban.",
       "network": "Pham vi mang: dang nhap OAuth can truy cap dich vu chinh thuc cua Qoder de hoan tat callback; truy van han muc su dung Qoder API. Khong tai len khoa hay thong tin xac thuc cuc bo."
+    },
+    "addModal": {
+      "title": "Thêm tài khoản Qoder"
+    },
+    "import": {
+      "localDesc": "Đọc trạng thái đăng nhập hiện tại từ ứng dụng Qoder cục bộ, bao gồm thông tin người dùng, gói và mức sử dụng tín dụng."
     }
   },
   "trae": {

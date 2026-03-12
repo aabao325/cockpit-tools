@@ -31,7 +31,9 @@
         "email": "E-Mail",
         "promptCredits": "Prompt-Credits",
         "creditPackage": "Credit-Paket",
-        "sharedCreditPackage": "Geteiltes Credit-Paket"
+        "sharedCreditPackage": "Geteiltes Credit-Paket",
+        "account": "Konto",
+        "createdAt": "Erstellt am"
       },
       "empty": {
         "title": "Keine Konten"
@@ -595,7 +597,9 @@
       "byGroupReset": "Nach Reset-Zeit von {{group}}",
       "descTooltip": "Absteigend, klicken für Aufsteigend",
       "ascTooltip": "Aufsteigend, klicken für Absteigend",
-      "toggleDirection": "Sortierrichtung umschalten"
+      "toggleDirection": "Sortierrichtung umschalten",
+      "plan": "Nach Tarif",
+      "quota": "Nach Kontingent"
     },
     "filterTags": "Tags filtern",
     "filterTagsCount": "Schlagworte",
@@ -2173,6 +2177,12 @@
       "desc": "Unterstutzt offizielle OAuth-Anmeldung (mit Callback), lokalen Import, JSON-Import, Kontowechsel-Injektion, Multi-Instance-Bindung und Kontingentuebersicht. Der Login-Ablauf folgt den tatsaechlichen On-Disk-Daten des Qoder-Clients.",
       "permission": "Berechtigungsumfang: liest den lokalen Qoder-Auth-Speicher (Auth-Anmeldedaten und Benutzerinformationen) fuer Kontowechsel und Sitzungsinjektion; alle Daten werden ausschliesslich lokal auf Ihrem Geraet verarbeitet.",
       "network": "Netzwerkumfang: OAuth-Anmeldung benoetigt eine Verbindung zu offiziellen Qoder-Diensten fuer den Callback-Ablauf; Kontingentabfragen verwenden die Qoder API. Lokale Schluessel oder Zugangsdaten werden nicht hochgeladen."
+    },
+    "addModal": {
+      "title": "Qoder-Konto hinzufügen"
+    },
+    "import": {
+      "localDesc": "Liest den aktuellen Anmeldestatus aus dem lokalen Qoder-Client, einschließlich Benutzerinfos, Tarif und Credits-Nutzung."
     }
   },
   "trae": {

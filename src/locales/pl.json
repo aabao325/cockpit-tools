@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Kredyty promptów",
         "creditPackage": "Pakiet kredytów",
-        "sharedCreditPackage": "Wspólny pakiet kredytów"
+        "sharedCreditPackage": "Wspólny pakiet kredytów",
+        "account": "Konto",
+        "createdAt": "Czas utworzenia"
       },
       "empty": {
         "title": "Brak kont"
@@ -595,7 +597,9 @@
       "byGroupReset": "Według czasu resetu {{group}}",
       "descTooltip": "Malejąco, kliknij dla rosnąco",
       "ascTooltip": "Rosnąco, kliknij dla malejąco",
-      "toggleDirection": "Zmień kierunek"
+      "toggleDirection": "Zmień kierunek",
+      "plan": "Według planu",
+      "quota": "Według limitu"
     },
     "filterTags": "Filtruj tagi",
     "filterTagsCount": "Tagi",
@@ -2173,6 +2177,12 @@
       "desc": "Obsluguje oficjalne logowanie OAuth (callback), import lokalny, import JSON, iniekcje przelaczania konta, powiazanie wielu instancji oraz przeglad limitu. Przeplyw logowania korzysta z rzeczywistych danych zapisywanych przez klienta Qoder.",
       "permission": "Zakres uprawnien: odczytuje lokalny magazyn uwierzytelniania Qoder (dane auth i informacje uzytkownika) na potrzeby przelaczania konta i iniekcji sesji; wszystkie dane sa przetwarzane lokalnie na Twoim urzadzeniu.",
       "network": "Zakres sieci: logowanie OAuth wymaga polaczenia z oficjalnymi uslugami Qoder do obslugi callbacku; zapytania o limit korzystaja z API Qoder. Lokalne klucze i dane uwierzytelniajace nie sa przesylane."
+    },
+    "addModal": {
+      "title": "Dodaj konto Qoder"
+    },
+    "import": {
+      "localDesc": "Odczytuje bieżący stan logowania z lokalnego klienta Qoder, w tym informacje o użytkowniku, planie i wykorzystaniu kredytów."
     }
   },
   "trae": {

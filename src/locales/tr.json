@@ -31,7 +31,9 @@
         "email": "E-posta",
         "promptCredits": "İstem kredileri",
         "creditPackage": "Kredi paketi",
-        "sharedCreditPackage": "Paylaşılan kredi paketi"
+        "sharedCreditPackage": "Paylaşılan kredi paketi",
+        "account": "Hesap",
+        "createdAt": "Oluşturulma zamanı"
       },
       "empty": {
         "title": "Hesap yok"
@@ -595,7 +597,9 @@
       "byGroupReset": "{{group}} sıfırlama zamanına göre",
       "descTooltip": "Azalan, Artan için tıkla",
       "ascTooltip": "Artan, Azalan için tıkla",
-      "toggleDirection": "Yönü değiştir"
+      "toggleDirection": "Yönü değiştir",
+      "plan": "Plana göre",
+      "quota": "Kotaya göre"
     },
     "filterTags": "Etiketleri filtrele",
     "filterTagsCount": "Etiketler",
@@ -2173,6 +2177,12 @@
       "desc": "Resmi OAuth girisini (callback), yerel ice aktarmayi, JSON ice aktarmayi, hesap degistirme enjeksiyonunu, coklu ornek baglamayi ve kota genel gorunumunu destekler. Giris akisi Qoder istemcisinin gercek disk verilerini izler.",
       "permission": "Izin kapsami: hesap degistirme ve oturum enjeksiyonu icin Qoder yerel kimlik dogrulama depolamasini (auth kimlik bilgileri ve kullanici bilgileri) okur; tum veriler cihazinizda yerel olarak islenir.",
       "network": "Ag kapsami: OAuth girisi, callback akisini tamamlamak icin resmi Qoder hizmetlerine erisim gerektirir; kota sorgulari Qoder API kullanir. Yerel anahtarlar veya kimlik bilgileri yuklenmez."
+    },
+    "addModal": {
+      "title": "Qoder hesabı ekle"
+    },
+    "import": {
+      "localDesc": "Yerel Qoder istemcisinden mevcut oturum durumunu okur; kullanıcı bilgileri, plan ve kredi kullanımı dahildir."
     }
   },
   "trae": {

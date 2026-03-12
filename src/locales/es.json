@@ -31,7 +31,9 @@
         "email": "Correo electrónico",
         "promptCredits": "Créditos de prompts",
         "creditPackage": "Paquete de créditos",
-        "sharedCreditPackage": "Paquete de créditos compartido"
+        "sharedCreditPackage": "Paquete de créditos compartido",
+        "account": "Cuenta",
+        "createdAt": "Fecha de creación"
       },
       "empty": {
         "title": "Sin cuentas"
@@ -595,7 +597,9 @@
       "byGroupReset": "Por hora de restablecimiento de {{group}}",
       "descTooltip": "Descendente, clic para Ascendente",
       "ascTooltip": "Ascendente, clic para Descendente",
-      "toggleDirection": "Alternar dirección"
+      "toggleDirection": "Alternar dirección",
+      "plan": "Por plan",
+      "quota": "Por cuota"
     },
     "filterTags": "Filtrar etiquetas",
     "filterTagsCount": "Etiquetas",
@@ -2173,6 +2177,12 @@
       "desc": "Admite inicio de sesion oficial por OAuth (callback), importacion local, importacion JSON, inyeccion para cambio de cuenta, vinculacion multiinstancia y vista general de cuota. El flujo de inicio de sesion sigue los datos reales almacenados por el cliente de Qoder.",
       "permission": "Alcance de permisos: lee el almacenamiento local de autenticacion de Qoder (credenciales auth e informacion del usuario) para cambio de cuenta e inyeccion de sesion; todos los datos se procesan localmente en tu equipo.",
       "network": "Alcance de red: el inicio de sesion OAuth requiere acceso a los servicios oficiales de Qoder para completar el callback; las consultas de cuota usan la API de Qoder. No se suben claves ni credenciales locales."
+    },
+    "addModal": {
+      "title": "Agregar cuenta de Qoder"
+    },
+    "import": {
+      "localDesc": "Lee el estado de inicio de sesión actual del cliente local de Qoder, incluida la información del usuario, el plan y el uso de créditos."
     }
   },
   "trae": {

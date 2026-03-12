@@ -31,7 +31,9 @@
         "email": "Email",
         "promptCredits": "User Prompt credits",
         "creditPackage": "Credit Package",
-        "sharedCreditPackage": "Shared Credit Package"
+        "sharedCreditPackage": "Shared Credit Package",
+        "account": "Account",
+        "createdAt": "Created Time"
       },
       "empty": {
         "title": "No Accounts"
@@ -595,7 +597,9 @@
       "byGroupReset": "By {{group}} reset time",
       "descTooltip": "Desc, click to switch to Asc",
       "ascTooltip": "Asc, click to switch to Desc",
-      "toggleDirection": "Toggle sort direction"
+      "toggleDirection": "Toggle sort direction",
+      "plan": "By plan",
+      "quota": "By quota"
     },
     "filterTags": "Filter Tags",
     "filterTagsCount": "Tags",
@@ -2173,6 +2177,12 @@
       "unsupported": {
         "descPlatform": "Qoder multi-instance is available only on macOS, Windows, and Linux."
       }
+    },
+    "addModal": {
+      "title": "Add Qoder Account"
+    },
+    "import": {
+      "localDesc": "Read the current sign-in state from the local Qoder client, including user info, plan, and credits usage."
     }
   },
   "trae": {

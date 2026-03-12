@@ -856,10 +856,7 @@ export function TraeAccountsPage() {
                 <Search size={16} className="search-icon" />
                 <input
                   type="text"
-                  placeholder={t(
-                    'common.shared.actions.searchAccountPlaceholder',
-                    '搜索账号 / 用户 ID / 套餐',
-                  )}
+                  placeholder={t('common.shared.search')}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -974,11 +971,11 @@ export function TraeAccountsPage() {
                 <select
                   value={TRAE_KNOWN_SORT_KEYS.includes(sortBy as (typeof TRAE_KNOWN_SORT_KEYS)[number]) ? sortBy : 'created_at'}
                   onChange={(event) => setSortBy(event.target.value)}
-                  aria-label={t('common.shared.sortLabel', '排序')}
+                  aria-label={t('common.shared.sortLabel')}
                 >
-                  <option value="created_at">{t('accounts.sort.createdAt', '按创建时间')}</option>
-                  <option value="plan">{t('accounts.sort.plan', '按套餐')}</option>
-                  <option value="quota">{t('accounts.sort.quota', '按配额')}</option>
+                  <option value="created_at">{t('accounts.sort.createdAt')}</option>
+                  <option value="plan">{t('accounts.sort.plan')}</option>
+                  <option value="quota">{t('accounts.sort.quota')}</option>
                 </select>
               </div>
 
@@ -1000,8 +997,8 @@ export function TraeAccountsPage() {
               <button
                 className="btn btn-primary icon-only"
                 onClick={() => openAddModal('oauth')}
-                title={t('common.shared.actions.addAccount', '添加账号')}
-                aria-label={t('common.shared.actions.addAccount', '添加账号')}
+                title={t('common.shared.addAccount')}
+                aria-label={t('common.shared.addAccount')}
               >
                 <Plus size={14} />
               </button>
@@ -1088,7 +1085,7 @@ export function TraeAccountsPage() {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
                 <button className="btn btn-primary" onClick={() => openAddModal('oauth')}>
                   <Plus size={16} />
-                  {t('common.shared.actions.addAccount', '添加账号')}
+                  {t('common.shared.addAccount')}
                 </button>
                 <button
                   className="btn btn-secondary"
@@ -1138,11 +1135,11 @@ export function TraeAccountsPage() {
                         onChange={() => toggleSelectAll(filteredAccounts.map((account) => account.id))}
                       />
                     </th>
-                    <th style={{ width: 260 }}>{t('common.shared.columns.account', '账号')}</th>
+                    <th style={{ width: 260 }}>{t('common.shared.columns.account')}</th>
                     <th>{t('instances.labels.quota', '配额')}</th>
-                    <th style={{ width: 160 }}>{t('accounts.createdAt', '创建时间')}</th>
+                    <th style={{ width: 160 }}>{t('common.shared.columns.createdAt')}</th>
                     <th className="sticky-action-header table-action-header">
-                      {t('common.shared.columns.actions', '操作')}
+                      {t('common.shared.columns.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -1175,11 +1172,11 @@ export function TraeAccountsPage() {
                         onChange={() => toggleSelectAll(filteredAccounts.map((account) => account.id))}
                       />
                     </th>
-                    <th style={{ width: 260 }}>{t('common.shared.columns.account', '账号')}</th>
+                    <th style={{ width: 260 }}>{t('common.shared.columns.account')}</th>
                     <th>{t('instances.labels.quota', '配额')}</th>
-                    <th style={{ width: 160 }}>{t('accounts.createdAt', '创建时间')}</th>
+                    <th style={{ width: 160 }}>{t('common.shared.columns.createdAt')}</th>
                     <th className="sticky-action-header table-action-header">
-                      {t('common.shared.columns.actions', '操作')}
+                      {t('common.shared.columns.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -1192,7 +1189,7 @@ export function TraeAccountsPage() {
             <div className="modal-overlay" onClick={closeAddModal}>
               <div className="modal-content ghcp-add-modal" onClick={(event) => event.stopPropagation()}>
                 <div className="modal-header">
-                  <h2>{t('trae.addModal.title', '添加 Trae 账号')}</h2>
+                  <h2>{t('trae.addModal.title')}</h2>
                   <button
                     className="modal-close"
                     onClick={closeAddModal}
@@ -1319,10 +1316,7 @@ export function TraeAccountsPage() {
                   ) : (
                     <div className="add-section">
                       <p className="section-desc">
-                        {t(
-                          'trae.import.localDesc',
-                          '支持从本机 Trae 配置目录读取当前登录账号、套餐信息和配额缓存数据。',
-                        )}
+                        {t('trae.import.localDesc')}
                       </p>
                       <button
                         className="btn btn-secondary btn-full"
@@ -1334,7 +1328,7 @@ export function TraeAccountsPage() {
                         ) : (
                           <Database size={16} />
                         )}
-                        {t('accounts.add.importLocal', '从本机导入')}
+                        {t('common.shared.addModal.import')}
                       </button>
                       <div className="oauth-hint" style={{ margin: '8px 0 4px' }}>
                         {t('common.shared.import.orJson', '或从 JSON 文件导入')}

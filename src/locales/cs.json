@@ -31,7 +31,9 @@
         "email": "E-mail",
         "promptCredits": "Kredity promptů",
         "creditPackage": "Balíček kreditů",
-        "sharedCreditPackage": "Sdílený balíček kreditů"
+        "sharedCreditPackage": "Sdílený balíček kreditů",
+        "account": "Účet",
+        "createdAt": "Čas vytvoření"
       },
       "empty": {
         "title": "Žádné účty"
@@ -595,7 +597,9 @@
       "byGroupReset": "Podle času resetu {{group}}",
       "descTooltip": "Sestupně, kliknutím přepnete na vzestupně",
       "ascTooltip": "Vzestupně, kliknutím přepnete na sestupně",
-      "toggleDirection": "Přepnout směr řazení"
+      "toggleDirection": "Přepnout směr řazení",
+      "plan": "Podle plánu",
+      "quota": "Podle kvóty"
     },
     "filterTags": "Filtrovat štítky",
     "filterTagsCount": "Štítky",
@@ -2173,6 +2177,12 @@
       "desc": "Podporuje oficialni prihlaseni pres OAuth (callback), mistni import, import JSON, injekci pro prepnuti uctu, navazani vice instanci a prehled kvot. Prihlasovaci tok vychazi ze skutecnych ulozenych dat klienta Qoder.",
       "permission": "Rozsah opravneni: cte mistni autentizacni uloziste Qoderu (prihlasovaci udaje auth a informace o uzivateli) pro prepinani uctu a injekci relace; vsechna data se zpracovavaji pouze lokalne na vasem zarizeni.",
       "network": "Sitovy rozsah: prihlaseni pres OAuth vyzaduje spojeni s oficialnimi sluzbami Qoderu pro callback; dotazy na kvotu pouzivaji Qoder API. Mistni klice ani povereni se neodesilaji."
+    },
+    "addModal": {
+      "title": "Přidat účet Qoder"
+    },
+    "import": {
+      "localDesc": "Načte aktuální stav přihlášení z místního klienta Qoder, včetně informací o uživateli, plánu a využití kreditů."
     }
   },
   "trae": {
