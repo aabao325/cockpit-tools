@@ -1306,6 +1306,11 @@
     "editTags": "タグを編集",
     "account": {
       "personal": "個人アカウント"
+    },
+    "usage": {
+      "open": "OpenAI使用量を開く",
+      "hint": "API Key のクレジットは OpenAI Usage ページで確認してください。",
+      "openFailed": "使用量ページを開けませんでした: {{error}}"
     }
   },
   "githubCopilot": {

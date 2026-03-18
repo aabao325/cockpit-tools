@@ -1,10 +1,28 @@
 use serde::{Deserialize, Serialize};
 
+/// Codex 认证模式
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum CodexAuthMode {
+    OAuth,
+    Apikey,
+}
+
+impl Default for CodexAuthMode {
+    fn default() -> Self {
+        Self::OAuth
+    }
+}
+
 /// Codex 账号数据结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodexAccount {
     pub id: String,
     pub email: String,
+    #[serde(default)]
+    pub auth_mode: CodexAuthMode,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub openai_api_key: Option<String>,
     pub user_id: Option<String>,
     pub plan_type: Option<String>,
     pub account_id: Option<String>,
@@ -71,9 +89,13 @@ pub struct CodexQuotaErrorInfo {
 /// ~/.codex/auth.json 文件格式
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodexAuthFile {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auth_mode: Option<String>,
     #[serde(rename = "OPENAI_API_KEY")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub openai_api_key: Option<serde_json::Value>, // 可以是 null 或字符串
-    pub tokens: CodexAuthTokens,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tokens: Option<CodexAuthTokens>,
     #[serde(default)]
     pub last_refresh: Option<serde_json::Value>, // 可以是字符串或数字
 }
@@ -152,6 +174,8 @@ impl CodexAccount {
         Self {
             id,
             email,
+            auth_mode: CodexAuthMode::OAuth,
+            openai_api_key: None,
             user_id: None,
             plan_type: None,
             account_id: None,
@@ -165,6 +189,26 @@ impl CodexAccount {
             created_at: now,
             last_used: now,
         }
+    }
+
+    pub fn new_api_key(id: String, email: String, openai_api_key: String) -> Self {
+        let mut account = Self::new(
+            id,
+            email,
+            CodexTokens {
+                id_token: String::new(),
+                access_token: String::new(),
+                refresh_token: None,
+            },
+        );
+        account.auth_mode = CodexAuthMode::Apikey;
+        account.openai_api_key = Some(openai_api_key);
+        account.plan_type = Some("API_KEY".to_string());
+        account
+    }
+
+    pub fn is_api_key_auth(&self) -> bool {
+        self.auth_mode == CodexAuthMode::Apikey
     }
 
     pub fn update_last_used(&mut self) {

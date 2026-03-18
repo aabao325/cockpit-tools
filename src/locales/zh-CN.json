@@ -1229,7 +1229,7 @@
     "addModal": {
       "title": "添加 Codex 账号",
       "oauth": "OAuth 授权",
-      "token": "JSON 导入",
+      "token": "API Key",
       "local": "本地导入"
     },
     "oauth": {
@@ -1260,6 +1260,11 @@
       "hourly": "5小时配额",
       "weekly": "周配额",
       "reset": "重置"
+    },
+    "usage": {
+      "open": "查看 OpenAI 用量",
+      "hint": "API Key 额度请在 OpenAI Usage 页面查看。",
+      "openFailed": "打开用量页面失败: {{error}}"
     },
     "quotaError": {
       "badge": "配额异常",

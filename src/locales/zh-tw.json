@@ -1306,6 +1306,11 @@
     "editTags": "編輯標籤",
     "account": {
       "personal": "個人帳戶"
+    },
+    "usage": {
+      "open": "查看 OpenAI 用量",
+      "hint": "API Key 額度請到 OpenAI Usage 頁面查看。",
+      "openFailed": "開啟用量頁面失敗：{{error}}"
     }
   },
   "githubCopilot": {

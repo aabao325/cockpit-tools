@@ -308,6 +308,12 @@ fn sync_plan_type_from_token(account: &mut CodexAccount, plan_type: Option<Strin
 async fn refresh_account_quota_once(account_id: &str) -> Result<CodexQuota, String> {
     let mut account = codex_account::load_account(account_id)
         .ok_or_else(|| format!("账号不存在: {}", account_id))?;
+    if account.is_api_key_auth() {
+        account.quota = None;
+        account.quota_error = None;
+        let _ = codex_account::save_account(&account);
+        return Err("API Key 账号不支持刷新配额，请在网页端查看。".to_string());
+    }
 
     // 检查 token 是否过期，如果过期则刷新
     if crate::modules::codex_oauth::is_token_expired(&account.tokens.access_token) {
@@ -408,7 +414,10 @@ pub async fn refresh_all_quotas() -> Result<Vec<(String, Result<CodexQuota, Stri
     use tokio::sync::Semaphore;
 
     const MAX_CONCURRENT: usize = 5;
-    let accounts = codex_account::list_accounts();
+    let accounts: Vec<_> = codex_account::list_accounts()
+        .into_iter()
+        .filter(|account| !account.is_api_key_auth())
+        .collect();
 
     let semaphore = Arc::new(Semaphore::new(MAX_CONCURRENT));
     let tasks: Vec<_> = accounts

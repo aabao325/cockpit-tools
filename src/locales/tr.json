@@ -1306,6 +1306,11 @@
     "editTags": "Etiketleri düzenle",
     "account": {
       "personal": "Kişisel hesap"
+    },
+    "usage": {
+      "open": "OpenAI kullanımını aç",
+      "hint": "API Key kredileri için OpenAI Usage sayfasını kullanın.",
+      "openFailed": "Kullanım sayfası açılamadı: {{error}}"
     }
   },
   "githubCopilot": {

@@ -1229,7 +1229,7 @@
     "addModal": {
       "title": "Add Codex Account",
       "oauth": "OAuth Authorization",
-      "token": "JSON Import",
+      "token": "API Key",
       "local": "Local Import"
     },
     "oauth": {
@@ -1260,6 +1260,11 @@
       "hourly": "5-hour quota",
       "weekly": "Weekly quota",
       "reset": "Reset"
+    },
+    "usage": {
+      "open": "Open OpenAI usage",
+      "hint": "For API key credits, use the OpenAI Usage page.",
+      "openFailed": "Failed to open usage page: {{error}}"
     },
     "quotaError": {
       "badge": "Quota error",

@@ -1306,6 +1306,11 @@
     "editTags": "Upravit štítky",
     "account": {
       "personal": "Osobní účet"
+    },
+    "usage": {
+      "open": "Otevřít využití OpenAI",
+      "hint": "Kredit API Key zkontrolujte na stránce OpenAI Usage.",
+      "openFailed": "Nepodařilo se otevřít stránku využití: {{error}}"
     }
   },
   "githubCopilot": {

@@ -153,7 +153,11 @@ const BASE_DROP_ICON_MAP: DropIconMap = {
 const BASE_DROP_ICON_PLATFORM_IDS = Object.values(BASE_DROP_ICON_MAP) as PlatformId[];
 
 const DROP_SPEED = 2.45;
-const DROP_CHANCE = 0.18;
+const DROP_RATE_SPLIT = 0.15;
+const DROP_RATE_TRIPLE = 0.15;
+const DROP_RATE_EXPAND = 0.045;
+const DROP_RATE_SHIELD = 0.045;
+const DROP_CHANCE = DROP_RATE_SPLIT + DROP_RATE_TRIPLE + DROP_RATE_EXPAND + DROP_RATE_SHIELD;
 const SPLIT_SHOT_SIDE_DELTA_VX = 2.6;
 const SPLIT_SHOT_UP_SPEED = 6.3;
 const TRIPLE_SHOT_SIDE_DELTA_VX = 2.2;
@@ -163,6 +167,7 @@ const BRICK_CELL_KEY_OFFSET = 512;
 const BRICK_CELL_KEY_STRIDE = 2048;
 const BALL_GRID_KEY_OFFSET = 256;
 const BALL_GRID_KEY_STRIDE = 1024;
+const INITIAL_SHIELDS = 3;
 
 type LayoutStyle = (typeof LEVEL_LAYOUT_STYLES)[number];
 
@@ -1337,7 +1342,7 @@ function createInitialState(runSeed: number = generateRunSeed()): GameState {
     dropCounts: createEmptyDropCounts(),
     levelDropCounts: createEmptyDropCounts(),
     score: 0,
-    shields: 0,
+    shields: INITIAL_SHIELDS,
     nextBallId: 2,
     nextDropId: 1,
   };
@@ -1473,10 +1478,10 @@ function resolveBallCollisions(balls: Ball[]) {
 }
 
 function randomDropType(): DropType {
-  const roll = Math.random();
-  if (roll < 0.25) return 'split';
-  if (roll < 0.5) return 'triple';
-  if (roll < 0.75) return 'expand';
+  const roll = Math.random() * DROP_CHANCE;
+  if (roll < DROP_RATE_SPLIT) return 'split';
+  if (roll < DROP_RATE_SPLIT + DROP_RATE_TRIPLE) return 'triple';
+  if (roll < DROP_RATE_SPLIT + DROP_RATE_TRIPLE + DROP_RATE_EXPAND) return 'expand';
   return 'shield';
 }
 
@@ -1616,7 +1621,7 @@ export function BreakoutModal({ open, onMinimize, onTerminate }: BreakoutModalPr
   const [drops, setDrops] = useState<DropViewModel[]>([]);
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
-  const [shields, setShields] = useState(0);
+  const [shields, setShields] = useState(() => stateRef.current.shields);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isLevelCleared, setIsLevelCleared] = useState(false);
   const [isPaused, setIsPaused] = useState(false);

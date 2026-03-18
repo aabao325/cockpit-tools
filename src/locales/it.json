@@ -1306,6 +1306,11 @@
     "editTags": "Modifica tag",
     "account": {
       "personal": "Account personale"
+    },
+    "usage": {
+      "open": "Apri utilizzo OpenAI",
+      "hint": "Per i crediti API Key, consulta la pagina Usage di OpenAI.",
+      "openFailed": "Impossibile aprire la pagina di utilizzo: {{error}}"
     }
   },
   "githubCopilot": {

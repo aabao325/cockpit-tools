@@ -77,6 +77,22 @@
   white-space: nowrap;
 }
 
+.codex-accounts-page .account-email.editable,
+.codex-accounts-page .account-email-text.editable {
+  cursor: text;
+}
+
+.codex-accounts-page .inline-name-editor {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  outline: none;
+}
+
 .codex-account-card .current-tag {
   flex-shrink: 0;
   padding: 3px 10px;

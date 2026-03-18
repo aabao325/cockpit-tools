@@ -19,6 +19,7 @@ import {
   getCodexPlanDisplayName,
   getCodexQuotaClass,
   getCodexQuotaWindows,
+  isCodexApiKeyAccount,
 } from '../types/codex';
 import {
   formatGitHubCopilotResetTime,
@@ -293,6 +294,9 @@ export function buildCodexAccountPresentation(
 ): UnifiedAccountPresentation {
   const normalizedPlan = getCodexPlanDisplayName(account.plan_type);
   const rawPlan = account.plan_type?.trim();
+  const apiKeyDisplayName = account.account_name?.trim();
+  const displayName =
+    isCodexApiKeyAccount(account) && apiKeyDisplayName ? apiKeyDisplayName : account.email;
   const quotaItems: UnifiedQuotaMetric[] = getCodexQuotaWindows(account.quota).map((window) => ({
     key: window.id,
     label: window.label,
@@ -317,7 +321,7 @@ export function buildCodexAccountPresentation(
 
   return {
     id: account.id,
-    displayName: account.email,
+    displayName,
     planLabel: rawPlan || normalizedPlan,
     planClass: normalizedPlan.toLowerCase(),
     quotaItems,

@@ -212,6 +212,10 @@ pub async fn refresh_current_codex_quota(app: AppHandle) -> Result<(), String> {
     let Some(account) = codex_account::get_current_account() else {
         return Err("未找到当前 Codex 账号".to_string());
     };
+    if account.is_api_key_auth() {
+        return Ok(());
+    }
+
     let result = codex_quota::refresh_account_quota(&account.id).await;
     if result.is_ok() {
         run_codex_post_refresh_checks(&app).await;
@@ -349,7 +353,18 @@ pub async fn add_codex_account_with_token(
     codex_account::load_account(&account.id).ok_or_else(|| "账号保存后无法读取".to_string())
 }
 
-/// 检查 Codex OAuth 端口是否被占用
+/// 通过 API Key 添加账号
+#[tauri::command]
+pub fn add_codex_account_with_api_key(api_key: String) -> Result<CodexAccount, String> {
+    let account = codex_account::upsert_api_key_account(api_key)?;
+    codex_account::load_account(&account.id).ok_or_else(|| "账号保存后无法读取".to_string())
+}
+
+#[tauri::command]
+pub fn update_codex_account_name(account_id: String, name: String) -> Result<CodexAccount, String> {
+    codex_account::update_account_name(&account_id, name)
+}
+
 #[tauri::command]
 pub async fn update_codex_account_tags(
     account_id: String,
@@ -358,6 +373,7 @@ pub async fn update_codex_account_tags(
     codex_account::update_account_tags(&account_id, tags)
 }
 
+/// 检查 Codex OAuth 端口是否被占用
 #[tauri::command]
 pub fn is_codex_oauth_port_in_use() -> Result<bool, String> {
     let port = codex_oauth::get_callback_port();

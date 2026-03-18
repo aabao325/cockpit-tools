@@ -7,6 +7,17 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)。
 
 ---
+## [0.16.1] - 2026-03-18
+
+### 新增
+- **Codex 新增 API Key 账号全链路接入与导入能力**：新增 API Key 专用添加流程，支持在 `~/.codex/auth.json` 以 `auth_mode=apikey` 真实落盘，并兼容 JSON/本地导入 API Key 账号数据。
+
+### 变更
+- **Codex 账号卡片/表格已按 API Key 账号行为自适配**：API Key 账号支持行内重命名、展示掩码后的密钥信息、隐藏不支持的配额刷新操作，并提供直达 OpenAI Usage 页面的入口。
+- **Codex 后端刷新与注入链路已对 API Key 账号跳过 OAuth 专属操作**：资料刷新、配额刷新与批量刷新调度会自动跳过 API Key 账号，同时保持切号与 auth 文件写入遵循本地真实落盘规则。
+- **Codex 实例页账号选择器已与账号列表统一展示名逻辑**：API Key 账号重命名后会在实例选择中保持一致展示。
+
+---
 ## [0.16.0] - 2026-03-18
 
 ### 新增

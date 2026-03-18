@@ -1306,6 +1306,11 @@
     "editTags": "تحرير العلامات",
     "account": {
       "personal": "حساب شخصي"
+    },
+    "usage": {
+      "open": "فتح استخدام OpenAI",
+      "hint": "لرصيد API Key، راجع صفحة استخدام OpenAI.",
+      "openFailed": "تعذر فتح صفحة الاستخدام: {{error}}"
     }
   },
   "githubCopilot": {

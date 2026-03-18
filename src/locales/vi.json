@@ -1306,6 +1306,11 @@
     "editTags": "Chỉnh sửa thẻ",
     "account": {
       "personal": "Tài khoản cá nhân"
+    },
+    "usage": {
+      "open": "Mở trang sử dụng OpenAI",
+      "hint": "Với hạn mức API Key, hãy xem trang OpenAI Usage.",
+      "openFailed": "Không thể mở trang sử dụng: {{error}}"
     }
   },
   "githubCopilot": {

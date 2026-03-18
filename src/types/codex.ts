@@ -2,6 +2,8 @@
 export interface CodexAccount {
   id: string;
   email: string;
+  auth_mode?: string;
+  openai_api_key?: string;
   user_id?: string;
   plan_type?: string;
   account_id?: string;
@@ -237,6 +239,10 @@ export function getCodexCodeReviewQuotaMetric(
     (primaryWindow ? normalizeCodeReviewWindow(primaryWindow, 'hourly') : null) ||
     (secondaryWindow ? normalizeCodeReviewWindow(secondaryWindow, 'weekly') : null)
   );
+}
+
+export function isCodexApiKeyAccount(account: CodexAccount): boolean {
+  return (account.auth_mode || '').trim().toLowerCase() === 'apikey';
 }
 
 /** 获取订阅类型显示名称 */

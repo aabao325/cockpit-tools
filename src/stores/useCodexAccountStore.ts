@@ -76,6 +76,7 @@ interface CodexAccountState {
   hydrateAccountProfilesIfNeeded: (accountIds?: string[]) => Promise<void>;
   importFromLocal: () => Promise<CodexAccount>;
   importFromJson: (jsonContent: string) => Promise<CodexAccount[]>;
+  updateAccountName: (accountId: string, name: string) => Promise<CodexAccount>;
   updateAccountTags: (accountId: string, tags: string[]) => Promise<CodexAccount>;
 }
 
@@ -192,6 +193,13 @@ export const useCodexAccountStore = create<CodexAccountState>((set, get) => ({
     const accounts = await codexService.importCodexFromJson(jsonContent);
     await get().fetchAccounts();
     return accounts;
+  },
+
+  updateAccountName: async (accountId: string, name: string) => {
+    const account = await codexService.updateCodexAccountName(accountId, name);
+    await get().fetchAccounts();
+    await get().fetchCurrentAccount();
+    return account;
   },
 
   updateAccountTags: async (accountId: string, tags: string[]) => {

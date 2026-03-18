@@ -25,6 +25,8 @@ import {
   EyeOff,
   BookOpen,
   FileUp,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import { useCodexAccountStore } from '../stores/useCodexAccountStore';
 import * as codexService from '../services/codexService';
@@ -35,6 +37,7 @@ import {
   formatCodexLoginProvider,
   getCodexAuthMetadata,
   hasCodexAccountName,
+  isCodexApiKeyAccount,
   isCodexTeamLikePlan,
   type CodexQuotaErrorInfo,
 } from '../types/codex';
@@ -73,6 +76,7 @@ const CODEX_TOKEN_BATCH_EXAMPLE = `[
     "last_used": 1730000000
   }
 ]`;
+const CODEX_USAGE_URL = 'https://platform.openai.com/usage';
 
 export function CodexAccountsPage() {
   const [activeTab, setActiveTab] = useState<CodexTab>('overview');
@@ -133,6 +137,7 @@ export function CodexAccountsPage() {
     switchAccount,
     refreshQuota,
     hydrateAccountProfilesIfNeeded,
+    updateAccountName,
   } = store;
 
   // ─── Codex-specific: OAuth via Tauri events ──────────────────────────
@@ -147,6 +152,10 @@ export function CodexAccountsPage() {
   const [oauthCallbackError, setOauthCallbackError] = useState<string | null>(null);
   const [oauthTokenExchangeRetryVisible, setOauthTokenExchangeRetryVisible] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [editingApiKeyNameId, setEditingApiKeyNameId] = useState<string | null>(null);
+  const [editingApiKeyNameValue, setEditingApiKeyNameValue] = useState('');
+  const [savingApiKeyNameId, setSavingApiKeyNameId] = useState<string | null>(null);
   const [showCodeReviewQuota, setShowCodeReviewQuota] = useState<boolean>(
     isCodexCodeReviewQuotaVisibleByDefault,
   );
@@ -159,6 +168,7 @@ export function CodexAccountsPage() {
   const oauthCompletingRef = useRef(false);
   const oauthEventSeqRef = useRef(0);
   const oauthAttemptSeqRef = useRef(0);
+  const inlineRenameDiscardRef = useRef(false);
 
   const oauthLog = useCallback((...args: unknown[]) => {
     console.info('[CodexOAuth]', ...args);
@@ -174,6 +184,12 @@ export function CodexAccountsPage() {
     fetchAccounts();
     fetchCurrentAccount();
   }, [fetchAccounts, fetchCurrentAccount]);
+
+  useEffect(() => {
+    if (!showAddModal) {
+      setApiKeyInput('');
+    }
+  }, [showAddModal]);
 
   useEffect(() => {
     const syncCodeReviewVisibility = () => {
@@ -575,6 +591,42 @@ export function CodexAccountsPage() {
     }
   };
 
+  const handleApiKeyLogin = async () => {
+    const apiKey = apiKeyInput.trim();
+    if (!apiKey) {
+      page.setAddStatus('error');
+      page.setAddMessage(t('common.shared.token.empty', '请输入 Token 或 JSON'));
+      return;
+    }
+
+    page.setAddStatus('loading');
+    page.setAddMessage(t('common.shared.token.importing', '正在导入...'));
+    try {
+      const account = await codexService.addCodexAccountWithApiKey(apiKey);
+      await fetchAccounts();
+      await fetchCurrentAccount();
+      page.setAddStatus('success');
+      page.setAddMessage(
+        t('codex.import.successMsg', '导入成功: {{email}}').replace(
+          '{{email}}',
+          maskAccountText(account.email),
+        ),
+      );
+      setApiKeyInput('');
+      setTimeout(() => {
+        closeAddModal();
+      }, 1200);
+    } catch (e) {
+      page.setAddStatus('error');
+      page.setAddMessage(
+        t('common.shared.token.importFailedMsg', '导入失败: {{error}}').replace(
+          '{{error}}',
+          String(e).replace(/^Error:\s*/, ''),
+        ),
+      );
+    }
+  };
+
   const handleTokenImport = async () => {
     const trimmed = tokenInput.trim();
     if (!trimmed) { page.setAddStatus('error'); page.setAddMessage(t('common.shared.token.empty', '请输入 Token 或 JSON')); return; }
@@ -593,6 +645,76 @@ export function CodexAccountsPage() {
       page.setAddMessage(t('common.shared.token.importFailedMsg', '导入失败: {{error}}').replace('{{error}}', String(e).replace(/^Error:\s*/, '')));
     }
   };
+
+  const handleOpenCodexUsage = useCallback(async () => {
+    try {
+      await openUrl(CODEX_USAGE_URL);
+    } catch (e) {
+      setMessage({
+        text: t('codex.usage.openFailed', { error: String(e) }),
+        tone: 'error',
+      });
+    }
+  }, [setMessage, t]);
+
+  const clearInlineRename = useCallback(() => {
+    setEditingApiKeyNameId(null);
+    setEditingApiKeyNameValue('');
+  }, []);
+
+  const handleAccountNameDoubleClick = useCallback((account: CodexAccount) => {
+    if (!isCodexApiKeyAccount(account)) return;
+    inlineRenameDiscardRef.current = false;
+    setEditingApiKeyNameId(account.id);
+    setEditingApiKeyNameValue((account.account_name || account.email || '').trim());
+  }, []);
+
+  const handleSubmitInlineRename = useCallback(
+    async (account: CodexAccount) => {
+      if (inlineRenameDiscardRef.current) {
+        inlineRenameDiscardRef.current = false;
+        return;
+      }
+      if (!isCodexApiKeyAccount(account)) return;
+      if (editingApiKeyNameId !== account.id) return;
+
+      const nextName = editingApiKeyNameValue.trim();
+      const currentName = (account.account_name || '').trim();
+      const fallbackName = (account.email || '').trim();
+      const unchanged = nextName === currentName || (!currentName && nextName === fallbackName);
+      if (unchanged) {
+        clearInlineRename();
+        return;
+      }
+
+      setSavingApiKeyNameId(account.id);
+      try {
+        await updateAccountName(account.id, nextName);
+        setMessage({ text: t('fingerprints.messages.renamed', '已重命名') });
+      } catch (e) {
+        setMessage({
+          text: `${t('fingerprints.messages.renameFailed', '重命名失败')}: ${String(e)}`,
+          tone: 'error',
+        });
+      } finally {
+        setSavingApiKeyNameId(null);
+        clearInlineRename();
+      }
+    },
+    [
+      clearInlineRename,
+      editingApiKeyNameId,
+      editingApiKeyNameValue,
+      setMessage,
+      t,
+      updateAccountName,
+    ],
+  );
+
+  const resolveApiKeyDisplayText = useCallback(
+    (account: CodexAccount) => (account.openai_api_key || '').trim() || t('common.none', '暂无'),
+    [t],
+  );
 
   // ─── Platform-specific: Presentation ─────────────────────────────────
 
@@ -655,6 +777,16 @@ export function CodexAccountsPage() {
     const noneText = t('common.none', '暂无');
 
     accounts.forEach((account) => {
+      if (isCodexApiKeyAccount(account)) {
+        map.set(account.id, {
+          chatgptAccountId: t('common.none', '暂无'),
+          signedInWithText: '',
+          userId: '',
+          accountContextText: '',
+        });
+        return;
+      }
+
       const metadata = getCodexAuthMetadata(account);
       const organizationId = (account.organization_id || '').trim();
       const matchedWorkspace = organizationId
@@ -793,11 +925,16 @@ export function CodexAccountsPage() {
       const presentation = resolvePresentation(account);
       const meta = resolveAccountMeta(account);
       const isCurrent = currentAccount?.id === account.id;
+      const isApiKeyAccount = isCodexApiKeyAccount(account);
+      const isEditingApiKeyName = isApiKeyAccount && editingApiKeyNameId === account.id;
+      const isSavingApiKeyName = savingApiKeyNameId === account.id;
       const planClass = presentation.planClass || 'unknown';
       const isSelected = selected.has(account.id);
-      const quotaItems = showCodeReviewQuota
-        ? presentation.quotaItems
-        : presentation.quotaItems.filter((item) => item.key !== 'code_review');
+      const quotaItems = isApiKeyAccount
+        ? []
+        : showCodeReviewQuota
+          ? presentation.quotaItems
+          : presentation.quotaItems.filter((item) => item.key !== 'code_review');
       const quotaErrorMeta = resolveQuotaErrorMeta(account.quota_error);
       const hasQuotaError = Boolean(quotaErrorMeta.rawMessage);
       const accountIdText =
@@ -805,6 +942,8 @@ export function CodexAccountsPage() {
           ? meta.chatgptAccountId
           : meta.userId;
       const signInLine = `${meta.signedInWithText} | ${accountIdLabel}: ${accountIdText}`;
+      const apiKeyText = resolveApiKeyDisplayText(account);
+      const apiKeyLine = `${t('codex.addModal.token', 'API Key')}：${maskAccountText(apiKeyText)}`;
       const accountTags = (account.tags || []).map((tag) => tag.trim()).filter(Boolean);
       const visibleTags = accountTags.slice(0, 2);
       const moreTagCount = Math.max(0, accountTags.length - visibleTags.length);
@@ -812,7 +951,34 @@ export function CodexAccountsPage() {
         <div key={groupKey ? `${groupKey}-${account.id}` : account.id} className={`codex-account-card ${isCurrent ? 'current' : ''} ${isSelected ? 'selected' : ''}`}>
           <div className="card-top">
             <div className="card-select"><input type="checkbox" checked={isSelected} onChange={() => toggleSelect(account.id)} /></div>
-            <span className="account-email" title={maskAccountText(presentation.displayName)}>{maskAccountText(presentation.displayName)}</span>
+            {isEditingApiKeyName ? (
+              <input
+                className="account-email inline-name-editor"
+                value={editingApiKeyNameValue}
+                onChange={(event) => setEditingApiKeyNameValue(event.target.value)}
+                onBlur={() => void handleSubmitInlineRename(account)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void handleSubmitInlineRename(account);
+                  } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    inlineRenameDiscardRef.current = true;
+                    clearInlineRename();
+                  }
+                }}
+                disabled={isSavingApiKeyName}
+                autoFocus
+              />
+            ) : (
+              <span
+                className={`account-email ${isApiKeyAccount ? 'editable' : ''}`}
+                title={maskAccountText(presentation.displayName)}
+                onDoubleClick={() => handleAccountNameDoubleClick(account)}
+              >
+                {maskAccountText(presentation.displayName)}
+              </span>
+            )}
             {isCurrent && <span className="current-tag">{t('codex.current', '当前')}</span>}
             {hasQuotaError && (<span className="codex-status-pill quota-error" title={quotaErrorMeta.rawMessage}><CircleAlert size={12} />{quotaErrorMeta.statusCode || t('codex.quotaError.badge', '配额异常')}</span>)}
             <span className={`tier-badge ${planClass}`}>{presentation.planLabel}</span>
@@ -824,21 +990,41 @@ export function CodexAccountsPage() {
               </span>
             </div>
           )}
-          <div className="account-sub-line">
-            <span className="codex-login-subline" title={signInLine}>
-              {meta.signedInWithText} | {accountIdLabel}: {maskAccountText(accountIdText)}
-            </span>
-          </div>
+          {!isApiKeyAccount && (
+            <div className="account-sub-line">
+              <span className="codex-login-subline" title={signInLine}>
+                {meta.signedInWithText} | {accountIdLabel}: {maskAccountText(accountIdText)}
+              </span>
+            </div>
+          )}
+          {isApiKeyAccount && (
+            <div className="account-sub-line">
+              <span className="codex-login-subline" title={apiKeyLine}>
+                {apiKeyLine}
+              </span>
+            </div>
+          )}
           {accountTags.length > 0 && (<div className="card-tags">{visibleTags.map((tag, idx) => (<span key={`${account.id}-${tag}-${idx}`} className="tag-pill">{tag}</span>))}{moreTagCount > 0 && <span className="tag-pill more">+{moreTagCount}</span>}</div>)}
           <div className="codex-quota-section">
-            {hasQuotaError && (<div className="quota-error-inline" title={quotaErrorMeta.rawMessage}><CircleAlert size={14} /><span>{quotaErrorMeta.displayText}</span></div>)}
-            {quotaItems.map((item) => {
-              const QuotaIcon = item.key === 'secondary' ? Calendar : item.key === 'code_review' ? BookOpen : Clock;
-              return (<div key={item.key} className="quota-item"><div className="quota-header"><QuotaIcon size={14} /><span className="quota-label">{item.label}</span><span className={`quota-pct ${item.quotaClass}`}>{item.valueText}</span></div>
-                <div className="quota-bar-track"><div className={`quota-bar ${item.quotaClass}`} style={{ width: `${item.percentage}%` }} /></div>
-                {item.resetText && <span className="quota-reset">{item.resetText}</span>}</div>);
-            })}
-            {quotaItems.length === 0 && (<div className="quota-empty">{t('common.shared.quota.noData', '暂无配额数据')}</div>)}
+            {isApiKeyAccount ? (
+              <div className="quota-empty">
+                <button className="btn btn-secondary btn-sm" onClick={() => void handleOpenCodexUsage()}>
+                  <ExternalLink size={14} />
+                  {t('codex.usage.open', '查看 OpenAI 用量')}
+                </button>
+              </div>
+            ) : (
+              <>
+                {hasQuotaError && (<div className="quota-error-inline" title={quotaErrorMeta.rawMessage}><CircleAlert size={14} /><span>{quotaErrorMeta.displayText}</span></div>)}
+                {quotaItems.map((item) => {
+                  const QuotaIcon = item.key === 'secondary' ? Calendar : item.key === 'code_review' ? BookOpen : Clock;
+                  return (<div key={item.key} className="quota-item"><div className="quota-header"><QuotaIcon size={14} /><span className="quota-label">{item.label}</span><span className={`quota-pct ${item.quotaClass}`}>{item.valueText}</span></div>
+                    <div className="quota-bar-track"><div className={`quota-bar ${item.quotaClass}`} style={{ width: `${item.percentage}%` }} /></div>
+                    {item.resetText && <span className="quota-reset">{item.resetText}</span>}</div>);
+                })}
+                {quotaItems.length === 0 && (<div className="quota-empty">{t('common.shared.quota.noData', '暂无配额数据')}</div>)}
+              </>
+            )}
           </div>
           <div className="card-footer">
             <span className="card-date">{formatDate(account.created_at)}</span>
@@ -847,9 +1033,11 @@ export function CodexAccountsPage() {
               <button className={`card-action-btn ${!isCurrent ? 'success' : ''}`} onClick={() => handleSwitch(account.id)} disabled={!!switching} title={t('codex.switch', '切换')}>
                 {switching === account.id ? <RefreshCw size={14} className="loading-spinner" /> : <Play size={14} />}
               </button>
-              <button className="card-action-btn" onClick={() => handleRefresh(account.id)} disabled={refreshing === account.id} title={t('common.shared.refreshQuota', '刷新配额')}>
-                <RotateCw size={14} className={refreshing === account.id ? 'loading-spinner' : ''} />
-              </button>
+              {!isApiKeyAccount && (
+                <button className="card-action-btn" onClick={() => handleRefresh(account.id)} disabled={refreshing === account.id} title={t('common.shared.refreshQuota', '刷新配额')}>
+                  <RotateCw size={14} className={refreshing === account.id ? 'loading-spinner' : ''} />
+                </button>
+              )}
               <button
                 className="card-action-btn export-btn"
                 onClick={() => handleExportByIds([account.id], resolveSingleExportBaseName(account))}
@@ -869,10 +1057,15 @@ export function CodexAccountsPage() {
       const presentation = resolvePresentation(account);
       const meta = resolveAccountMeta(account);
       const isCurrent = currentAccount?.id === account.id;
+      const isApiKeyAccount = isCodexApiKeyAccount(account);
+      const isEditingApiKeyName = isApiKeyAccount && editingApiKeyNameId === account.id;
+      const isSavingApiKeyName = savingApiKeyNameId === account.id;
       const planClass = presentation.planClass || 'unknown';
-      const quotaItems = showCodeReviewQuota
-        ? presentation.quotaItems
-        : presentation.quotaItems.filter((item) => item.key !== 'code_review');
+      const quotaItems = isApiKeyAccount
+        ? []
+        : showCodeReviewQuota
+          ? presentation.quotaItems
+          : presentation.quotaItems.filter((item) => item.key !== 'code_review');
       const quotaErrorMeta = resolveQuotaErrorMeta(account.quota_error);
       const hasQuotaError = Boolean(quotaErrorMeta.rawMessage);
       const accountIdText =
@@ -880,10 +1073,39 @@ export function CodexAccountsPage() {
           ? meta.chatgptAccountId
           : meta.userId;
       const signInLine = `${meta.signedInWithText} | ${accountIdLabel}: ${accountIdText}`;
+      const apiKeyText = resolveApiKeyDisplayText(account);
+      const apiKeyLine = `${t('codex.addModal.token', 'API Key')}：${maskAccountText(apiKeyText)}`;
       return (
         <tr key={groupKey ? `${groupKey}-${account.id}` : account.id} className={isCurrent ? 'current' : ''}>
           <td><input type="checkbox" checked={selected.has(account.id)} onChange={() => toggleSelect(account.id)} /></td>
-          <td><div className="account-cell"><div className="account-main-line"><span className="account-email-text" title={maskAccountText(presentation.displayName)}>{maskAccountText(presentation.displayName)}</span>
+          <td><div className="account-cell"><div className="account-main-line">{isEditingApiKeyName ? (
+            <input
+              className="account-email-text inline-name-editor"
+              value={editingApiKeyNameValue}
+              onChange={(event) => setEditingApiKeyNameValue(event.target.value)}
+              onBlur={() => void handleSubmitInlineRename(account)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void handleSubmitInlineRename(account);
+                } else if (event.key === 'Escape') {
+                  event.preventDefault();
+                  inlineRenameDiscardRef.current = true;
+                  clearInlineRename();
+                }
+              }}
+              disabled={isSavingApiKeyName}
+              autoFocus
+            />
+          ) : (
+            <span
+              className={`account-email-text ${isApiKeyAccount ? 'editable' : ''}`}
+              title={maskAccountText(presentation.displayName)}
+              onDoubleClick={() => handleAccountNameDoubleClick(account)}
+            >
+              {maskAccountText(presentation.displayName)}
+            </span>
+          )}
             {isCurrent && <span className="mini-tag current">{t('codex.current', '当前')}</span>}</div>
             {meta.accountContextText && (
               <div className="account-sub-line codex-account-meta-inline">
@@ -892,38 +1114,58 @@ export function CodexAccountsPage() {
                 </span>
               </div>
             )}
-            <div className="account-sub-line codex-account-meta-inline">
-              <span className="codex-login-subline" title={signInLine}>
-                {meta.signedInWithText} | {accountIdLabel}: {maskAccountText(accountIdText)}
-              </span>
-            </div>
+            {!isApiKeyAccount && (
+              <div className="account-sub-line codex-account-meta-inline">
+                <span className="codex-login-subline" title={signInLine}>
+                  {meta.signedInWithText} | {accountIdLabel}: {maskAccountText(accountIdText)}
+                </span>
+              </div>
+            )}
+            {isApiKeyAccount && (
+              <div className="account-sub-line codex-account-meta-inline">
+                <span className="codex-login-subline" title={apiKeyLine}>
+                  {apiKeyLine}
+                </span>
+              </div>
+            )}
             {hasQuotaError && (<div className="account-sub-line"><span className="codex-status-pill quota-error" title={quotaErrorMeta.rawMessage}><CircleAlert size={12} />{quotaErrorMeta.statusCode || t('codex.quotaError.badge', '配额异常')}</span></div>)}</div></td>
           <td><span className={`tier-badge ${planClass}`}>{presentation.planLabel}</span></td>
           <td>
-            <div className="quota-grid">
-              {quotaItems.map((item) => (
-                <div key={item.key} className="quota-item">
-                  <div className="quota-header"><span className="quota-name">{item.label}</span><span className={`quota-value ${item.quotaClass}`}>{item.valueText}</span></div>
-                  <div className="quota-progress-track"><div className={`quota-progress-bar ${item.quotaClass}`} style={{ width: `${item.percentage}%` }} /></div>
-                  {item.resetText && (<div className="quota-footer"><span className="quota-reset">{item.resetText}</span></div>)}
+            {isApiKeyAccount ? (
+              <button className="btn btn-secondary btn-sm" onClick={() => void handleOpenCodexUsage()}>
+                <ExternalLink size={14} />
+                {t('codex.usage.open', '查看 OpenAI 用量')}
+              </button>
+            ) : (
+              <>
+                <div className="quota-grid">
+                  {quotaItems.map((item) => (
+                    <div key={item.key} className="quota-item">
+                      <div className="quota-header"><span className="quota-name">{item.label}</span><span className={`quota-value ${item.quotaClass}`}>{item.valueText}</span></div>
+                      <div className="quota-progress-track"><div className={`quota-progress-bar ${item.quotaClass}`} style={{ width: `${item.percentage}%` }} /></div>
+                      {item.resetText && (<div className="quota-footer"><span className="quota-reset">{item.resetText}</span></div>)}
+                    </div>
+                  ))}
+                  {quotaItems.length === 0 && (
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                      {t('common.shared.quota.noData', '暂无配额数据')}
+                    </span>
+                  )}
                 </div>
-              ))}
-              {quotaItems.length === 0 && (
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                  {t('common.shared.quota.noData', '暂无配额数据')}
-                </span>
-              )}
-            </div>
-            {hasQuotaError && (<div className="quota-error-inline table" title={quotaErrorMeta.rawMessage}><CircleAlert size={12} /><span>{quotaErrorMeta.displayText}</span></div>)}
+                {hasQuotaError && (<div className="quota-error-inline table" title={quotaErrorMeta.rawMessage}><CircleAlert size={12} /><span>{quotaErrorMeta.displayText}</span></div>)}
+              </>
+            )}
           </td>
           <td className="sticky-action-cell table-action-cell"><div className="action-buttons">
             <button className="action-btn" onClick={() => openTagModal(account.id)} title={t('accounts.editTags', '编辑标签')}><Tag size={14} /></button>
             <button className={`action-btn ${!isCurrent ? 'success' : ''}`} onClick={() => handleSwitch(account.id)} disabled={!!switching} title={t('codex.switch', '切换')}>
               {switching === account.id ? <RefreshCw size={14} className="loading-spinner" /> : <Play size={14} />}
             </button>
-            <button className="action-btn" onClick={() => handleRefresh(account.id)} disabled={refreshing === account.id} title={t('common.shared.refreshQuota', '刷新配额')}>
-              <RotateCw size={14} className={refreshing === account.id ? 'loading-spinner' : ''} />
-            </button>
+            {!isApiKeyAccount && (
+              <button className="action-btn" onClick={() => handleRefresh(account.id)} disabled={refreshing === account.id} title={t('common.shared.refreshQuota', '刷新配额')}>
+                <RotateCw size={14} className={refreshing === account.id ? 'loading-spinner' : ''} />
+              </button>
+            )}
             <button
               className="action-btn"
               onClick={() => handleExportByIds([account.id], resolveSingleExportBaseName(account))}
@@ -994,6 +1236,13 @@ export function CodexAccountsPage() {
             <button className="btn btn-primary icon-only" onClick={() => openAddModal('oauth')} title={t('common.shared.addAccount', '添加账号')}><Plus size={14} /></button>
             <button className="btn btn-secondary icon-only" onClick={handleRefreshAll} disabled={refreshingAll || accounts.length === 0} title={t('common.shared.refreshAll', '刷新全部')}>
               <RefreshCw size={14} className={refreshingAll ? 'loading-spinner' : ''} /></button>
+            <button
+              className="btn btn-secondary icon-only"
+              onClick={() => void handleOpenCodexUsage()}
+              title={t('codex.usage.open', '查看 OpenAI 用量')}
+            >
+              <ExternalLink size={14} />
+            </button>
             <button className="btn btn-secondary icon-only" onClick={togglePrivacyMode} title={privacyModeEnabled ? t('privacy.showSensitive', '显示邮箱') : t('privacy.hideSensitive', '隐藏邮箱')}>
               {privacyModeEnabled ? <EyeOff size={14} /> : <Eye size={14} />}</button>
             <button className="btn btn-secondary icon-only" onClick={() => openAddModal('token')} disabled={importing} title={t('common.shared.import.label', '导入')}><Download size={14} /></button>
@@ -1038,7 +1287,8 @@ export function CodexAccountsPage() {
           <div className="modal-header"><h2>{t('codex.addModal.title', '添加 Codex 账号')}</h2><button className="modal-close" onClick={closeAddModal} aria-label={t('common.close', '关闭')}><X /></button></div>
           <div className="modal-tabs">
             <button className={`modal-tab ${addTab === 'oauth' ? 'active' : ''}`} onClick={() => openAddModal('oauth')}><Globe size={14} />{t('common.shared.addModal.oauth', 'OAuth Authorization')}</button>
-            <button className={`modal-tab ${addTab === 'token' ? 'active' : ''}`} onClick={() => openAddModal('token')}><KeyRound size={14} />Token / JSON</button>
+            <button className={`modal-tab ${addTab === 'token' ? 'active' : ''}`} onClick={() => openAddModal('token')}><FileText size={14} />{t('common.shared.addModal.token', 'Token / JSON')}</button>
+            <button className={`modal-tab ${addTab === 'apikey' ? 'active' : ''}`} onClick={() => openAddModal('apikey')}><KeyRound size={14} />{t('codex.addModal.token', 'API Key')}</button>
             <button className={`modal-tab ${addTab === 'import' ? 'active' : ''}`} onClick={() => openAddModal('import')}><Database size={14} />{t('accounts.tabs.import', '本地导入')}</button>
           </div>
           <div className="modal-body">
@@ -1077,6 +1327,24 @@ export function CodexAccountsPage() {
                 {isOauthTimeoutState && (<div className="add-status error"><CircleAlert size={16} /><span>{t('codex.oauth.timeout', '授权超时，请点击"刷新授权链接"后重试。')}</span></div>)}
                 <p className="oauth-hint">{t('common.shared.oauth.hint', 'Once authorized, this window will update automatically')}</p></div>
               ) : (<div className="oauth-loading"><RefreshCw size={24} className="loading-spinner" /><span>{t('codex.oauth.preparing', '正在准备授权链接...')}</span></div>)}</div>)}
+            {addTab === 'apikey' && (<div className="add-section">
+              <div className="oauth-url-box oauth-manual-input">
+                <input
+                  type="password"
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  placeholder={t('codex.token.placeholder', '示例：sk-...')}
+                />
+                <button
+                  className="oauth-copy-button"
+                  onClick={() => void handleApiKeyLogin()}
+                  disabled={importing || !apiKeyInput.trim()}
+                >
+                  {importing ? <RefreshCw size={16} className="loading-spinner" /> : <KeyRound size={16} />}
+                  {t('common.shared.addAccount', '添加账号')}
+                </button>
+              </div>
+            </div>)}
             {addTab === 'token' && (<div className="add-section">
               <p className="section-desc">{t('codex.token.desc', '粘贴您的 Codex Access Token 或导出的 JSON 数据。')}</p>
               <details className="token-format-collapse"><summary className="token-format-collapse-summary">必填字段与示例（点击展开）</summary>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlatformInstancesContent } from '../components/platform/PlatformInstancesContent';
 import { useCodexInstanceStore } from '../stores/useCodexInstanceStore';
@@ -60,6 +60,15 @@ export function CodexInstancesContent({ accountsForSelect }: CodexInstancesConte
     };
   };
 
+  const accountsWithDisplayName = useMemo(
+    () =>
+      accounts.map((account) => {
+        const displayName = buildCodexAccountPresentation(account, t).displayName || account.email;
+        return { ...account, email: displayName };
+      }),
+    [accounts, t],
+  );
+
   const renderCodexQuotaPreview = (account: CodexAccount) => {
     const presentation = resolvePresentation(account);
     const lines = buildQuotaPreviewLines(presentation.quotaItems, 3);
@@ -88,7 +97,7 @@ export function CodexInstancesContent({ accountsForSelect }: CodexInstancesConte
   return (
     <PlatformInstancesContent
       instanceStore={instanceStore}
-      accounts={accounts}
+      accounts={accountsWithDisplayName}
       fetchAccounts={fetchAccounts}
       renderAccountQuotaPreview={renderCodexQuotaPreview}
       renderAccountBadge={renderCodexPlanBadge}

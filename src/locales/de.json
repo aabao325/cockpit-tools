@@ -1306,6 +1306,11 @@
     "editTags": "Tags bearbeiten",
     "account": {
       "personal": "Persönliches Konto"
+    },
+    "usage": {
+      "open": "OpenAI-Nutzung öffnen",
+      "hint": "API-Key-Guthaben findest du auf der OpenAI-Usage-Seite.",
+      "openFailed": "Nutzungsseite konnte nicht geöffnet werden: {{error}}"
     }
   },
   "githubCopilot": {

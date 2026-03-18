@@ -7,6 +7,17 @@ All notable changes to Cockpit Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.16.1] - 2026-03-18
+
+### Added
+- **Codex now supports API Key account onboarding and import paths end-to-end**: added dedicated API Key add flow, `auth_mode=apikey` persistence in `~/.codex/auth.json`, and JSON/local import compatibility for API Key records.
+
+### Changed
+- **Codex account cards/tables now adapt to API Key account behavior**: API Key accounts support inline rename, show masked key metadata, hide unsupported quota-refresh actions, and provide a direct link to OpenAI Usage.
+- **Codex backend refresh/injection paths now skip OAuth-only operations for API Key accounts**: profile/quota refresh and refresh-all scheduling bypass API Key accounts while keeping account switching and auth-file write behavior aligned with local storage rules.
+- **Codex instance account picker now uses the same presentation display name logic as the account list**: renamed API Key accounts are shown consistently in instance selection.
+
+---
 ## [0.16.0] - 2026-03-18
 
 ### Added

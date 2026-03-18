@@ -107,6 +107,15 @@ export async function addCodexAccountWithToken(
   });
 }
 
+/** 通过 API Key 添加账号 */
+export async function addCodexAccountWithApiKey(apiKey: string): Promise<CodexAccount> {
+  return await invoke('add_codex_account_with_api_key', { apiKey });
+}
+
+export async function updateCodexAccountName(accountId: string, name: string): Promise<CodexAccount> {
+  return await invoke('update_codex_account_name', { accountId, name });
+}
+
 /** 检查 Codex OAuth 端口是否被占用 */
 export async function isCodexOAuthPortInUse(): Promise<boolean> {
   return await invoke('is_codex_oauth_port_in_use');
