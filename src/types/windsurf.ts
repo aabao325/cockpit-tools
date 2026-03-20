@@ -364,6 +364,19 @@ export type WindsurfCreditsSummary = {
   planEndsAt: number | null;
 };
 
+export type WindsurfOfficialUsageMode = 'credits' | 'quota';
+
+export type WindsurfQuotaUsageSummary = {
+  dailyRemainingPercent: number | null;
+  weeklyRemainingPercent: number | null;
+  dailyResetAt: number | null;
+  weeklyResetAt: number | null;
+  overageBalanceMicros: number | null;
+  autoRechargeEnabled: boolean | null;
+  hasQuotaUsage: boolean;
+  hasAutoRecharge: boolean;
+};
+
 /** 兼容 Codex 风格的 quota 结构（用于复用 UI 组件/样式） */
 export interface WindsurfQuota {
   hourly_percentage: number;
@@ -427,7 +440,36 @@ type WindsurfProtoSummary = {
   addOnCreditsLeft: number | null;
   addOnCreditsUsed: number | null;
   addOnCreditsTotal: number | null;
+  dailyQuotaRemainingPercent: number | null;
+  weeklyQuotaRemainingPercent: number | null;
+  overageBalanceMicros: number | null;
+  dailyQuotaResetAt: number | null;
+  weeklyQuotaResetAt: number | null;
+  topUpEnabled: boolean | null;
 };
+
+function getBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return null;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') return true;
+    if (normalized === 'false' || normalized === '0') return false;
+  }
+  return null;
+}
+
+function getBooleanFromPaths(root: unknown, paths: string[][]): boolean | null {
+  for (const path of paths) {
+    const value = getBoolean(getPathValue(root, path));
+    if (value != null) return value;
+  }
+  return null;
+}
 
 function decodeBase64ToBytes(value: string): Uint8Array | null {
   if (!value) return null;
@@ -594,9 +636,16 @@ function parseWindsurfProtoSummary(account: WindsurfAccount): WindsurfProtoSumma
   let addOnCreditsLeft: number | null = null;
   let addOnCreditsUsed: number | null = null;
   let addOnCreditsTotal: number | null = null;
+  let dailyQuotaRemainingPercent: number | null = null;
+  let weeklyQuotaRemainingPercent: number | null = null;
+  let overageBalanceMicros: number | null = null;
+  let dailyQuotaResetAt: number | null = null;
+  let weeklyQuotaResetAt: number | null = null;
+  let topUpEnabled: boolean | null = null;
 
   if (planStatusBytes) {
     let planInfoBytes: Uint8Array | null = null;
+    let topUpStatusBytes: Uint8Array | null = null;
     let promptAvailableFromPlanStatus: number | null = null;
     let promptUsedFromPlanStatus: number | null = null;
     let flexAvailableFromPlanStatus: number | null = null;
@@ -658,10 +707,74 @@ function parseWindsurfProtoSummary(account: WindsurfAccount): WindsurfProtoSumma
         planStatusOffset = valueInfo.nextOffset;
         continue;
       }
+      if (fieldNo === 10 && wireType === 2) {
+        const valueInfo = readProtoLengthDelimited(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        topUpStatusBytes = valueInfo.value;
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
+      if (fieldNo === 14 && wireType === 0) {
+        const valueInfo = readProtoVarint(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        dailyQuotaRemainingPercent = clampPercent(valueInfo.value);
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
+      if (fieldNo === 15 && wireType === 0) {
+        const valueInfo = readProtoVarint(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        weeklyQuotaRemainingPercent = clampPercent(valueInfo.value);
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
+      if (fieldNo === 16 && wireType === 0) {
+        const valueInfo = readProtoVarint(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        overageBalanceMicros = valueInfo.value;
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
+      if (fieldNo === 17 && wireType === 0) {
+        const valueInfo = readProtoVarint(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        dailyQuotaResetAt = Math.floor(valueInfo.value);
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
+      if (fieldNo === 18 && wireType === 0) {
+        const valueInfo = readProtoVarint(planStatusBytes, tagInfo.nextOffset);
+        if (!valueInfo) break;
+        weeklyQuotaResetAt = Math.floor(valueInfo.value);
+        planStatusOffset = valueInfo.nextOffset;
+        continue;
+      }
 
       const nextOffset = skipProtoField(planStatusBytes, wireType, tagInfo.nextOffset);
       if (nextOffset == null) break;
       planStatusOffset = nextOffset;
+    }
+
+    if (topUpStatusBytes) {
+      let topUpOffset = 0;
+      while (topUpOffset < topUpStatusBytes.length) {
+        const tagInfo = readProtoVarint(topUpStatusBytes, topUpOffset);
+        if (!tagInfo) break;
+        const fieldNo = Math.floor(tagInfo.value / 8);
+        const wireType = tagInfo.value & 0x7;
+
+        if (fieldNo === 2 && wireType === 0) {
+          const valueInfo = readProtoVarint(topUpStatusBytes, tagInfo.nextOffset);
+          if (!valueInfo) break;
+          topUpEnabled = valueInfo.value !== 0;
+          topUpOffset = valueInfo.nextOffset;
+          continue;
+        }
+
+        const nextOffset = skipProtoField(topUpStatusBytes, wireType, tagInfo.nextOffset);
+        if (nextOffset == null) break;
+        topUpOffset = nextOffset;
+      }
     }
 
     let monthlyPromptCreditsFromPlanInfo: number | null = null;
@@ -741,6 +854,12 @@ function parseWindsurfProtoSummary(account: WindsurfAccount): WindsurfProtoSumma
     addOnCreditsLeft,
     addOnCreditsUsed,
     addOnCreditsTotal,
+    dailyQuotaRemainingPercent,
+    weeklyQuotaRemainingPercent,
+    overageBalanceMicros,
+    dailyQuotaResetAt,
+    weeklyQuotaResetAt,
+    topUpEnabled,
   };
 }
 
@@ -807,6 +926,18 @@ function calcRemainingFromPremiumSnapshot(snapshot: Record<string, unknown>): nu
   const percentRemaining = getNumber(snapshot['percent_remaining']);
   if (entitlement == null || percentRemaining == null || entitlement <= 0) return null;
   return Math.max(0, Math.round((entitlement * percentRemaining) / 100));
+}
+
+function sumFiniteNumbers(...values: Array<number | null | undefined>): number | null {
+  let total = 0;
+  let hasValue = false;
+  values.forEach((value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      total += value;
+      hasValue = true;
+    }
+  });
+  return hasValue ? total : null;
 }
 
 export function getWindsurfUsage(account: WindsurfAccount): WindsurfUsage {
@@ -978,7 +1109,7 @@ export function getWindsurfCreditsSummary(account: WindsurfAccount): WindsurfCre
 
   return {
     planName: getWindsurfResolvedPlanLabel(account),
-    creditsLeft: promptCreditsLeftActual,
+    creditsLeft: sumFiniteNumbers(promptCreditsLeftActual, addOnCreditsLeftActual),
     promptCreditsLeft: promptCreditsLeftActual,
     promptCreditsUsed,
     promptCreditsTotal,
@@ -987,6 +1118,127 @@ export function getWindsurfCreditsSummary(account: WindsurfAccount): WindsurfCre
     addOnCreditsTotal,
     planStartsAt,
     planEndsAt,
+  };
+}
+
+export function getWindsurfBillingStrategy(account: WindsurfAccount): string | null {
+  const planStatus = resolveWindsurfPlanStatus(account);
+  const planInfo = resolveWindsurfPlanInfo(account, planStatus);
+
+  const strategy =
+    getStringFromPaths(planStatus, [['billingStrategy'], ['billing_strategy']]) ??
+    getStringFromPaths(planInfo, [['billingStrategy'], ['billing_strategy']]) ??
+    getStringFromPaths(account.windsurf_plan_status, [
+      ['planStatus', 'billingStrategy'],
+      ['planStatus', 'billing_strategy'],
+      ['billingStrategy'],
+      ['billing_strategy'],
+    ]) ??
+    getStringFromPaths(account.windsurf_user_status, [
+      ['userStatus', 'planStatus', 'billingStrategy'],
+      ['userStatus', 'planStatus', 'billing_strategy'],
+      ['planStatus', 'billingStrategy'],
+      ['planStatus', 'billing_strategy'],
+      ['billingStrategy'],
+      ['billing_strategy'],
+    ]) ??
+    getStringFromPaths(account.copilot_quota_snapshots, [
+      ['windsurfPlanStatus', 'billingStrategy'],
+      ['windsurfPlanStatus', 'billing_strategy'],
+      ['windsurfPlanStatus', 'planStatus', 'billingStrategy'],
+      ['windsurfPlanStatus', 'planStatus', 'billing_strategy'],
+      ['windsurfPlanInfo', 'billingStrategy'],
+      ['windsurfPlanInfo', 'billing_strategy'],
+      ['windsurfUserStatus', 'userStatus', 'planStatus', 'billingStrategy'],
+      ['windsurfUserStatus', 'userStatus', 'planStatus', 'billing_strategy'],
+    ]);
+
+  return strategy?.trim() || null;
+}
+
+export function getWindsurfOfficialUsageMode(account: WindsurfAccount): WindsurfOfficialUsageMode {
+  const billingStrategy = getWindsurfBillingStrategy(account)?.trim().toLowerCase();
+  if (billingStrategy === 'quota') {
+    return 'quota';
+  }
+  if (billingStrategy) {
+    return 'credits';
+  }
+
+  const quotaSummary = getWindsurfQuotaUsageSummary(account);
+  if (quotaSummary.hasQuotaUsage || quotaSummary.hasAutoRecharge) {
+    return 'quota';
+  }
+
+  return 'credits';
+}
+
+export function getWindsurfQuotaUsageSummary(account: WindsurfAccount): WindsurfQuotaUsageSummary {
+  const planStatus = resolveWindsurfPlanStatus(account);
+  const protoSummary = parseWindsurfProtoSummary(account);
+  const topUpStatus = firstRecord([
+    getPathValue(planStatus, ['topUpStatus']),
+    getPathValue(planStatus, ['top_up_status']),
+    getPathValue(account.windsurf_user_status, ['userStatus', 'planStatus', 'topUpStatus']),
+    getPathValue(account.windsurf_user_status, ['userStatus', 'planStatus', 'top_up_status']),
+    getPathValue(account.copilot_quota_snapshots, ['windsurfPlanStatus', 'topUpStatus']),
+    getPathValue(account.copilot_quota_snapshots, ['windsurfPlanStatus', 'top_up_status']),
+  ]);
+
+  const dailyRemainingPercent =
+    (() => {
+      const value = getNumberFromPaths(planStatus, [
+        ['dailyQuotaRemainingPercent'],
+        ['daily_quota_remaining_percent'],
+      ]);
+      return value == null ? null : clampPercent(value);
+    })() ??
+    protoSummary?.dailyQuotaRemainingPercent ??
+    null;
+
+  const weeklyRemainingPercent =
+    (() => {
+      const value = getNumberFromPaths(planStatus, [
+        ['weeklyQuotaRemainingPercent'],
+        ['weekly_quota_remaining_percent'],
+      ]);
+      return value == null ? null : clampPercent(value);
+    })() ??
+    protoSummary?.weeklyQuotaRemainingPercent ??
+    null;
+
+  const overageBalanceMicros =
+    getNumberFromPaths(planStatus, [['overageBalanceMicros'], ['overage_balance_micros']]) ??
+    protoSummary?.overageBalanceMicros ??
+    null;
+
+  const dailyResetAt =
+    parseTimestampSeconds(getPathValue(planStatus, ['dailyQuotaResetAtUnix'])) ??
+    parseTimestampSeconds(getPathValue(planStatus, ['daily_quota_reset_at_unix'])) ??
+    protoSummary?.dailyQuotaResetAt ??
+    null;
+
+  const weeklyResetAt =
+    parseTimestampSeconds(getPathValue(planStatus, ['weeklyQuotaResetAtUnix'])) ??
+    parseTimestampSeconds(getPathValue(planStatus, ['weekly_quota_reset_at_unix'])) ??
+    protoSummary?.weeklyQuotaResetAt ??
+    null;
+
+  const autoRechargeEnabled =
+    getBooleanFromPaths(topUpStatus, [['topUpEnabled'], ['top_up_enabled']]) ??
+    protoSummary?.topUpEnabled ??
+    null;
+
+  return {
+    dailyRemainingPercent,
+    weeklyRemainingPercent,
+    dailyResetAt,
+    weeklyResetAt,
+    overageBalanceMicros,
+    autoRechargeEnabled,
+    hasQuotaUsage:
+      dailyRemainingPercent != null || weeklyRemainingPercent != null || overageBalanceMicros != null,
+    hasAutoRecharge: autoRechargeEnabled != null || !!topUpStatus,
   };
 }
 

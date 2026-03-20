@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Forfait",
       "renewMonthly": "Les crédits sont renouvelés chaque mois",
-      "left": "{{count}} crédits restants",
+      "left": "{{value}} crédits restants",
       "leftUnknown": "Crédits restants -",
       "promptLeft": "{{remaining}}/{{total}} crédits de prompts restants",
       "promptLeftNoTotal": "{{remaining}} crédits de prompts restants",
       "promptLeftUnknown": "Crédits de prompts restants -",
-      "addOnAvailable": "{{count}} crédits additionnels disponibles"
+      "addOnAvailable": "{{count}} crédits additionnels disponibles",
+      "promptCreditsLeftLabel": "Crédits de prompt restants",
+      "addOnCreditsAvailableLabel": "Crédits additionnels disponibles"
     },
     "columns": {
       "plan": "Étiquette"
+    },
+    "usageSummary": {
+      "dailyQuota": "Utilisation du quota quotidien",
+      "weeklyQuota": "Utilisation du quota hebdomadaire",
+      "extraUsageBalance": "Solde d'utilisation supplémentaire",
+      "autoRecharge": "Recharge automatique",
+      "remaining": "{{value}} restant"
     },
     "injectToVSCode": "Basculer vers Windsurf",
     "injectSuccess": "Basculement terminé. Windsurf se lance.",

@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Tarif",
       "renewMonthly": "Credits werden jeden Monat erneuert",
-      "left": "{{count}} Credits verbleibend",
+      "left": "{{value}} Credits übrig",
       "leftUnknown": "Verbleibende Credits -",
       "promptLeft": "{{remaining}}/{{total}} Prompt-Credits verbleibend",
       "promptLeftNoTotal": "{{remaining}} Prompt-Credits verbleibend",
       "promptLeftUnknown": "Verbleibende Prompt-Credits -",
-      "addOnAvailable": "{{count}} Zusatz-Credits verfügbar"
+      "addOnAvailable": "{{count}} Zusatz-Credits verfügbar",
+      "promptCreditsLeftLabel": "Verbleibende Prompt-Credits",
+      "addOnCreditsAvailableLabel": "Verfügbare Zusatz-Credits"
     },
     "columns": {
       "plan": "Tag"
+    },
+    "usageSummary": {
+      "dailyQuota": "Tägliche Quotennutzung",
+      "weeklyQuota": "Wöchentliche Quotennutzung",
+      "extraUsageBalance": "Zusätzliches Nutzungsguthaben",
+      "autoRecharge": "Automatische Aufladung",
+      "remaining": "{{value}} verbleibend"
     },
     "injectToVSCode": "Zu Windsurf wechseln",
     "injectSuccess": "Wechsel abgeschlossen. Windsurf wird gestartet.",

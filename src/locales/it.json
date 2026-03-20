@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Piano",
       "renewMonthly": "I crediti si rinnovano ogni mese",
-      "left": "{{count}} crediti rimanenti",
+      "left": "{{value}} crediti rimanenti",
       "leftUnknown": "Crediti rimanenti -",
       "promptLeft": "{{remaining}}/{{total}} crediti prompt rimanenti",
       "promptLeftNoTotal": "{{remaining}} crediti prompt rimanenti",
       "promptLeftUnknown": "Crediti prompt rimanenti -",
-      "addOnAvailable": "{{count}} crediti aggiuntivi disponibili"
+      "addOnAvailable": "{{count}} crediti aggiuntivi disponibili",
+      "promptCreditsLeftLabel": "Crediti prompt rimanenti",
+      "addOnCreditsAvailableLabel": "Crediti aggiuntivi disponibili"
     },
     "columns": {
       "plan": "Etichetta"
+    },
+    "usageSummary": {
+      "dailyQuota": "Utilizzo quota giornaliera",
+      "weeklyQuota": "Utilizzo quota settimanale",
+      "extraUsageBalance": "Saldo uso extra",
+      "autoRecharge": "Ricarica automatica",
+      "remaining": "{{value}} rimanente"
     },
     "injectToVSCode": "Passa a Windsurf",
     "injectSuccess": "Passaggio completato. Windsurf si sta avviando.",

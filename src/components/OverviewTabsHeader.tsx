@@ -1,8 +1,9 @@
 import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlarmClock, Fingerprint, Layers, ShieldCheck, HelpCircle } from 'lucide-react';
+import { AlarmClock, Fingerprint, Layers, ShieldCheck } from 'lucide-react';
 import { Page } from '../types/navigation';
 import { RobotIcon } from './icons/RobotIcon';
+import { ManualHelpIconButton } from './ManualHelpIconButton';
 import { PlatformId } from '../types/platform';
 import {
   findGroupByPlatform,
@@ -96,13 +97,7 @@ export function OverviewTabsHeader({
         <div className="platform-header-title">
           <div className="page-title">{headerTitle}</div>
           {onOpenManual && (
-            <button
-              className="btn btn-secondary icon-only platform-header-help"
-              onClick={onOpenManual}
-              title={t('manual.navTitle', '功能使用手册')}
-            >
-              <HelpCircle size={18} />
-            </button>
+            <ManualHelpIconButton className="platform-header-help" onClick={onOpenManual} />
           )}
         </div>
         <div className="page-subtitle">{subtitle}</div>

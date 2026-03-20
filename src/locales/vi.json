@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Gói",
       "renewMonthly": "Tín dụng được làm mới mỗi tháng",
-      "left": "Còn {{count}} tín dụng",
+      "left": "Còn {{value}} tín dụng",
       "leftUnknown": "Tín dụng còn lại -",
       "promptLeft": "Còn {{remaining}}/{{total}} tín dụng prompt",
       "promptLeftNoTotal": "Còn {{remaining}} tín dụng prompt",
       "promptLeftUnknown": "Tín dụng prompt còn lại -",
-      "addOnAvailable": "Có {{count}} tín dụng bổ sung khả dụng"
+      "addOnAvailable": "Có {{count}} tín dụng bổ sung khả dụng",
+      "promptCreditsLeftLabel": "Số tín dụng prompt còn lại",
+      "addOnCreditsAvailableLabel": "Số tín dụng bổ sung khả dụng"
     },
     "columns": {
       "plan": "Nhãn"
+    },
+    "usageSummary": {
+      "dailyQuota": "Mức sử dụng hạn ngạch ngày",
+      "weeklyQuota": "Mức sử dụng hạn ngạch tuần",
+      "extraUsageBalance": "Số dư sử dụng bổ sung",
+      "autoRecharge": "Nạp tự động",
+      "remaining": "Còn {{value}}"
     },
     "injectToVSCode": "Chuyển sang Windsurf",
     "injectSuccess": "Chuyển đổi hoàn tất. Windsurf đang khởi chạy.",

@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Plan",
       "renewMonthly": "Kredyty odnawiają się co miesiąc",
-      "left": "Pozostało {{count}} kredytów",
+      "left": "pozostało {{value}} kredytów",
       "leftUnknown": "Pozostałe kredyty -",
       "promptLeft": "Pozostało {{remaining}}/{{total}} kredytów promptów",
       "promptLeftNoTotal": "Pozostało {{remaining}} kredytów promptów",
       "promptLeftUnknown": "Pozostałe kredyty promptów -",
-      "addOnAvailable": "{{count}} dodatkowych kredytów dostępnych"
+      "addOnAvailable": "{{count}} dodatkowych kredytów dostępnych",
+      "promptCreditsLeftLabel": "Pozostałe kredyty promptów",
+      "addOnCreditsAvailableLabel": "Dostępne dodatkowe kredyty"
     },
     "columns": {
       "plan": "Etykieta"
+    },
+    "usageSummary": {
+      "dailyQuota": "Wykorzystanie dziennego limitu",
+      "weeklyQuota": "Wykorzystanie tygodniowego limitu",
+      "extraUsageBalance": "Saldo dodatkowego użycia",
+      "autoRecharge": "Automatyczne doładowanie",
+      "remaining": "Pozostało {{value}}"
     },
     "injectToVSCode": "Przełącz do Windsurf",
     "injectSuccess": "Przełączenie zakończone. Windsurf uruchamia się.",

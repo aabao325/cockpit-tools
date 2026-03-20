@@ -951,6 +951,12 @@
   background: var(--bg-tertiary);
 }
 
+.ghcp-accounts-page .windsurf-plan-cycle.compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .ghcp-accounts-page .windsurf-plan-cycle-note {
   font-size: 11px;
   color: var(--text-muted);
@@ -968,14 +974,71 @@
   font-family: var(--font-mono);
 }
 
-.ghcp-accounts-page .windsurf-cycle-line {
-  margin-top: 2px;
+.ghcp-accounts-page .windsurf-official-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
 }
 
-.ghcp-accounts-page .windsurf-cycle-text {
+.ghcp-accounts-page .windsurf-official-usage.compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-headline {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ghcp-accounts-page .windsurf-official-usage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ghcp-accounts-page .windsurf-official-usage-value {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+.ghcp-accounts-page .windsurf-official-usage-detail {
   font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.4;
+  font-family: var(--font-mono);
 }
 
 .ghcp-accounts-page .windsurf-table-credit-item {

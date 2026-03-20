@@ -1,6 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bot, Github, Layers, HelpCircle } from 'lucide-react';
+import { Bot, Github, Layers } from 'lucide-react';
 import { CodexIcon } from '../icons/CodexIcon';
 import { WindsurfIcon } from '../icons/WindsurfIcon';
 import { KiroIcon } from '../icons/KiroIcon';
@@ -9,6 +9,7 @@ import { GeminiIcon } from '../icons/GeminiIcon';
 import { CodebuddyIcon } from '../icons/CodebuddyIcon';
 import { QoderIcon } from '../icons/QoderIcon';
 import { WorkbuddyIcon } from '../icons/WorkbuddyIcon';
+import { ManualHelpIconButton } from '../ManualHelpIconButton';
 import { PlatformId } from '../../types/platform';
 import {
   findGroupByPlatform,
@@ -157,13 +158,7 @@ export function PlatformOverviewTabsHeader({
       <div className="page-header">
         <div className="platform-header-title">
           <div className="page-title">{headerTitle}</div>
-          <button
-            className="btn btn-secondary icon-only platform-header-help"
-            onClick={() => window.dispatchEvent(new CustomEvent('app-request-navigate', { detail: 'manual' }))}
-            title={t('manual.navTitle', '功能使用手册')}
-          >
-            <HelpCircle size={18} />
-          </button>
+          <ManualHelpIconButton className="platform-header-help" />
         </div>
         <div className="page-subtitle">{subtitle}</div>
       </div>

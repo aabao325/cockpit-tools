@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Planı",
       "renewMonthly": "Krediler her ay yenilenir",
-      "left": "{{count}} kredi kaldı",
+      "left": "{{value}} kredi kaldı",
       "leftUnknown": "Kalan krediler -",
       "promptLeft": "{{remaining}}/{{total}} istem kredisi kaldı",
       "promptLeftNoTotal": "{{remaining}} istem kredisi kaldı",
       "promptLeftUnknown": "Kalan istem kredileri -",
-      "addOnAvailable": "{{count}} ek kredi kullanılabilir"
+      "addOnAvailable": "{{count}} ek kredi kullanılabilir",
+      "promptCreditsLeftLabel": "Kalan istem kredileri",
+      "addOnCreditsAvailableLabel": "Kullanılabilir ek krediler"
     },
     "columns": {
       "plan": "Etiket"
+    },
+    "usageSummary": {
+      "dailyQuota": "Günlük kota kullanımı",
+      "weeklyQuota": "Haftalık kota kullanımı",
+      "extraUsageBalance": "Ek kullanım bakiyesi",
+      "autoRecharge": "Otomatik yükleme",
+      "remaining": "{{value}} kaldı"
     },
     "injectToVSCode": "Windsurf'a geç",
     "injectSuccess": "Geçiş tamamlandı. Windsurf başlatılıyor.",

@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Plano",
       "renewMonthly": "Os créditos são renovados todo mês",
-      "left": "{{count}} créditos restantes",
+      "left": "{{value}} créditos restantes",
       "leftUnknown": "Créditos restantes -",
       "promptLeft": "{{remaining}}/{{total}} créditos de prompt restantes",
       "promptLeftNoTotal": "{{remaining}} créditos de prompt restantes",
       "promptLeftUnknown": "Créditos de prompt restantes -",
-      "addOnAvailable": "{{count}} créditos adicionais disponíveis"
+      "addOnAvailable": "{{count}} créditos adicionais disponíveis",
+      "promptCreditsLeftLabel": "Créditos de prompt restantes",
+      "addOnCreditsAvailableLabel": "Créditos adicionais disponíveis"
     },
     "columns": {
       "plan": "Etiqueta"
+    },
+    "usageSummary": {
+      "dailyQuota": "Uso da cota diária",
+      "weeklyQuota": "Uso da cota semanal",
+      "extraUsageBalance": "Saldo de uso extra",
+      "autoRecharge": "Recarga automática",
+      "remaining": "{{value}} restante"
     },
     "injectToVSCode": "Alternar para Windsurf",
     "injectSuccess": "Alternância concluída. O Windsurf está iniciando.",

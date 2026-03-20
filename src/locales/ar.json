@@ -1567,16 +1567,25 @@
     },
     "credits": {
       "title": "الباقة",
-      "renewMonthly": "تتجدد الأرصدة كل شهر",
-      "left": "متبقي {{count}} رصيد",
+      "renewMonthly": "تتجدد الاعتمادات كل شهر",
+      "left": "{{value}} رصيدًا متبقيًا",
       "leftUnknown": "الأرصدة المتبقية -",
       "promptLeft": "متبقي {{remaining}}/{{total}} من أرصدة الأوامر",
       "promptLeftNoTotal": "متبقي {{remaining}} من أرصدة الأوامر",
       "promptLeftUnknown": "أرصدة الأوامر المتبقية -",
-      "addOnAvailable": "{{count}} رصيد إضافي متاح"
+      "addOnAvailable": "{{count}} رصيد إضافي متاح",
+      "promptCreditsLeftLabel": "اعتمادات المطالبات المتبقية",
+      "addOnCreditsAvailableLabel": "الاعتمادات الإضافية المتاحة"
     },
     "columns": {
       "plan": "الوسم"
+    },
+    "usageSummary": {
+      "dailyQuota": "استخدام الحصة اليومية",
+      "weeklyQuota": "استخدام الحصة الأسبوعية",
+      "extraUsageBalance": "رصيد الاستخدام الإضافي",
+      "autoRecharge": "إعادة الشحن التلقائي",
+      "remaining": "متبقٍ {{value}}"
     },
     "injectToVSCode": "التبديل إلى Windsurf",
     "injectSuccess": "اكتمل التبديل. جارٍ تشغيل Windsurf.",

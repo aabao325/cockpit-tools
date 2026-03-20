@@ -1567,16 +1567,25 @@
     },
     "credits": {
       "title": "方案",
-      "renewMonthly": "點數每月自動重置",
-      "left": "剩餘 {{count}} 點數",
-      "leftUnknown": "剩餘點數 -",
+      "renewMonthly": "積分每月自動重置",
+      "left": "剩餘 {{value}} 積分",
+      "leftUnknown": "剩餘積分 -",
       "promptLeft": "剩餘 {{remaining}}/{{total}} prompt 點數",
       "promptLeftNoTotal": "剩餘 {{remaining}} prompt 點數",
       "promptLeftUnknown": "剩餘 prompt 點數 -",
-      "addOnAvailable": "{{count}} add-on 點數可用"
+      "addOnAvailable": "{{count}} add-on 點數可用",
+      "promptCreditsLeftLabel": "剩餘提示積分",
+      "addOnCreditsAvailableLabel": "可用附加積分"
     },
     "columns": {
       "plan": "標籤"
+    },
+    "usageSummary": {
+      "dailyQuota": "每日額度用量",
+      "weeklyQuota": "每週額度用量",
+      "extraUsageBalance": "額外用量餘額",
+      "autoRecharge": "自動儲值",
+      "remaining": "剩餘 {{value}}"
     },
     "injectToVSCode": "切換到 Windsurf",
     "injectSuccess": "已完成切換，Windsurf 正在啟動。",

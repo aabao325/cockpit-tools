@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "플랜",
       "renewMonthly": "크레딧은 매월 갱신됩니다",
-      "left": "{{count}} 크레딧 남음",
+      "left": "{{value}} 크레딧 남음",
       "leftUnknown": "남은 크레딧 -",
       "promptLeft": "{{remaining}}/{{total}} 프롬프트 크레딧 남음",
       "promptLeftNoTotal": "{{remaining}} 프롬프트 크레딧 남음",
       "promptLeftUnknown": "남은 프롬프트 크레딧 -",
-      "addOnAvailable": "추가 크레딧 {{count}} 사용 가능"
+      "addOnAvailable": "추가 크레딧 {{count}} 사용 가능",
+      "promptCreditsLeftLabel": "남은 프롬프트 크레딧",
+      "addOnCreditsAvailableLabel": "사용 가능한 추가 크레딧"
     },
     "columns": {
       "plan": "태그"
+    },
+    "usageSummary": {
+      "dailyQuota": "일일 할당량 사용량",
+      "weeklyQuota": "주간 할당량 사용량",
+      "extraUsageBalance": "추가 사용 잔액",
+      "autoRecharge": "자동 충전",
+      "remaining": "{{value}} 남음"
     },
     "injectToVSCode": "Windsurf로 전환",
     "injectSuccess": "전환이 완료되었습니다. Windsurf를 시작하는 중입니다.",

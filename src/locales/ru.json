@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Тариф",
       "renewMonthly": "Кредиты обновляются каждый месяц",
-      "left": "Осталось {{count}} кредитов",
-      "leftUnknown": "Остаток кредитов -",
+      "left": "осталось {{value}} кредитов",
+      "leftUnknown": "Оставшиеся кредиты -",
       "promptLeft": "Осталось {{remaining}}/{{total}} кредитов промптов",
       "promptLeftNoTotal": "Осталось {{remaining}} кредитов промптов",
       "promptLeftUnknown": "Остаток кредитов промптов -",
-      "addOnAvailable": "Доступно {{count}} доп. кредитов"
+      "addOnAvailable": "Доступно {{count}} доп. кредитов",
+      "promptCreditsLeftLabel": "Оставшиеся prompt-кредиты",
+      "addOnCreditsAvailableLabel": "Доступные дополнительные кредиты"
     },
     "columns": {
       "plan": "Тег"
+    },
+    "usageSummary": {
+      "dailyQuota": "Использование дневной квоты",
+      "weeklyQuota": "Использование недельной квоты",
+      "extraUsageBalance": "Баланс дополнительного использования",
+      "autoRecharge": "Автопополнение",
+      "remaining": "Осталось {{value}}"
     },
     "injectToVSCode": "Переключить в Windsurf",
     "injectSuccess": "Переключение завершено. Windsurf запускается.",

@@ -31,8 +31,11 @@ import { TagEditModal } from '../components/TagEditModal';
 import { ExportJsonModal } from '../components/ExportJsonModal';
 import {
   getWindsurfCreditsSummary,
+  getWindsurfOfficialUsageMode,
   getWindsurfPlanDisplayName,
   getWindsurfPlanLabel,
+  getWindsurfQuotaUsageSummary,
+  formatWindsurfResetTime,
 } from '../types/windsurf';
 import { buildWindsurfAccountPresentation } from '../presentation/platformAccountPresentation';
 
@@ -212,6 +215,28 @@ export function WindsurfAccountsPage() {
     [creditsSummaryById],
   );
 
+  const quotaSummaryById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof getWindsurfQuotaUsageSummary>>();
+    accounts.forEach((account) => { map.set(account.id, getWindsurfQuotaUsageSummary(account)); });
+    return map;
+  }, [accounts]);
+
+  const resolveQuotaSummary = useCallback(
+    (account: WindsurfAccount) => quotaSummaryById.get(account.id) ?? getWindsurfQuotaUsageSummary(account),
+    [quotaSummaryById],
+  );
+
+  const usageModeById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof getWindsurfOfficialUsageMode>>();
+    accounts.forEach((account) => { map.set(account.id, getWindsurfOfficialUsageMode(account)); });
+    return map;
+  }, [accounts]);
+
+  const resolveUsageMode = useCallback(
+    (account: WindsurfAccount) => usageModeById.get(account.id) ?? getWindsurfOfficialUsageMode(account),
+    [usageModeById],
+  );
+
   const accountPresentations = useMemo(() => {
     const map = new Map<string, ReturnType<typeof buildWindsurfAccountPresentation>>();
     accounts.forEach((account) => { map.set(account.id, buildWindsurfAccountPresentation(account, t)); });
@@ -237,31 +262,14 @@ export function WindsurfAccountsPage() {
     [resolvePresentation],
   );
 
-  const formatCreditsNumber = useCallback((value: number | null | undefined) => {
-    const n = typeof value === 'number' && Number.isFinite(value) ? value : 0;
-    return n.toFixed(2);
-  }, []);
-
-  const resolvePromptMetrics = useCallback(
-    (account: WindsurfAccount) => resolvePresentation(account).quotaItems.find((item) => item.key === 'prompt') ?? null,
-    [resolvePresentation],
-  );
-
-  const resolveAddOnMetrics = useCallback(
-    (account: WindsurfAccount) => resolvePresentation(account).quotaItems.find((item) => item.key === 'addon') ?? null,
-    [resolvePresentation],
-  );
-
-  const formatUsedLine = useCallback(
-    (used: number | null | undefined, total: number | null | undefined) =>
-      t('common.shared.credits.usedLine', { used: formatCreditsNumber(used), total: formatCreditsNumber(total), defaultValue: '{{used}} / {{total}} used' }),
-    [formatCreditsNumber, t],
-  );
-
-  const formatLeftLine = useCallback(
-    (left: number | null | undefined) =>
-      t('common.shared.credits.leftInline', { left: formatCreditsNumber(left), defaultValue: '{{left}} left' }),
-    [formatCreditsNumber, t],
+  const formatCreditValue = useCallback(
+    (value: number | null | undefined) => {
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return t('common.none', '暂无');
+      }
+      return value.toLocaleString(locale, { maximumFractionDigits: 2 });
+    },
+    [locale, t],
   );
 
   const formatCycleDate = useCallback(
@@ -300,6 +308,152 @@ export function WindsurfAccountsPage() {
       return { summary, detail, title };
     },
     [formatCycleDate, t],
+  );
+
+  const formatQuotaUsagePercent = useCallback(
+    (value: number | null | undefined) => {
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return t('common.none', '暂无');
+      }
+      return `${Math.max(0, Math.min(100, 100 - value))}%`;
+    },
+    [t],
+  );
+
+  const formatMicrosAsUsd = useCallback(
+    (value: number | null | undefined) => {
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return t('common.none', '暂无');
+      }
+      return `$${(value / 1_000_000).toFixed(2)}`;
+    },
+    [t],
+  );
+
+  const buildQuotaDisplayItems = useCallback(
+    (account: WindsurfAccount) => {
+      const summary = resolveQuotaSummary(account);
+      const items: Array<{ key: string; label: string; value: string; detail: string; title: string }> = [];
+
+      if (summary.dailyRemainingPercent != null) {
+        const label = t('windsurf.usageSummary.dailyQuota', 'Daily quota usage');
+        const value = formatQuotaUsagePercent(summary.dailyRemainingPercent);
+        const detail = summary.dailyResetAt
+          ? t('common.shared.quota.resetAt', {
+              time: formatWindsurfResetTime(summary.dailyResetAt, t),
+              defaultValue: 'Reset: {{time}}',
+            })
+          : '';
+        items.push({
+          key: 'daily',
+          label,
+          value,
+          detail,
+          title: detail ? `${label}: ${value} · ${detail}` : `${label}: ${value}`,
+        });
+      }
+
+      if (summary.weeklyRemainingPercent != null) {
+        const label = t('windsurf.usageSummary.weeklyQuota', 'Weekly quota usage');
+        const value = formatQuotaUsagePercent(summary.weeklyRemainingPercent);
+        const detail = summary.weeklyResetAt
+          ? t('common.shared.quota.resetAt', {
+              time: formatWindsurfResetTime(summary.weeklyResetAt, t),
+              defaultValue: 'Reset: {{time}}',
+            })
+          : '';
+        items.push({
+          key: 'weekly',
+          label,
+          value,
+          detail,
+          title: detail ? `${label}: ${value} · ${detail}` : `${label}: ${value}`,
+        });
+      }
+
+      if (summary.overageBalanceMicros != null) {
+        const label = t('windsurf.usageSummary.extraUsageBalance', 'Extra usage balance');
+        const value = formatMicrosAsUsd(summary.overageBalanceMicros);
+        items.push({
+          key: 'extraUsage',
+          label,
+          value,
+          detail: '',
+          title: `${label}: ${value}`,
+        });
+      }
+
+      return items;
+    },
+    [formatMicrosAsUsd, formatQuotaUsagePercent, resolveQuotaSummary, t],
+  );
+
+  const buildCreditsDisplayItems = useCallback(
+    (account: WindsurfAccount) => {
+      const credits = resolveCreditsSummary(account);
+      const promptLabel = t('windsurf.credits.promptCreditsLeftLabel', 'prompt credits left');
+      const addOnLabel = t('windsurf.credits.addOnCreditsAvailableLabel', 'add-on credits available');
+      const promptValue =
+        credits.promptCreditsLeft != null && credits.promptCreditsTotal != null
+          ? `${formatCreditValue(credits.promptCreditsLeft)} / ${formatCreditValue(credits.promptCreditsTotal)}`
+          : credits.promptCreditsLeft != null
+          ? formatCreditValue(credits.promptCreditsLeft)
+          : t('common.none', '暂无');
+      const addOnValue =
+        credits.addOnCredits != null
+          ? formatCreditValue(credits.addOnCredits)
+          : t('common.none', '暂无');
+
+      return [
+        {
+          key: 'promptCredits',
+          label: promptLabel,
+          value: promptValue,
+          detail: '',
+          title: `${promptLabel}: ${promptValue}`,
+        },
+        {
+          key: 'addOnCredits',
+          label: addOnLabel,
+          value: addOnValue,
+          detail: '',
+          title: `${addOnLabel}: ${addOnValue}`,
+        },
+      ];
+    },
+    [formatCreditValue, resolveCreditsSummary, t],
+  );
+
+  const buildOfficialUsagePanel = useCallback(
+    (account: WindsurfAccount) => {
+      const mode = resolveUsageMode(account);
+      if (mode === 'quota') {
+        const items = buildQuotaDisplayItems(account);
+        return {
+          mode,
+          headline: '',
+          note: '',
+          items,
+          title: items.map((item) => item.title).join(' | '),
+        };
+      }
+
+      const credits = resolveCreditsSummary(account);
+      const items = buildCreditsDisplayItems(account);
+      const headline =
+        credits.creditsLeft != null
+          ? t('windsurf.credits.left', { value: formatCreditValue(credits.creditsLeft) })
+          : t('windsurf.credits.leftUnknown', 'Credits left -');
+
+      return {
+        mode,
+        headline,
+        note: t('windsurf.credits.renewMonthly', 'Credits renew every month'),
+        items,
+        title: [headline, ...items.map((item) => item.title)].join(' | '),
+      };
+    },
+    [buildCreditsDisplayItems, buildQuotaDisplayItems, formatCreditValue, resolveCreditsSummary, resolveUsageMode, t],
   );
 
   // ─── Tier filter ────────────────────────────────────────────────────
@@ -384,14 +538,44 @@ export function WindsurfAccountsPage() {
 
   // ─── Render helpers ──────────────────────────────────────────────────
 
+  const renderUsagePanel = (
+    panel: ReturnType<typeof buildOfficialUsagePanel>,
+    options?: { compact?: boolean },
+  ) => (
+    <div className={`windsurf-official-usage ${options?.compact ? 'compact' : ''}`} title={panel.title}>
+      {panel.headline ? <div className="windsurf-official-usage-headline">{panel.headline}</div> : null}
+      {panel.note ? <div className="windsurf-official-usage-note">{panel.note}</div> : null}
+      <div className="windsurf-official-usage-list">
+        {panel.items.map((item) => (
+          <div key={item.key} className="windsurf-official-usage-item" title={item.title}>
+            <div className="windsurf-official-usage-main">
+              <span className="windsurf-official-usage-label">{item.label}</span>
+              <span className="windsurf-official-usage-value">{item.value}</span>
+            </div>
+            {item.detail ? <div className="windsurf-official-usage-detail">{item.detail}</div> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderPlanDetails = (
+    cycleDisplay: ReturnType<typeof resolveCycleDisplay>,
+    options?: { compact?: boolean },
+  ) => (
+    <div className={`windsurf-plan-cycle ${options?.compact ? 'compact' : ''}`} title={cycleDisplay.title}>
+      <span className="windsurf-plan-cycle-summary">{cycleDisplay.summary}</span>
+      {cycleDisplay.detail ? <span className="windsurf-plan-cycle-detail">{cycleDisplay.detail}</span> : null}
+    </div>
+  );
+
   const renderGridCards = (items: typeof filteredAccounts, groupKey?: string) =>
     items.map((account) => {
       const presentation = resolvePresentation(account);
       const emailText = presentation.displayName || '-';
       const credits = resolveCreditsSummary(account);
       const cycleDisplay = resolveCycleDisplay(credits);
-      const promptMetrics = resolvePromptMetrics(account);
-      const addOnMetrics = resolveAddOnMetrics(account);
+      const usagePanel = buildOfficialUsagePanel(account);
       const accountTags = (account.tags || []).map((tag) => tag.trim()).filter(Boolean);
       const visibleTags = accountTags.slice(0, 2);
       const moreTagCount = Math.max(0, accountTags.length - visibleTags.length);
@@ -412,34 +596,8 @@ export function WindsurfAccountsPage() {
               {moreTagCount > 0 && <span className="tag-pill more">+{moreTagCount}</span>}
             </div>
           )}
-          <div className="ghcp-quota-section">
-            <div className="quota-item windsurf-credit-item">
-              <div className="quota-header">
-                <span className="quota-label">{promptMetrics?.label ?? t('common.shared.columns.promptCredits', 'User Prompt credits')}</span>
-                <span className={`quota-pct ${promptMetrics?.quotaClass ?? 'high'}`}>{promptMetrics?.valueText ?? '0%'}</span>
-              </div>
-              <div className="windsurf-credit-meta-row">
-                <span className="windsurf-credit-used">{formatUsedLine(promptMetrics?.used, promptMetrics?.total)}</span>
-                <span className="windsurf-credit-left">{formatLeftLine(promptMetrics?.left)}</span>
-              </div>
-              <div className="quota-bar-track"><div className={`quota-bar ${promptMetrics?.quotaClass ?? 'high'}`} style={{ width: `${promptMetrics?.percentage ?? 0}%` }} /></div>
-            </div>
-            <div className="quota-item windsurf-credit-item">
-              <div className="quota-header">
-                <span className="quota-label">{addOnMetrics?.label ?? t('common.shared.columns.addOnPromptCredits', 'Add-on prompt credits')}</span>
-                <span className={`quota-pct ${addOnMetrics?.quotaClass ?? 'high'}`}>{addOnMetrics?.valueText ?? '0%'}</span>
-              </div>
-              <div className="windsurf-credit-meta-row">
-                <span className="windsurf-credit-used">{formatUsedLine(addOnMetrics?.used, addOnMetrics?.total)}</span>
-                <span className="windsurf-credit-left">{formatLeftLine(addOnMetrics?.left)}</span>
-              </div>
-              <div className="quota-bar-track"><div className={`quota-bar ${addOnMetrics?.quotaClass ?? 'high'}`} style={{ width: `${addOnMetrics?.percentage ?? 0}%` }} /></div>
-            </div>
-          </div>
-          <div className="windsurf-plan-cycle" title={cycleDisplay.title}>
-            <span className="windsurf-plan-cycle-summary">{cycleDisplay.summary}</span>
-            {cycleDisplay.detail ? <span className="windsurf-plan-cycle-detail">{cycleDisplay.detail}</span> : null}
-          </div>
+          {renderUsagePanel(usagePanel)}
+          {renderPlanDetails(cycleDisplay)}
           <div className="card-footer">
             <span className="card-date">{formatDate(account.created_at)}</span>
             <div className="card-actions">
@@ -470,8 +628,7 @@ export function WindsurfAccountsPage() {
       const emailText = presentation.displayName || '-';
       const credits = resolveCreditsSummary(account);
       const cycleDisplay = resolveCycleDisplay(credits);
-      const promptMetrics = resolvePromptMetrics(account);
-      const addOnMetrics = resolveAddOnMetrics(account);
+      const usagePanel = buildOfficialUsagePanel(account);
       const accountTags = (account.tags || []).map((tag) => tag.trim()).filter(Boolean);
       const visibleTags = accountTags.slice(0, 3);
       const moreTagCount = Math.max(0, accountTags.length - visibleTags.length);
@@ -485,7 +642,6 @@ export function WindsurfAccountsPage() {
                 <span className="account-email-text" title={maskAccountText(emailText)}>{maskAccountText(emailText)}</span>
                 {isCurrent && <span className="mini-tag current">{t('accounts.status.current')}</span>}
               </div>
-              <div className="account-sub-line windsurf-cycle-line" title={cycleDisplay.title}><span className="windsurf-cycle-text">{cycleDisplay.summary}</span></div>
               {accountTags.length > 0 && (
                 <div className="account-tags-inline">
                   {visibleTags.map((tag, idx) => (<span key={`${account.id}-inline-${tag}-${idx}`} className="tag-pill">{tag}</span>))}
@@ -496,30 +652,10 @@ export function WindsurfAccountsPage() {
           </td>
           <td><span className={`tier-badge ${presentation.planClass}`}>{presentation.planLabel}</span></td>
           <td>
-            <div className="quota-item windsurf-table-credit-item">
-              <div className="quota-header">
-                <span className="quota-name">{promptMetrics?.label ?? t('common.shared.columns.promptCredits', 'User Prompt credits')}</span>
-                <span className={`quota-value ${promptMetrics?.quotaClass ?? 'high'}`}>{promptMetrics?.valueText ?? '0%'}</span>
-              </div>
-              <div className="windsurf-credit-meta-row table">
-                <span className="windsurf-credit-used">{formatUsedLine(promptMetrics?.used, promptMetrics?.total)}</span>
-                <span className="windsurf-credit-left">{formatLeftLine(promptMetrics?.left)}</span>
-              </div>
-              <div className="quota-progress-track"><div className={`quota-progress-bar ${promptMetrics?.quotaClass ?? 'high'}`} style={{ width: `${promptMetrics?.percentage ?? 0}%` }} /></div>
-            </div>
+            {renderUsagePanel(usagePanel, { compact: true })}
           </td>
           <td>
-            <div className="quota-item windsurf-table-credit-item">
-              <div className="quota-header">
-                <span className="quota-name">{addOnMetrics?.label ?? t('common.shared.columns.addOnPromptCredits', 'Add-on prompt credits')}</span>
-                <span className={`quota-value ${addOnMetrics?.quotaClass ?? 'high'}`}>{addOnMetrics?.valueText ?? '0%'}</span>
-              </div>
-              <div className="windsurf-credit-meta-row table">
-                <span className="windsurf-credit-used">{formatUsedLine(addOnMetrics?.used, addOnMetrics?.total)}</span>
-                <span className="windsurf-credit-left">{formatLeftLine(addOnMetrics?.left)}</span>
-              </div>
-              <div className="quota-progress-track"><div className={`quota-progress-bar ${addOnMetrics?.quotaClass ?? 'high'}`} style={{ width: `${addOnMetrics?.percentage ?? 0}%` }} /></div>
-            </div>
+            {renderPlanDetails(cycleDisplay, { compact: true })}
           </td>
           <td className="sticky-action-cell table-action-cell">
             <div className="action-buttons">
@@ -678,7 +814,7 @@ export function WindsurfAccountsPage() {
         <div className="account-table-container grouped"><table className="account-table"><thead><tr>
           <th style={{ width: 40 }}><input type="checkbox" checked={selected.size === filteredAccounts.length && filteredAccounts.length > 0} onChange={() => toggleSelectAll(filteredAccounts.map((a) => a.id))} /></th>
           <th style={{ width: 240 }}>{t('common.shared.columns.email', '邮箱')}</th><th style={{ width: 120 }}>{t('common.shared.columns.plan', '计划')}</th>
-          <th>{t('common.shared.columns.promptCredits', 'User Prompt credits')}</th><th>{t('common.shared.columns.addOnPromptCredits', 'Add-on prompt credits')}</th>
+          <th>{t('common.shared.columns.credits', 'Credits')}</th><th>{t('common.detail', '详情')}</th>
           <th className="sticky-action-header table-action-header">{t('common.shared.columns.actions', '操作')}</th></tr></thead>
           <tbody>{groupedAccounts.map(([groupKey, groupAccounts]) => (
             <Fragment key={groupKey}><tr className="tag-group-row"><td colSpan={6}><div className="tag-group-header"><span className="tag-group-title">{resolveGroupLabel(groupKey)}</span><span className="tag-group-count">{groupAccounts.length}</span></div></td></tr>
@@ -688,7 +824,7 @@ export function WindsurfAccountsPage() {
         <div className="account-table-container"><table className="account-table"><thead><tr>
           <th style={{ width: 40 }}><input type="checkbox" checked={selected.size === filteredAccounts.length && filteredAccounts.length > 0} onChange={() => toggleSelectAll(filteredAccounts.map((a) => a.id))} /></th>
           <th style={{ width: 240 }}>{t('common.shared.columns.email', '邮箱')}</th><th style={{ width: 120 }}>{t('common.shared.columns.plan', '计划')}</th>
-          <th>{t('common.shared.columns.promptCredits', 'User Prompt credits')}</th><th>{t('common.shared.columns.addOnPromptCredits', 'Add-on prompt credits')}</th>
+          <th>{t('common.shared.columns.credits', 'Credits')}</th><th>{t('common.detail', '详情')}</th>
           <th className="sticky-action-header table-action-header">{t('common.shared.columns.actions', '操作')}</th></tr></thead>
           <tbody>{renderTableRows(filteredAccounts)}</tbody></table></div>
       )}

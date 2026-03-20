@@ -1664,15 +1664,24 @@
     "credits": {
       "title": "Plan",
       "renewMonthly": "Credits renew every month",
-      "left": "{{count}} credits left",
+      "left": "{{value}} credits left",
       "leftUnknown": "Credits left -",
       "promptLeft": "{{remaining}}/{{total}} prompt credits left",
       "promptLeftNoTotal": "{{remaining}} prompt credits left",
       "promptLeftUnknown": "Prompt credits left -",
-      "addOnAvailable": "{{count}} add-on credits available"
+      "addOnAvailable": "{{count}} add-on credits available",
+      "promptCreditsLeftLabel": "prompt credits left",
+      "addOnCreditsAvailableLabel": "add-on credits available"
     },
     "columns": {
       "plan": "Tag"
+    },
+    "usageSummary": {
+      "dailyQuota": "Daily quota usage",
+      "weeklyQuota": "Weekly quota usage",
+      "extraUsageBalance": "Extra usage balance",
+      "autoRecharge": "Auto recharge",
+      "remaining": "{{value}} remaining"
     },
     "injectToVSCode": "Switch to Windsurf",
     "injectSuccess": "Switch completed. Windsurf is launching.",

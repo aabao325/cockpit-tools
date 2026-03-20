@@ -1663,16 +1663,25 @@
     },
     "credits": {
       "title": "计划",
-      "renewMonthly": "Credits 每月自动重置",
-      "left": "剩余 {{count}} credits",
-      "leftUnknown": "剩余 credits -",
+      "renewMonthly": "积分每月自动重置",
+      "left": "剩余 {{value}} 积分",
+      "leftUnknown": "剩余积分 -",
       "promptLeft": "剩余 {{remaining}}/{{total}} prompt credits",
       "promptLeftNoTotal": "剩余 {{remaining}} prompt credits",
       "promptLeftUnknown": "Prompt credits -",
-      "addOnAvailable": "{{count}} add-on credits 可用"
+      "addOnAvailable": "{{count}} add-on credits 可用",
+      "promptCreditsLeftLabel": "剩余提示积分",
+      "addOnCreditsAvailableLabel": "可用附加积分"
     },
     "columns": {
       "plan": "标签"
+    },
+    "usageSummary": {
+      "dailyQuota": "每日额度用量",
+      "weeklyQuota": "每周额度用量",
+      "extraUsageBalance": "额外用量余额",
+      "autoRecharge": "自动充值",
+      "remaining": "剩余 {{value}}"
     },
     "injectToVSCode": "切换到 Windsurf",
     "injectSuccess": "已完成切换，Windsurf 正在启动。",

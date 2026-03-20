@@ -1568,15 +1568,24 @@
     "credits": {
       "title": "Tarif",
       "renewMonthly": "Kredity se obnovují každý měsíc",
-      "left": "Zbývá {{count}} kreditů",
+      "left": "zbývá {{value}} kreditů",
       "leftUnknown": "Zbývající kredity -",
       "promptLeft": "Zbývá {{remaining}}/{{total}} kreditů promptů",
       "promptLeftNoTotal": "Zbývá {{remaining}} kreditů promptů",
       "promptLeftUnknown": "Zbývající kredity promptů -",
-      "addOnAvailable": "Dostupných {{count}} doplňkových kreditů"
+      "addOnAvailable": "Dostupných {{count}} doplňkových kreditů",
+      "promptCreditsLeftLabel": "Zbývající prompt kredity",
+      "addOnCreditsAvailableLabel": "Dostupné doplňkové kredity"
     },
     "columns": {
       "plan": "Štítek"
+    },
+    "usageSummary": {
+      "dailyQuota": "Využití denní kvóty",
+      "weeklyQuota": "Využití týdenní kvóty",
+      "extraUsageBalance": "Zůstatek dodatečného využití",
+      "autoRecharge": "Automatické dobíjení",
+      "remaining": "Zbývá {{value}}"
     },
     "injectToVSCode": "Přepnout do Windsurf",
     "injectSuccess": "Přepnutí dokončeno. Windsurf se spouští.",
