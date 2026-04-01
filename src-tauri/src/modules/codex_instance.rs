@@ -343,12 +343,22 @@ fn sync_shared_directory(
         return create_directory_symlink(&global_dir, &instance_dir);
     }
 
-    Err(format!(
-        "检测到实例共享目录与全局目录不一致，请先手动合并后重试 ({}): instance={}, global={}",
-        relative_display,
-        display_abs_path(&instance_dir),
-        display_abs_path(&global_dir)
-    ))
+    fs::remove_dir_all(&instance_dir).map_err(|e| {
+        format!(
+            "强制重建实例共享目录链接前清理实例目录失败 ({}): {}",
+            display_abs_path(&instance_dir),
+            e
+        )
+    })?;
+    create_directory_symlink(&global_dir, &instance_dir).map_err(|e| {
+        format!(
+            "强制重建实例共享目录链接失败 ({} -> {}, {}): {}",
+            display_abs_path(&global_dir),
+            display_abs_path(&instance_dir),
+            relative_display,
+            e
+        )
+    })
 }
 
 fn sync_shared_file(
@@ -479,12 +489,22 @@ fn sync_shared_file(
         return create_file_symlink(&global_file, &instance_file);
     }
 
-    Err(format!(
-        "检测到实例共享文件与全局文件不一致，请先手动合并后重试 ({}): instance={}, global={}",
-        relative_display,
-        display_abs_path(&instance_file),
-        display_abs_path(&global_file)
-    ))
+    fs::remove_file(&instance_file).map_err(|e| {
+        format!(
+            "强制重建实例共享文件链接前清理实例文件失败 ({}): {}",
+            display_abs_path(&instance_file),
+            e
+        )
+    })?;
+    create_file_symlink(&global_file, &instance_file).map_err(|e| {
+        format!(
+            "强制重建实例共享文件链接失败 ({} -> {}, {}): {}",
+            display_abs_path(&global_file),
+            display_abs_path(&instance_file),
+            relative_display,
+            e
+        )
+    })
 }
 
 pub fn ensure_instance_shared_skills(profile_dir: &Path) -> Result<(), String> {

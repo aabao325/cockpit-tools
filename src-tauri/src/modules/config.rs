@@ -196,12 +196,21 @@ pub struct UserConfig {
     /// 切换 Codex 时是否自动启动/重启 Codex App
     #[serde(default = "default_codex_launch_on_switch")]
     pub codex_launch_on_switch: bool,
+    /// Antigravity 切号是否启用“本地落盘 + 扩展无感”且不重启
+    #[serde(default = "default_antigravity_dual_switch_no_restart_enabled")]
+    pub antigravity_dual_switch_no_restart_enabled: bool,
     /// 是否启用自动切号
     #[serde(default = "default_auto_switch_enabled")]
     pub auto_switch_enabled: bool,
     /// 自动切号阈值（百分比），任意模型配额低于此值触发
     #[serde(default = "default_auto_switch_threshold")]
     pub auto_switch_threshold: i32,
+    /// 自动切号触发模式：any_group | selected_groups
+    #[serde(default = "default_auto_switch_scope_mode")]
+    pub auto_switch_scope_mode: String,
+    /// 自动切号指定模型分组（分组 ID）
+    #[serde(default = "default_auto_switch_selected_group_ids")]
+    pub auto_switch_selected_group_ids: Vec<String>,
     /// 是否启用 Codex 自动切号
     #[serde(default = "default_codex_auto_switch_enabled")]
     pub codex_auto_switch_enabled: bool,
@@ -481,11 +490,20 @@ fn default_openclaw_auth_overwrite_on_switch() -> bool {
 fn default_codex_launch_on_switch() -> bool {
     true
 }
+fn default_antigravity_dual_switch_no_restart_enabled() -> bool {
+    false
+}
 fn default_auto_switch_enabled() -> bool {
     false
 }
 fn default_auto_switch_threshold() -> i32 {
     5
+}
+fn default_auto_switch_scope_mode() -> String {
+    "any_group".to_string()
+}
+fn default_auto_switch_selected_group_ids() -> Vec<String> {
+    Vec::new()
 }
 fn default_codex_auto_switch_enabled() -> bool {
     false
@@ -637,8 +655,12 @@ impl Default for UserConfig {
             ghcp_launch_on_switch: default_ghcp_launch_on_switch(),
             openclaw_auth_overwrite_on_switch: default_openclaw_auth_overwrite_on_switch(),
             codex_launch_on_switch: default_codex_launch_on_switch(),
+            antigravity_dual_switch_no_restart_enabled:
+                default_antigravity_dual_switch_no_restart_enabled(),
             auto_switch_enabled: default_auto_switch_enabled(),
             auto_switch_threshold: default_auto_switch_threshold(),
+            auto_switch_scope_mode: default_auto_switch_scope_mode(),
+            auto_switch_selected_group_ids: default_auto_switch_selected_group_ids(),
             codex_auto_switch_enabled: default_codex_auto_switch_enabled(),
             codex_auto_switch_primary_threshold: default_codex_auto_switch_primary_threshold(),
             codex_auto_switch_secondary_threshold: default_codex_auto_switch_secondary_threshold(),
@@ -1053,6 +1075,18 @@ pub fn load_user_config() -> Result<UserConfig, String> {
             obj.insert(
                 "codex_auto_switch_secondary_threshold".to_string(),
                 json!(legacy_auto_switch_threshold),
+            );
+        }
+        if !obj.contains_key("auto_switch_scope_mode") {
+            obj.insert(
+                "auto_switch_scope_mode".to_string(),
+                json!(default_auto_switch_scope_mode()),
+            );
+        }
+        if !obj.contains_key("auto_switch_selected_group_ids") {
+            obj.insert(
+                "auto_switch_selected_group_ids".to_string(),
+                json!(default_auto_switch_selected_group_ids()),
             );
         }
         let codex_legacy_threshold = obj

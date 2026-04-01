@@ -579,7 +579,9 @@
       "sideNavLayout": "사이드바 레이아웃",
       "sideNavLayoutDesc": "원래의 사이드바 레이아웃과 클래식 사이드바 레이아웃 간 전환",
       "sideNavLayoutOriginal": "원래 레이아웃",
-      "sideNavLayoutClassic": "클래식 레이아웃"
+      "sideNavLayoutClassic": "클래식 레이아웃",
+      "antigravityDualSwitchNoRestart": "재시작 없이 이중 전환",
+      "antigravityDualSwitchNoRestartDesc": "계정 전환 시 로컬 계정 데이터 기록과 확장 프로그램의 원활한 전환을 한 번에 수행하며, Antigravity를 재시작하지 않습니다."
     },
     "network": {
       "apiTitle": "반중력 조종석 API",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "일치하는 계정이 없습니다",
       "filterHint": "필터링할 그룹 {{count}}개 선택됨",
       "filterToggle": "이 그룹으로 필터링하려면 선택"
+    },
+    "switchHistory": {
+      "title": "전환 기록",
+      "empty": "아직 전환 기록이 없습니다",
+      "success": "성공",
+      "failed": "실패",
+      "target": "대상 계정: {{email}}",
+      "trigger": "트리거: {{trigger}}",
+      "triggerManual": "수동 전환",
+      "triggerAuto": "자동 전환",
+      "triggerUnknown": "알 수 없음",
+      "origin": "실행 주체: {{origin}}",
+      "originDesktop": "데스크톱",
+      "originPlugin": "확장 프로그램",
+      "originUnknown": "알 수 없음",
+      "autoReasonLabel": "자동 사유: {{reason}}",
+      "autoReason": "규칙: {{rule}}; 임계값: {{threshold}}%; 범위: {{scope}}; 모니터링 그룹: {{selectedGroups}}; 적중 그룹: {{hitGroups}}; 후보 계정: {{candidates}}",
+      "autoReasonUnknown": "자동 전환이 실행되었지만 상세 사유가 기록되지 않았습니다",
+      "autoReasonRuleCurrentDisabled": "현재 계정이 비활성화됨",
+      "autoReasonRuleQuotaForbidden": "현재 계정의 할당량이 제한됨",
+      "autoReasonRuleGroupBelowThreshold": "모델 그룹이 임계값 미만",
+      "autoReasonScopeAnyGroup": "임의 모델 그룹",
+      "autoReasonScopeSelectedGroups": "선택한 모델 그룹",
+      "stageResult": "로컬: {{local}} / 원활 전환: {{seamless}}",
+      "duration": "소요 시간: 총 {{total}}ms, 로컬 {{local}}ms, 원활 전환 {{seamless}}ms",
+      "error": "{{stage}} 단계 실패 ({{code}}): {{message}}",
+      "stageLocal": "로컬 기록",
+      "stageClientStart": "클라이언트 시작",
+      "stageSeamless": "확장 원활 전환",
+      "stageUnknown": "알 수 없는 단계",
+      "clear": "기록 지우기",
+      "clearConfirm": "전환 기록을 모두 삭제하시겠습니까?",
+      "loadFailed": "전환 기록을 불러오지 못했습니다: {{error}}",
+      "clearFailed": "전환 기록을 삭제하지 못했습니다: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "자동 전환",
       "enable": "자동 전환",
       "threshold": "전환 임계값",
-      "thresholdDesc": "모델 할당량이 이 비율 아래로 떨어지면 자동 전환이 트리거됩니다",
-      "hint": "모델 할당량이 임계값 아래로 떨어지면 할당량이 가장 많은 계정으로 자동 전환합니다."
+      "thresholdDesc": "모니터링 중인 모델 그룹이 이 비율 임계값에 도달하면 자동 전환이 실행됩니다",
+      "hint": "모니터링 중인 모델 그룹이 임계값에 도달하면 할당량이 가장 높은 계정으로 자동 전환합니다.",
+      "triggerModel": "트리거 모델",
+      "scopeAnyGroup": "임의 모델 그룹",
+      "scopeSelectedGroups": "선택한 모델 그룹",
+      "selectedGroups": "선택한 그룹",
+      "selectedGroupsEmpty": "사용 가능한 모델 그룹이 없습니다"
     },
     "quotaAlert": {
       "title": "할당량 경고",

@@ -318,15 +318,30 @@ export const useAccountStore = create<AccountState>()(
     },
 
     switchAccount: async (accountId: string) => {
-        const account = await accountService.switchAccount(accountId);
-        set({ currentAccount: account });
-        await get().fetchAccounts();
-        await emitCurrentAccountChanged({
-            platformId: 'antigravity',
-            accountId: account.id,
-            reason: 'switch',
-        });
-        return account;
+        const previousCurrentAccountId = get().currentAccount?.id ?? null;
+        try {
+            const account = await accountService.switchAccount(accountId);
+            set({ currentAccount: account });
+            await get().fetchAccounts();
+            await emitCurrentAccountChanged({
+                platformId: 'antigravity',
+                accountId: account.id,
+                reason: 'switch',
+            });
+            return account;
+        } catch (error) {
+            await get().fetchAccounts();
+            await get().fetchCurrentAccount();
+            const nextCurrentAccountId = get().currentAccount?.id ?? null;
+            if (previousCurrentAccountId !== nextCurrentAccountId) {
+                await emitCurrentAccountChanged({
+                    platformId: 'antigravity',
+                    accountId: nextCurrentAccountId,
+                    reason: 'switch',
+                });
+            }
+            throw error;
+        }
     },
 
     syncCurrentFromClient: async () => {

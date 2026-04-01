@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{broadcast, oneshot, Mutex, RwLock};
 use tokio_tungstenite::tungstenite::Message;
 
 use super::config::{get_preferred_port, init_server_status, PORT_RANGE};
@@ -41,6 +41,17 @@ pub enum WsMessage {
     #[serde(rename = "event.wakeup_override")]
     WakeupOverride { enabled: bool },
 
+    /// 触发扩展执行无感切号
+    #[serde(rename = "event.plugin_switch_account")]
+    PluginSwitchAccountEvent {
+        request_id: String,
+        target_email: String,
+        switch_mode: String,
+        trigger_type: String,
+        trigger_source: String,
+        reason: String,
+    },
+
     // ============ 请求（扩展 -> Tools） ============
     /// 请求获取账号列表
     #[serde(rename = "request.get_accounts")]
@@ -56,7 +67,11 @@ pub enum WsMessage {
 
     /// 请求切换账号（真正的切换）
     #[serde(rename = "request.switch_account")]
-    SwitchAccount { account_id: String },
+    SwitchAccount {
+        account_id: String,
+        #[serde(default)]
+        request_id: Option<String>,
+    },
 
     /// 请求设置语言
     #[serde(rename = "request.set_language")]
@@ -123,6 +138,21 @@ pub enum WsMessage {
     /// 错误响应
     #[serde(rename = "response.error")]
     ErrorResponse { request_id: String, error: String },
+
+    /// 扩展无感切号响应
+    #[serde(rename = "response.plugin_switch_account")]
+    PluginSwitchAccountResponse {
+        execution_id: String,
+        request_id: Option<String>,
+        success: bool,
+        effective_mode: String,
+        from_email: Option<String>,
+        to_email: String,
+        duration_ms: u64,
+        error_code: Option<String>,
+        error_message: Option<String>,
+        finished_at: String,
+    },
 }
 
 /// 账号信息（用于 WebSocket 传输）
@@ -155,6 +185,21 @@ pub struct AccountTokenInfo {
     pub access_token: String,
     pub expires_at: i64,
     pub project_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginSwitchAccountResponsePayload {
+    pub execution_id: String,
+    pub request_id: Option<String>,
+    pub success: bool,
+    pub effective_mode: String,
+    pub from_email: Option<String>,
+    pub to_email: String,
+    pub duration_ms: u64,
+    pub error_code: Option<String>,
+    pub error_message: Option<String>,
+    pub finished_at: String,
 }
 
 /// 已连接的客户端信息
@@ -191,6 +236,9 @@ impl WsServer {
 
 /// 全局 WebSocket 服务实例
 static WS_SERVER: std::sync::OnceLock<Arc<WsServer>> = std::sync::OnceLock::new();
+static PLUGIN_SWITCH_PENDING: std::sync::LazyLock<
+    Mutex<HashMap<String, oneshot::Sender<PluginSwitchAccountResponsePayload>>>,
+> = std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// 获取全局 WebSocket 服务实例
 pub fn get_server() -> &'static Arc<WsServer> {
@@ -245,6 +293,80 @@ pub fn broadcast_wakeup_override(enabled: bool) {
     let server = get_server();
     server.broadcast(WsMessage::WakeupOverride { enabled });
     crate::modules::logger::log_info(&format!("[WS] 广播唤醒互斥: enabled={}", enabled));
+}
+
+pub async fn connected_client_count() -> usize {
+    let server = get_server();
+    let clients = server.clients.read().await;
+    clients.len()
+}
+
+pub async fn wait_for_connected_clients(timeout_ms: u64) -> Result<usize, String> {
+    let initial_count = connected_client_count().await;
+    if initial_count > 0 {
+        return Ok(initial_count);
+    }
+
+    let started = std::time::Instant::now();
+    let timeout = std::time::Duration::from_millis(timeout_ms);
+    while started.elapsed() < timeout {
+        let count = connected_client_count().await;
+        if count > 0 {
+            return Ok(count);
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+    }
+
+    Err(format!("等待扩展连接超时（{}ms）", timeout_ms))
+}
+
+pub async fn request_plugin_switch_account(
+    target_email: &str,
+    switch_mode: &str,
+    trigger_type: &str,
+    trigger_source: &str,
+    reason: &str,
+    timeout_ms: u64,
+) -> Result<PluginSwitchAccountResponsePayload, String> {
+    let email = target_email.trim();
+    if email.is_empty() {
+        return Err("目标账号邮箱不能为空".to_string());
+    }
+
+    let request_id = format!("plugin_switch_{}", uuid::Uuid::new_v4());
+    let (tx, rx) = oneshot::channel::<PluginSwitchAccountResponsePayload>();
+    {
+        let mut pending = PLUGIN_SWITCH_PENDING.lock().await;
+        pending.insert(request_id.clone(), tx);
+    }
+
+    let msg = WsMessage::PluginSwitchAccountEvent {
+        request_id: request_id.clone(),
+        target_email: email.to_string(),
+        switch_mode: switch_mode.to_string(),
+        trigger_type: trigger_type.to_string(),
+        trigger_source: trigger_source.to_string(),
+        reason: reason.to_string(),
+    };
+
+    let server = get_server();
+    let json = serde_json::to_string(&msg).map_err(|e| format!("序列化无感切号请求失败: {}", e))?;
+    if server.tx.send(json).is_err() {
+        let mut pending = PLUGIN_SWITCH_PENDING.lock().await;
+        pending.remove(&request_id);
+        return Err("扩展未连接，无法执行无感切号".to_string());
+    }
+
+    let wait = tokio::time::timeout(std::time::Duration::from_millis(timeout_ms), rx).await;
+    match wait {
+        Ok(Ok(payload)) => Ok(payload),
+        Ok(Err(_)) => Err("扩展已断开，未收到无感切号结果".to_string()),
+        Err(_) => {
+            let mut pending = PLUGIN_SWITCH_PENDING.lock().await;
+            pending.remove(&request_id);
+            Err(format!("等待扩展无感切号响应超时（{}ms）", timeout_ms))
+        }
+    }
 }
 
 /// 启动 WebSocket 服务（支持动态端口尝试）
@@ -469,26 +591,70 @@ async fn handle_client_message(
             }
         }
 
-        WsMessage::SwitchAccount { account_id } => {
+        WsMessage::SwitchAccount {
+            account_id,
+            request_id,
+        } => {
             crate::modules::logger::log_info("[WS] 收到切换请求");
 
             // 异步执行切换
             let server_clone = server.tx.clone();
             tokio::spawn(async move {
-                match crate::modules::account::switch_account_internal(&account_id).await {
+                let dual_no_restart_enabled =
+                    crate::modules::config::get_user_config().antigravity_dual_switch_no_restart_enabled;
+                let switch_result = if dual_no_restart_enabled {
+                    crate::modules::account::switch_account_dual_no_restart(
+                        &account_id,
+                        "manual",
+                        "tools.ws.request_switch_account",
+                        "ws_request_switch_account",
+                        None,
+                    )
+                    .await
+                } else {
+                    crate::modules::account::switch_account_internal(&account_id).await
+                };
+
+                match switch_result {
                     Ok(account) => {
-                        let msg = WsMessage::AccountSwitched {
-                            account_id: account.id,
-                            email: account.email,
+                        // 无感双通道链路内已广播 account_switched，这里避免重复广播。
+                        if !dual_no_restart_enabled {
+                            let msg = WsMessage::AccountSwitched {
+                                account_id: account.id,
+                                email: account.email,
+                            };
+                            if let Ok(json) = serde_json::to_string(&msg) {
+                                let _ = server_clone.send(json);
+                            }
+                        }
+                        // 通知 Tools 前端刷新当前账号与账号列表，避免插件端切换后 UI 仍显示旧标识。
+                        broadcast_data_changed("ws_switch_account");
+                        if let Some(request_id) = request_id.clone() {
+                            let response = WsMessage::SuccessResponse {
+                                request_id,
+                                message: "切换账号成功".to_string(),
+                            };
+                            if let Ok(json) = serde_json::to_string(&response) {
+                                let _ = server_clone.send(json);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        let error_message = e;
+                        let msg = WsMessage::SwitchError {
+                            message: error_message.clone(),
                         };
                         if let Ok(json) = serde_json::to_string(&msg) {
                             let _ = server_clone.send(json);
                         }
-                    }
-                    Err(e) => {
-                        let msg = WsMessage::SwitchError { message: e };
-                        if let Ok(json) = serde_json::to_string(&msg) {
-                            let _ = server_clone.send(json);
+                        if let Some(request_id) = request_id {
+                            let response = WsMessage::ErrorResponse {
+                                request_id,
+                                error: error_message,
+                            };
+                            if let Ok(json) = serde_json::to_string(&response) {
+                                let _ = server_clone.send(json);
+                            }
                         }
                     }
                 }
@@ -588,6 +754,50 @@ async fn handle_client_message(
             crate::modules::logger::log_info(&format!("[WS] 收到数据变更通知: {}", source));
             // 广播给其他客户端
             server.broadcast(WsMessage::DataChanged { source });
+        }
+
+        WsMessage::PluginSwitchAccountResponse {
+            execution_id,
+            request_id,
+            success,
+            effective_mode,
+            from_email,
+            to_email,
+            duration_ms,
+            error_code,
+            error_message,
+            finished_at,
+        } => {
+            let response_payload = PluginSwitchAccountResponsePayload {
+                execution_id,
+                request_id: request_id.clone(),
+                success,
+                effective_mode,
+                from_email,
+                to_email,
+                duration_ms,
+                error_code,
+                error_message,
+                finished_at,
+            };
+
+            let Some(req_id) = request_id else {
+                crate::modules::logger::log_warn("[WS] 收到无感切号响应但缺少 request_id");
+                return Ok(());
+            };
+
+            let sender = {
+                let mut pending = PLUGIN_SWITCH_PENDING.lock().await;
+                pending.remove(&req_id)
+            };
+            if let Some(pending_tx) = sender {
+                let _ = pending_tx.send(response_payload);
+            } else {
+                crate::modules::logger::log_warn(&format!(
+                    "[WS] 收到无匹配请求的无感切号响应: request_id={}",
+                    req_id
+                ));
+            }
         }
 
         _ => {}

@@ -579,7 +579,9 @@
       "sideNavLayout": "Disposition de la barre latérale",
       "sideNavLayoutDesc": "Basculer entre la disposition originale et classique de la barre latérale",
       "sideNavLayoutOriginal": "Disposition originale",
-      "sideNavLayoutClassic": "Disposition classique"
+      "sideNavLayoutClassic": "Disposition classique",
+      "antigravityDualSwitchNoRestart": "Bascule double sans redémarrage",
+      "antigravityDualSwitchNoRestartDesc": "Lors du changement de compte, les données locales sont écrites et la bascule fluide de l’extension est exécutée dans un seul flux, sans redémarrer Antigravity."
     },
     "network": {
       "apiTitle": "API du cockpit antigravité",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Aucun compte correspondant",
       "filterHint": "{{count}} groupe(s) sélectionné(s) pour le filtrage",
       "filterToggle": "Cochez pour filtrer par ce groupe"
+    },
+    "switchHistory": {
+      "title": "Historique des bascules",
+      "empty": "Aucun historique de bascule pour le moment",
+      "success": "Réussi",
+      "failed": "Échec",
+      "target": "Compte cible : {{email}}",
+      "trigger": "Déclencheur : {{trigger}}",
+      "triggerManual": "Bascule manuelle",
+      "triggerAuto": "Bascule automatique",
+      "triggerUnknown": "Inconnu",
+      "origin": "Initiateur : {{origin}}",
+      "originDesktop": "Bureau",
+      "originPlugin": "Extension",
+      "originUnknown": "Inconnu",
+      "autoReasonLabel": "Raison auto : {{reason}}",
+      "autoReason": "Règle : {{rule}} ; seuil : {{threshold}}% ; portée : {{scope}} ; groupes surveillés : {{selectedGroups}} ; groupes touchés : {{hitGroups}} ; candidats : {{candidates}}",
+      "autoReasonUnknown": "La bascule automatique a été déclenchée, mais aucune raison détaillée n’a été enregistrée",
+      "autoReasonRuleCurrentDisabled": "Le compte actuel est désactivé",
+      "autoReasonRuleQuotaForbidden": "Le quota du compte actuel est bloqué",
+      "autoReasonRuleGroupBelowThreshold": "Groupe de modèles sous le seuil",
+      "autoReasonScopeAnyGroup": "N’importe quel groupe de modèles",
+      "autoReasonScopeSelectedGroups": "Groupes de modèles sélectionnés",
+      "stageResult": "Local : {{local}} / Fluide : {{seamless}}",
+      "duration": "Durée : total {{total}}ms, local {{local}}ms, fluide {{seamless}}ms",
+      "error": "Échec à l’étape {{stage}} ({{code}}) : {{message}}",
+      "stageLocal": "Écriture locale",
+      "stageClientStart": "Démarrage du client",
+      "stageSeamless": "Extension fluide",
+      "stageUnknown": "Étape inconnue",
+      "clear": "Effacer l’historique",
+      "clearConfirm": "Effacer tout l’historique des bascules ?",
+      "loadFailed": "Échec du chargement de l’historique des bascules : {{error}}",
+      "clearFailed": "Échec de l’effacement de l’historique des bascules : {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Changement automatique",
       "enable": "Changement automatique",
       "threshold": "Seuil de changement",
-      "thresholdDesc": "Le changement automatique se déclenche lorsque le quota d'un modèle tombe en dessous de ce pourcentage",
-      "hint": "Bascule automatiquement vers le compte avec le quota le plus élevé lorsque le quota d'un modèle descend en dessous du seuil."
+      "thresholdDesc": "La bascule automatique se déclenche lorsque les groupes de modèles surveillés atteignent ce seuil en pourcentage",
+      "hint": "Bascule automatiquement vers le compte avec le quota le plus élevé lorsque les groupes de modèles surveillés atteignent le seuil.",
+      "triggerModel": "Modèle de déclenchement",
+      "scopeAnyGroup": "N’importe quel groupe de modèles",
+      "scopeSelectedGroups": "Groupes de modèles sélectionnés",
+      "selectedGroups": "Groupes sélectionnés",
+      "selectedGroupsEmpty": "Aucun groupe de modèles disponible"
     },
     "quotaAlert": {
       "title": "Alerte de quota",

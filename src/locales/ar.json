@@ -625,7 +625,9 @@
       "sideNavLayout": "تخطيط الشريط الجانبي",
       "sideNavLayoutDesc": "التبديل بين التخطيط الأصلي والكلاسيكي للشريط الجانبي",
       "sideNavLayoutOriginal": "التخطيط الأصلي",
-      "sideNavLayoutClassic": "التخطيط الكلاسيكي"
+      "sideNavLayoutClassic": "التخطيط الكلاسيكي",
+      "antigravityDualSwitchNoRestart": "تبديل ثنائي بدون إعادة تشغيل",
+      "antigravityDualSwitchNoRestartDesc": "عند تبديل الحساب، يتم تنفيذ كتابة بيانات الحساب محليًا والتبديل السلس عبر الإضافة في تدفق واحد، دون إعادة تشغيل Antigravity."
     },
     "network": {
       "apiTitle": "واجهة برمجة تطبيقات قمرة القيادة المضادة للجاذبية",
@@ -866,6 +868,40 @@
       "accountPickerEmpty": "لا توجد حسابات مطابقة",
       "filterHint": "تم تحديد {{count}} مجموعة للتصفية",
       "filterToggle": "حدّد للتصفية حسب هذه المجموعة"
+    },
+    "switchHistory": {
+      "title": "سجل التبديل",
+      "empty": "لا يوجد سجل تبديل حتى الآن",
+      "success": "نجاح",
+      "failed": "فشل",
+      "target": "الحساب الهدف: {{email}}",
+      "trigger": "المُشغِّل: {{trigger}}",
+      "triggerManual": "تبديل يدوي",
+      "triggerAuto": "تبديل تلقائي",
+      "triggerUnknown": "غير معروف",
+      "origin": "جهة التنفيذ: {{origin}}",
+      "originDesktop": "سطح المكتب",
+      "originPlugin": "الإضافة",
+      "originUnknown": "غير معروف",
+      "autoReasonLabel": "سبب التبديل التلقائي: {{reason}}",
+      "autoReason": "القاعدة: {{rule}}؛ العتبة: {{threshold}}%؛ النطاق: {{scope}}؛ المجموعات المراقبة: {{selectedGroups}}؛ المجموعات المطابِقة: {{hitGroups}}؛ الحسابات المرشحة: {{candidates}}",
+      "autoReasonUnknown": "تم تشغيل التبديل التلقائي، لكن لم يتم تسجيل سبب مفصل",
+      "autoReasonRuleCurrentDisabled": "الحساب الحالي معطّل",
+      "autoReasonRuleQuotaForbidden": "حصة الحساب الحالي مقيّدة",
+      "autoReasonRuleGroupBelowThreshold": "مجموعة النماذج أقل من العتبة",
+      "autoReasonScopeAnyGroup": "أي مجموعة نماذج",
+      "autoReasonScopeSelectedGroups": "مجموعات نماذج محددة",
+      "stageResult": "محلي: {{local}} / سلس: {{seamless}}",
+      "duration": "المدة: الإجمالي {{total}}ms، المحلي {{local}}ms، السلس {{seamless}}ms",
+      "error": "فشل في المرحلة {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "كتابة محلية",
+      "stageClientStart": "تشغيل العميل",
+      "stageSeamless": "التبديل السلس عبر الإضافة",
+      "stageUnknown": "مرحلة غير معروفة",
+      "clear": "مسح السجل",
+      "clearConfirm": "هل تريد مسح كل سجلات التبديل؟",
+      "loadFailed": "فشل تحميل سجل التبديل: {{error}}",
+      "clearFailed": "فشل مسح سجل التبديل: {{error}}"
     }
   },
   "overview": {
@@ -1771,8 +1807,13 @@
       "title": "التبديل التلقائي",
       "enable": "التبديل التلقائي",
       "threshold": "عتبة التبديل",
-      "thresholdDesc": "يتم تشغيل التبديل التلقائي عندما تنخفض حصة أي نموذج عن هذه النسبة المئوية",
-      "hint": "يتم التبديل تلقائياً إلى الحساب ذي الحصة الأعلى عندما تنخفض حصة أي نموذج عن العتبة."
+      "thresholdDesc": "يتم تشغيل التبديل التلقائي عندما تصل مجموعات النماذج المُراقبة إلى هذه العتبة المئوية",
+      "hint": "يتم التبديل تلقائيًا إلى الحساب صاحب أعلى حصة عندما تصل مجموعات النماذج المُراقبة إلى العتبة.",
+      "triggerModel": "نموذج التفعيل",
+      "scopeAnyGroup": "أي مجموعة نماذج",
+      "scopeSelectedGroups": "مجموعات نماذج محددة",
+      "selectedGroups": "المجموعات المحددة",
+      "selectedGroupsEmpty": "لا توجد مجموعات نماذج متاحة"
     },
     "quotaAlert": {
       "title": "تنبيه الحصة",

@@ -579,7 +579,9 @@
       "sideNavLayout": "側邊欄佈局",
       "sideNavLayoutDesc": "切換原始佈局或經典佈局",
       "sideNavLayoutOriginal": "原始佈局",
-      "sideNavLayoutClassic": "經典佈局"
+      "sideNavLayoutClassic": "經典佈局",
+      "antigravityDualSwitchNoRestart": "無感雙通道切號（不重啟）",
+      "antigravityDualSwitchNoRestartDesc": "切號時同時執行本地落盤與擴充套件無感切號，不再自動重啟 Antigravity。"
     },
     "network": {
       "apiTitle": "反重力駕駛艙 API",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "沒有符合條件的帳號",
       "filterHint": "已勾選 {{count}} 個分組做篩選",
       "filterToggle": "勾選以篩選此分組"
+    },
+    "switchHistory": {
+      "title": "切換記錄",
+      "empty": "暫無切換記錄",
+      "success": "成功",
+      "failed": "失敗",
+      "target": "目標帳號：{{email}}",
+      "trigger": "觸發方式：{{trigger}}",
+      "triggerManual": "手動切換",
+      "triggerAuto": "自動切換",
+      "triggerUnknown": "未知",
+      "origin": "觸發端：{{origin}}",
+      "originDesktop": "桌面端",
+      "originPlugin": "外掛端",
+      "originUnknown": "未知",
+      "autoReasonLabel": "自動原因：{{reason}}",
+      "autoReason": "規則：{{rule}}；閾值：{{threshold}}%；範圍：{{scope}}；監控分組：{{selectedGroups}}；命中分組：{{hitGroups}}；候選帳號：{{candidates}}",
+      "autoReasonUnknown": "已觸發自動切號，但未記錄詳細原因",
+      "autoReasonRuleCurrentDisabled": "目前帳號已停用",
+      "autoReasonRuleQuotaForbidden": "目前帳號配額受限",
+      "autoReasonRuleGroupBelowThreshold": "模型分組低於閾值",
+      "autoReasonScopeAnyGroup": "任一模型分組",
+      "autoReasonScopeSelectedGroups": "指定模型分組",
+      "stageResult": "本地：{{local}} / 無感：{{seamless}}",
+      "duration": "耗時：總 {{total}}ms，本地 {{local}}ms，無感 {{seamless}}ms",
+      "error": "失敗階段：{{stage}}（{{code}}）{{message}}",
+      "stageLocal": "本地落盤",
+      "stageClientStart": "啟動客戶端",
+      "stageSeamless": "外掛無感",
+      "stageUnknown": "未知階段",
+      "clear": "清空記錄",
+      "clearConfirm": "確定清空全部切換記錄嗎？",
+      "loadFailed": "載入切換記錄失敗：{{error}}",
+      "clearFailed": "清空切換記錄失敗：{{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "自動切換",
       "enable": "自動切換",
       "threshold": "切換閾值",
-      "thresholdDesc": "任意模型配額低於此百分比時觸發自動切換",
-      "hint": "當任意模型配額低於閾值時，自動切換到配額最高的帳號。"
+      "thresholdDesc": "命中監控的模型分組閾值時觸發自動切號",
+      "hint": "當命中監控的模型分組閾值時，自動切換到配額最高的帳號。",
+      "triggerModel": "觸發模型",
+      "scopeAnyGroup": "任一模型分組",
+      "scopeSelectedGroups": "指定模型分組",
+      "selectedGroups": "指定分組",
+      "selectedGroupsEmpty": "暫無可選分組"
     },
     "quotaAlert": {
       "title": "超額預警",

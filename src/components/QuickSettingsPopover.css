@@ -181,6 +181,40 @@
   flex-shrink: 0;
 }
 
+.qs-row--top {
+  align-items: flex-start;
+}
+
+.qs-row-control--fill {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  flex-shrink: 1;
+  justify-content: flex-end;
+}
+
+.qs-check-group-inline {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 14px;
+}
+
+.qs-check-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.qs-check-item input {
+  margin: 0;
+}
+
 /* Field group */
 .qs-field-group {
   display: flex;
@@ -384,6 +418,10 @@
   border: 1px solid var(--border-light);
 }
 
+.qs-hint--compact {
+  margin: 0;
+}
+
 /* Active state for the trigger button */
 .quick-settings-wrapper .btn.active {
   background: var(--bg-hover);
@@ -425,4 +463,16 @@
 
 .qs-error-close:hover {
   background: rgba(239, 68, 68, 0.15);
+}
+
+@media (max-width: 640px) {
+  .qs-row--top {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .qs-row--top .qs-row-control--fill,
+  .qs-row--top .qs-check-group-inline {
+    justify-content: flex-start;
+  }
 }

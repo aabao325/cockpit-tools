@@ -579,7 +579,9 @@
       "sideNavLayout": "サイドバーのレイアウト",
       "sideNavLayoutDesc": "元のサイドバーとクラシックなサイドバーのレイアウトを切り替えます",
       "sideNavLayoutOriginal": "元のレイアウト",
-      "sideNavLayoutClassic": "クラシックレイアウト"
+      "sideNavLayoutClassic": "クラシックレイアウト",
+      "antigravityDualSwitchNoRestart": "再起動なしデュアル切替",
+      "antigravityDualSwitchNoRestartDesc": "切替時にローカルのアカウントデータ書き込みと拡張機能のシームレス切替を1つのフローで実行し、Antigravity を再起動しません。"
     },
     "network": {
       "apiTitle": "反重力コックピット API",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "条件に一致するアカウントはありません",
       "filterHint": "フィルター対象に {{count}} 件のグループを選択中",
       "filterToggle": "このグループで絞り込む"
+    },
+    "switchHistory": {
+      "title": "切替履歴",
+      "empty": "切替履歴はまだありません",
+      "success": "成功",
+      "failed": "失敗",
+      "target": "対象アカウント: {{email}}",
+      "trigger": "トリガー: {{trigger}}",
+      "triggerManual": "手動切替",
+      "triggerAuto": "自動切替",
+      "triggerUnknown": "不明",
+      "origin": "実行元: {{origin}}",
+      "originDesktop": "デスクトップ",
+      "originPlugin": "拡張機能",
+      "originUnknown": "不明",
+      "autoReasonLabel": "自動理由: {{reason}}",
+      "autoReason": "ルール: {{rule}}；しきい値: {{threshold}}%；範囲: {{scope}}；監視グループ: {{selectedGroups}}；命中グループ: {{hitGroups}}；候補アカウント: {{candidates}}",
+      "autoReasonUnknown": "自動切替は実行されましたが、詳細な理由は記録されていません",
+      "autoReasonRuleCurrentDisabled": "現在のアカウントは無効です",
+      "autoReasonRuleQuotaForbidden": "現在のアカウントのクォータは制限されています",
+      "autoReasonRuleGroupBelowThreshold": "モデルグループがしきい値未満",
+      "autoReasonScopeAnyGroup": "任意のモデルグループ",
+      "autoReasonScopeSelectedGroups": "指定したモデルグループ",
+      "stageResult": "ローカル: {{local}} / シームレス: {{seamless}}",
+      "duration": "所要時間: 合計 {{total}}ms、ローカル {{local}}ms、シームレス {{seamless}}ms",
+      "error": "{{stage}} で失敗 ({{code}}): {{message}}",
+      "stageLocal": "ローカル書き込み",
+      "stageClientStart": "クライアント起動",
+      "stageSeamless": "拡張機能シームレス",
+      "stageUnknown": "不明な段階",
+      "clear": "履歴をクリア",
+      "clearConfirm": "すべての切替履歴をクリアしますか？",
+      "loadFailed": "切替履歴の読み込みに失敗しました: {{error}}",
+      "clearFailed": "切替履歴のクリアに失敗しました: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "自動切替",
       "enable": "自動切替",
       "threshold": "切替閾値",
-      "thresholdDesc": "任意のモデルのクォータがこのパーセンテージを下回ると自動切替がトリガーされます",
-      "hint": "任意のモデルのクォータが閾値を下回ると、最もクォータの多いアカウントに自動的に切り替えます。"
+      "thresholdDesc": "監視対象のモデルグループがこの割合に達したときに自動切替を実行します",
+      "hint": "監視対象のモデルグループがしきい値に達したとき、最もクォータが高いアカウントへ自動で切り替えます。",
+      "triggerModel": "トリガーモデル",
+      "scopeAnyGroup": "任意のモデルグループ",
+      "scopeSelectedGroups": "指定したモデルグループ",
+      "selectedGroups": "指定グループ",
+      "selectedGroupsEmpty": "利用可能なモデルグループがありません"
     },
     "quotaAlert": {
       "title": "クォータ警告",

@@ -200,6 +200,8 @@ pub fn run() {
             commands::account::refresh_all_quotas,
             commands::account::refresh_current_quota,
             commands::account::switch_account,
+            commands::account::load_antigravity_switch_history,
+            commands::account::clear_antigravity_switch_history,
             commands::account::bind_account_fingerprint,
             commands::account::get_bound_accounts,
             commands::account::update_account_tags,

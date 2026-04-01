@@ -579,7 +579,9 @@
       "sideNavLayout": "Layout della barra laterale",
       "sideNavLayoutDesc": "Passa dal layout originale a quello classico della barra laterale",
       "sideNavLayoutOriginal": "Layout originale",
-      "sideNavLayoutClassic": "Layout classico"
+      "sideNavLayoutClassic": "Layout classico",
+      "antigravityDualSwitchNoRestart": "Cambio doppio senza riavvio",
+      "antigravityDualSwitchNoRestartDesc": "Durante il cambio account, la scrittura dei dati locali e il cambio fluido dell’estensione vengono eseguiti in un unico flusso, senza riavviare Antigravity."
     },
     "network": {
       "apiTitle": "API della cabina di pilotaggio antigravità",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Nessun account corrispondente",
       "filterHint": "{{count}} gruppi selezionati per il filtro",
       "filterToggle": "Seleziona per filtrare per questo gruppo"
+    },
+    "switchHistory": {
+      "title": "Cronologia dei cambi",
+      "empty": "Nessuna cronologia dei cambi al momento",
+      "success": "Riuscito",
+      "failed": "Non riuscito",
+      "target": "Account di destinazione: {{email}}",
+      "trigger": "Attivatore: {{trigger}}",
+      "triggerManual": "Cambio manuale",
+      "triggerAuto": "Cambio automatico",
+      "triggerUnknown": "Sconosciuto",
+      "origin": "Origine: {{origin}}",
+      "originDesktop": "App desktop",
+      "originPlugin": "Estensione",
+      "originUnknown": "Sconosciuto",
+      "autoReasonLabel": "Motivo automatico: {{reason}}",
+      "autoReason": "Regola: {{rule}}; soglia: {{threshold}}%; ambito: {{scope}}; gruppi monitorati: {{selectedGroups}}; gruppi colpiti: {{hitGroups}}; candidati: {{candidates}}",
+      "autoReasonUnknown": "È stato attivato il cambio automatico, ma non è stato registrato un motivo dettagliato",
+      "autoReasonRuleCurrentDisabled": "L’account corrente è disabilitato",
+      "autoReasonRuleQuotaForbidden": "La quota dell’account corrente è limitata",
+      "autoReasonRuleGroupBelowThreshold": "Gruppo di modelli sotto soglia",
+      "autoReasonScopeAnyGroup": "Qualsiasi gruppo di modelli",
+      "autoReasonScopeSelectedGroups": "Gruppi di modelli selezionati",
+      "stageResult": "Locale: {{local}} / Fluido: {{seamless}}",
+      "duration": "Durata: totale {{total}}ms, locale {{local}}ms, fluido {{seamless}}ms",
+      "error": "Errore nella fase {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Scrittura locale",
+      "stageClientStart": "Avvio client",
+      "stageSeamless": "Estensione fluida",
+      "stageUnknown": "Fase sconosciuta",
+      "clear": "Cancella cronologia",
+      "clearConfirm": "Cancellare tutta la cronologia dei cambi?",
+      "loadFailed": "Impossibile caricare la cronologia dei cambi: {{error}}",
+      "clearFailed": "Impossibile cancellare la cronologia dei cambi: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Cambio automatico",
       "enable": "Cambio automatico",
       "threshold": "Soglia di cambio",
-      "thresholdDesc": "Il cambio automatico si attiva quando la quota di un modello scende sotto questa percentuale",
-      "hint": "Passa automaticamente all'account con la quota più alta quando la quota di un modello scende sotto la soglia."
+      "thresholdDesc": "Il cambio automatico si attiva quando i gruppi di modelli monitorati raggiungono questa soglia percentuale",
+      "hint": "Passa automaticamente all’account con quota più alta quando i gruppi di modelli monitorati raggiungono la soglia.",
+      "triggerModel": "Modello di attivazione",
+      "scopeAnyGroup": "Qualsiasi gruppo di modelli",
+      "scopeSelectedGroups": "Gruppi di modelli selezionati",
+      "selectedGroups": "Gruppi selezionati",
+      "selectedGroupsEmpty": "Nessun gruppo di modelli disponibile"
     },
     "quotaAlert": {
       "title": "Avviso quota",

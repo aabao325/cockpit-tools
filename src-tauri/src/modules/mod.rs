@@ -1,6 +1,7 @@
 pub mod account;
 pub mod account_index_repair;
 pub mod announcement;
+pub mod antigravity_switch_history;
 pub mod codebuddy_account;
 pub mod codebuddy_cn_account;
 pub mod codebuddy_cn_instance;

@@ -579,7 +579,9 @@
       "sideNavLayout": "Układ paska bocznego",
       "sideNavLayoutDesc": "Przełącz między oryginalnym a klasycznym układem paska bocznego",
       "sideNavLayoutOriginal": "Układ oryginalny",
-      "sideNavLayoutClassic": "Układ klasyczny"
+      "sideNavLayoutClassic": "Układ klasyczny",
+      "antigravityDualSwitchNoRestart": "Podwójne przełączanie bez restartu",
+      "antigravityDualSwitchNoRestartDesc": "Podczas przełączania konta zapis lokalnych danych i płynne przełączenie przez rozszerzenie są wykonywane w jednym przebiegu, bez restartu Antigravity."
     },
     "network": {
       "apiTitle": "API kokpitu antygrawitacyjnego",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Brak pasujących kont",
       "filterHint": "Wybrano {{count}} grup do filtrowania",
       "filterToggle": "Zaznacz, aby filtrować według tej grupy"
+    },
+    "switchHistory": {
+      "title": "Historia przełączeń",
+      "empty": "Brak historii przełączeń",
+      "success": "Sukces",
+      "failed": "Niepowodzenie",
+      "target": "Konto docelowe: {{email}}",
+      "trigger": "Wyzwalacz: {{trigger}}",
+      "triggerManual": "Przełączenie ręczne",
+      "triggerAuto": "Przełączenie automatyczne",
+      "triggerUnknown": "Nieznane",
+      "origin": "Inicjator: {{origin}}",
+      "originDesktop": "Pulpit",
+      "originPlugin": "Rozszerzenie",
+      "originUnknown": "Nieznane",
+      "autoReasonLabel": "Powód automatyczny: {{reason}}",
+      "autoReason": "Reguła: {{rule}}; próg: {{threshold}}%; zakres: {{scope}}; monitorowane grupy: {{selectedGroups}}; trafione grupy: {{hitGroups}}; kandydaci: {{candidates}}",
+      "autoReasonUnknown": "Uruchomiono automatyczne przełączenie, ale nie zapisano szczegółowego powodu",
+      "autoReasonRuleCurrentDisabled": "Bieżące konto jest wyłączone",
+      "autoReasonRuleQuotaForbidden": "Limit bieżącego konta jest ograniczony",
+      "autoReasonRuleGroupBelowThreshold": "Grupa modeli poniżej progu",
+      "autoReasonScopeAnyGroup": "Dowolna grupa modeli",
+      "autoReasonScopeSelectedGroups": "Wybrane grupy modeli",
+      "stageResult": "Lokalnie: {{local}} / Płynnie: {{seamless}}",
+      "duration": "Czas: łącznie {{total}}ms, lokalnie {{local}}ms, płynnie {{seamless}}ms",
+      "error": "Błąd na etapie {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Zapis lokalny",
+      "stageClientStart": "Start klienta",
+      "stageSeamless": "Płynne rozszerzenie",
+      "stageUnknown": "Nieznany etap",
+      "clear": "Wyczyść historię",
+      "clearConfirm": "Wyczyścić całą historię przełączeń?",
+      "loadFailed": "Nie udało się wczytać historii przełączeń: {{error}}",
+      "clearFailed": "Nie udało się wyczyścić historii przełączeń: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Automatyczne przełączanie",
       "enable": "Automatyczne przełączanie",
       "threshold": "Próg przełączania",
-      "thresholdDesc": "Automatyczne przełączanie zostanie wyzwolone, gdy limit dowolnego modelu spadnie poniżej tego procentu",
-      "hint": "Automatycznie przełącza na konto z najwyższym limitem, gdy limit dowolnego modelu spadnie poniżej progu."
+      "thresholdDesc": "Automatyczne przełączenie uruchamia się, gdy monitorowane grupy modeli osiągną ten próg procentowy",
+      "hint": "Automatycznie przełącza na konto z najwyższym limitem, gdy monitorowane grupy modeli osiągną próg.",
+      "triggerModel": "Model wyzwalający",
+      "scopeAnyGroup": "Dowolna grupa modeli",
+      "scopeSelectedGroups": "Wybrane grupy modeli",
+      "selectedGroups": "Wybrane grupy",
+      "selectedGroupsEmpty": "Brak dostępnych grup modeli"
     },
     "quotaAlert": {
       "title": "Alert limitu",

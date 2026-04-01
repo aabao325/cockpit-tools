@@ -625,7 +625,9 @@
       "openclawAuthOverwriteDesc": "When off, only Codex is switched and OpenClaw keeps its current login state",
       "ghcpOpencodeAuthOverwrite": "Overwrite OpenCode login when switching GitHub Copilot",
       "ghcpOpencodeRestart": "Restart OpenCode when switching GitHub Copilot",
-      "ghcpLaunchOnSwitch": "Launch GitHub Copilot App when switching GitHub Copilot"
+      "ghcpLaunchOnSwitch": "Launch GitHub Copilot App when switching GitHub Copilot",
+      "antigravityDualSwitchNoRestart": "Dual switch without restart",
+      "antigravityDualSwitchNoRestartDesc": "On switch, write local account data and call extension seamless switch in one flow, without restarting Antigravity."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -804,6 +806,40 @@
       "switch": "Switch account",
       "switchTo": "Switch to this account",
       "selectFingerprint": "Select fingerprint"
+    },
+    "switchHistory": {
+      "title": "Switch History",
+      "empty": "No switch history yet",
+      "success": "Success",
+      "failed": "Failed",
+      "target": "Target: {{email}}",
+      "trigger": "Trigger: {{trigger}}",
+      "triggerManual": "Manual switch",
+      "triggerAuto": "Auto switch",
+      "triggerUnknown": "Unknown",
+      "origin": "Initiator: {{origin}}",
+      "originDesktop": "Desktop",
+      "originPlugin": "Plugin",
+      "originUnknown": "Unknown",
+      "autoReasonLabel": "Auto reason: {{reason}}",
+      "autoReason": "Rule: {{rule}}; threshold: {{threshold}}%; scope: {{scope}}; monitored groups: {{selectedGroups}}; hit groups: {{hitGroups}}; candidates: {{candidates}}",
+      "autoReasonUnknown": "Auto switch triggered, but no detailed reason was recorded",
+      "autoReasonRuleCurrentDisabled": "Current account is disabled",
+      "autoReasonRuleQuotaForbidden": "Current account quota is forbidden",
+      "autoReasonRuleGroupBelowThreshold": "Model group below threshold",
+      "autoReasonScopeAnyGroup": "Any model group",
+      "autoReasonScopeSelectedGroups": "Selected model groups",
+      "stageResult": "Local: {{local}} / Seamless: {{seamless}}",
+      "duration": "Duration: total {{total}}ms, local {{local}}ms, seamless {{seamless}}ms",
+      "error": "Failed at {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Local write",
+      "stageClientStart": "Client startup",
+      "stageSeamless": "Extension seamless",
+      "stageUnknown": "Unknown stage",
+      "clear": "Clear History",
+      "clearConfirm": "Clear all switch history records?",
+      "loadFailed": "Failed to load switch history: {{error}}",
+      "clearFailed": "Failed to clear switch history: {{error}}"
     },
     "tabs": {
       "oauth": "OAuth Authorization",
@@ -1870,8 +1906,13 @@
       "title": "Auto Switch",
       "enable": "Enable Auto Switch",
       "threshold": "Switch Threshold",
-      "thresholdDesc": "Auto switch when any model quota falls below this percentage",
-      "hint": "Automatically switch to the account with the highest quota when any model quota is below the threshold."
+      "thresholdDesc": "Auto switch when monitored model groups hit this percentage threshold",
+      "triggerModel": "Trigger Model",
+      "scopeAnyGroup": "Any model group",
+      "scopeSelectedGroups": "Selected model groups",
+      "selectedGroups": "Selected groups",
+      "selectedGroupsEmpty": "No model groups available",
+      "hint": "Automatically switch to the account with the highest quota when monitored model groups hit the threshold."
     },
     "quotaAlert": {
       "title": "Quota Alert",

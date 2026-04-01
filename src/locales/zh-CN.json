@@ -625,7 +625,9 @@
       "openclawAuthOverwriteDesc": "关闭后仅切换 Codex，不会改写 OpenClaw 当前登录态",
       "ghcpOpencodeAuthOverwrite": "切换 GitHub Copilot 时覆盖 OpenCode 登录信息",
       "ghcpOpencodeRestart": "切换 GitHub Copilot 时自动重启 OpenCode",
-      "ghcpLaunchOnSwitch": "切换 GitHub Copilot 时自动启动 GitHub Copilot App"
+      "ghcpLaunchOnSwitch": "切换 GitHub Copilot 时自动启动 GitHub Copilot App",
+      "antigravityDualSwitchNoRestart": "无感双通道切号（不重启）",
+      "antigravityDualSwitchNoRestartDesc": "切号时同时执行本地落盘与扩展无感切号，不再自动重启 Antigravity。"
     },
     "network": {
       "apiTitle": "反重力驾驶舱 API",
@@ -804,6 +806,40 @@
       "switch": "切换账号",
       "switchTo": "切换到此账号",
       "selectFingerprint": "点击选择指纹"
+    },
+    "switchHistory": {
+      "title": "切换记录",
+      "empty": "暂无切换记录",
+      "success": "成功",
+      "failed": "失败",
+      "target": "目标账号：{{email}}",
+      "trigger": "触发方式：{{trigger}}",
+      "triggerManual": "手动切换",
+      "triggerAuto": "自动切换",
+      "triggerUnknown": "未知",
+      "origin": "触发端：{{origin}}",
+      "originDesktop": "桌面端",
+      "originPlugin": "插件端",
+      "originUnknown": "未知",
+      "autoReasonLabel": "自动原因：{{reason}}",
+      "autoReason": "规则：{{rule}}；阈值：{{threshold}}%；范围：{{scope}}；监控分组：{{selectedGroups}}；命中分组：{{hitGroups}}；候选账号：{{candidates}}",
+      "autoReasonUnknown": "自动切号触发，未记录详细原因",
+      "autoReasonRuleCurrentDisabled": "当前账号已禁用",
+      "autoReasonRuleQuotaForbidden": "当前账号配额受限",
+      "autoReasonRuleGroupBelowThreshold": "模型分组低于阈值",
+      "autoReasonScopeAnyGroup": "任一模型分组",
+      "autoReasonScopeSelectedGroups": "指定模型分组",
+      "stageResult": "本地：{{local}} / 无感：{{seamless}}",
+      "duration": "耗时：总 {{total}}ms，本地 {{local}}ms，无感 {{seamless}}ms",
+      "error": "失败阶段：{{stage}}（{{code}}）{{message}}",
+      "stageLocal": "本地落盘",
+      "stageClientStart": "启动客户端",
+      "stageSeamless": "扩展无感",
+      "stageUnknown": "未知阶段",
+      "clear": "清空记录",
+      "clearConfirm": "确定清空全部切换记录吗？",
+      "loadFailed": "加载切换记录失败：{{error}}",
+      "clearFailed": "清空切换记录失败：{{error}}"
     },
     "tabs": {
       "oauth": "OAuth 授权",
@@ -1870,8 +1906,13 @@
       "title": "自动切号",
       "enable": "自动切号",
       "threshold": "切号阈值",
-      "thresholdDesc": "任意模型配额低于此百分比时触发自动切号",
-      "hint": "当任意模型配额低于阈值时，自动切换到配额最高的账号。"
+      "thresholdDesc": "命中监控的模型分组阈值时触发自动切号",
+      "triggerModel": "触发模型",
+      "scopeAnyGroup": "任一模型分组",
+      "scopeSelectedGroups": "指定模型分组",
+      "selectedGroups": "指定分组",
+      "selectedGroupsEmpty": "暂无可选分组",
+      "hint": "当命中监控的模型分组阈值时，自动切换到配额最高的账号。"
     },
     "quotaAlert": {
       "title": "超额预警",

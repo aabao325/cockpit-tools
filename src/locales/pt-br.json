@@ -579,7 +579,9 @@
       "sideNavLayout": "Layout da barra lateral",
       "sideNavLayoutDesc": "Alternar entre os layouts originais e clássicos da barra lateral",
       "sideNavLayoutOriginal": "Layout original",
-      "sideNavLayoutClassic": "Layout clássico"
+      "sideNavLayoutClassic": "Layout clássico",
+      "antigravityDualSwitchNoRestart": "Troca dupla sem reiniciar",
+      "antigravityDualSwitchNoRestartDesc": "Ao trocar de conta, a gravação local dos dados e a troca contínua da extensão são executadas em um único fluxo, sem reiniciar o Antigravity."
     },
     "network": {
       "apiTitle": "API de cockpit antigravidade",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Nenhuma conta correspondente",
       "filterHint": "{{count}} grupo(s) selecionado(s) para filtrar",
       "filterToggle": "Marque para filtrar por este grupo"
+    },
+    "switchHistory": {
+      "title": "Histórico de trocas",
+      "empty": "Ainda não há histórico de trocas",
+      "success": "Sucesso",
+      "failed": "Falha",
+      "target": "Conta de destino: {{email}}",
+      "trigger": "Disparador: {{trigger}}",
+      "triggerManual": "Troca manual",
+      "triggerAuto": "Troca automática",
+      "triggerUnknown": "Desconhecido",
+      "origin": "Origem: {{origin}}",
+      "originDesktop": "Aplicativo de desktop",
+      "originPlugin": "Extensão",
+      "originUnknown": "Desconhecido",
+      "autoReasonLabel": "Motivo automático: {{reason}}",
+      "autoReason": "Regra: {{rule}}; limite: {{threshold}}%; escopo: {{scope}}; grupos monitorados: {{selectedGroups}}; grupos atingidos: {{hitGroups}}; candidatos: {{candidates}}",
+      "autoReasonUnknown": "A troca automática foi acionada, mas nenhum motivo detalhado foi registrado",
+      "autoReasonRuleCurrentDisabled": "A conta atual está desativada",
+      "autoReasonRuleQuotaForbidden": "A cota da conta atual está restrita",
+      "autoReasonRuleGroupBelowThreshold": "Grupo de modelos abaixo do limite",
+      "autoReasonScopeAnyGroup": "Qualquer grupo de modelos",
+      "autoReasonScopeSelectedGroups": "Grupos de modelos selecionados",
+      "stageResult": "Local: {{local}} / Contínuo: {{seamless}}",
+      "duration": "Duração: total {{total}}ms, local {{local}}ms, contínuo {{seamless}}ms",
+      "error": "Falha na etapa {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Gravação local",
+      "stageClientStart": "Inicialização do cliente",
+      "stageSeamless": "Fluxo contínuo da extensão",
+      "stageUnknown": "Etapa desconhecida",
+      "clear": "Limpar histórico",
+      "clearConfirm": "Limpar todo o histórico de trocas?",
+      "loadFailed": "Falha ao carregar o histórico de trocas: {{error}}",
+      "clearFailed": "Falha ao limpar o histórico de trocas: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Troca automática",
       "enable": "Troca automática",
       "threshold": "Limiar de troca",
-      "thresholdDesc": "A troca automática é acionada quando a cota de qualquer modelo cai abaixo deste percentual",
-      "hint": "Troca automaticamente para a conta com a maior cota quando a cota de qualquer modelo cai abaixo do limiar."
+      "thresholdDesc": "A troca automática é acionada quando os grupos de modelos monitorados atingem este limite percentual",
+      "hint": "Troca automaticamente para a conta com maior cota quando os grupos de modelos monitorados atingem o limite.",
+      "triggerModel": "Modelo de acionamento",
+      "scopeAnyGroup": "Qualquer grupo de modelos",
+      "scopeSelectedGroups": "Grupos de modelos selecionados",
+      "selectedGroups": "Grupos selecionados",
+      "selectedGroupsEmpty": "Nenhum grupo de modelos disponível"
     },
     "quotaAlert": {
       "title": "Alerta de cota",

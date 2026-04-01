@@ -579,7 +579,9 @@
       "sideNavLayout": "Rozložení postranního panelu",
       "sideNavLayoutDesc": "Přepnutí mezi původním a klasickým rozložením postranního panelu",
       "sideNavLayoutOriginal": "Původní rozložení",
-      "sideNavLayoutClassic": "Klasické rozložení"
+      "sideNavLayoutClassic": "Klasické rozložení",
+      "antigravityDualSwitchNoRestart": "Duální přepnutí bez restartu",
+      "antigravityDualSwitchNoRestartDesc": "Při přepnutí účtu se v jednom kroku zapíší lokální data účtu a provede plynulé přepnutí rozšíření bez restartu Antigravity."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Žádné odpovídající účty",
       "filterHint": "Pro filtrování je vybráno {{count}} skupin",
       "filterToggle": "Zaškrtnutím filtrujete podle této skupiny"
+    },
+    "switchHistory": {
+      "title": "Historie přepnutí",
+      "empty": "Zatím žádná historie přepnutí",
+      "success": "Úspěch",
+      "failed": "Neúspěch",
+      "target": "Cílový účet: {{email}}",
+      "trigger": "Spouštěč: {{trigger}}",
+      "triggerManual": "Ruční přepnutí",
+      "triggerAuto": "Automatické přepnutí",
+      "triggerUnknown": "Neznámé",
+      "origin": "Iniciátor: {{origin}}",
+      "originDesktop": "Plocha",
+      "originPlugin": "Rozšíření",
+      "originUnknown": "Neznámé",
+      "autoReasonLabel": "Důvod automatiky: {{reason}}",
+      "autoReason": "Pravidlo: {{rule}}; práh: {{threshold}}%; rozsah: {{scope}}; sledované skupiny: {{selectedGroups}}; zasažené skupiny: {{hitGroups}}; kandidáti: {{candidates}}",
+      "autoReasonUnknown": "Bylo spuštěno automatické přepnutí, ale nebyl zaznamenán podrobný důvod",
+      "autoReasonRuleCurrentDisabled": "Aktuální účet je zakázán",
+      "autoReasonRuleQuotaForbidden": "Kvóta aktuálního účtu je omezená",
+      "autoReasonRuleGroupBelowThreshold": "Skupina modelů pod prahem",
+      "autoReasonScopeAnyGroup": "Libovolná skupina modelů",
+      "autoReasonScopeSelectedGroups": "Vybrané skupiny modelů",
+      "stageResult": "Lokálně: {{local}} / Plynule: {{seamless}}",
+      "duration": "Doba: celkem {{total}}ms, lokálně {{local}}ms, plynule {{seamless}}ms",
+      "error": "Selhání ve fázi {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Lokální zápis",
+      "stageClientStart": "Spuštění klienta",
+      "stageSeamless": "Plynulé rozšíření",
+      "stageUnknown": "Neznámá fáze",
+      "clear": "Vymazat historii",
+      "clearConfirm": "Vymazat celou historii přepnutí?",
+      "loadFailed": "Nepodařilo se načíst historii přepnutí: {{error}}",
+      "clearFailed": "Nepodařilo se vymazat historii přepnutí: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Automatické přepnutí",
       "enable": "Automatické přepnutí",
       "threshold": "Práh přepnutí",
-      "thresholdDesc": "Automatické přepnutí se spustí, když kvóta libovolného modelu klesne pod toto procento",
-      "hint": "Automaticky přepne na účet s nejvyšší kvótou, když kvóta libovolného modelu klesne pod práh."
+      "thresholdDesc": "Automatické přepnutí se spustí, když sledované skupiny modelů dosáhnou této procentní hranice",
+      "hint": "Automaticky přepne na účet s nejvyšší kvótou, když sledované skupiny modelů dosáhnou prahu.",
+      "triggerModel": "Spouštěcí model",
+      "scopeAnyGroup": "Libovolná skupina modelů",
+      "scopeSelectedGroups": "Vybrané skupiny modelů",
+      "selectedGroups": "Vybrané skupiny",
+      "selectedGroupsEmpty": "Žádné dostupné skupiny modelů"
     },
     "quotaAlert": {
       "title": "Upozornění na kvótu",

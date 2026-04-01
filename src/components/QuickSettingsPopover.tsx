@@ -8,6 +8,12 @@ import {
   isCodexCodeReviewQuotaVisibleByDefault,
   persistCodexCodeReviewQuotaVisible,
 } from '../utils/codexPreferences';
+import {
+  FEATURE_UNLOCK_CHANGED_EVENT,
+  type FeatureUnlockChangedDetail,
+  isAntigravitySeamlessSwitchFeatureUnlocked,
+} from '../utils/featureUnlocks';
+import { getDisplayGroups, type DisplayGroup } from '../services/groupService';
 import './QuickSettingsPopover.css';
 
 /** GeneralConfig from backend */
@@ -51,8 +57,11 @@ interface GeneralConfig {
   ghcp_launch_on_switch: boolean;
   openclaw_auth_overwrite_on_switch: boolean;
   codex_launch_on_switch: boolean;
+  antigravity_dual_switch_no_restart_enabled: boolean;
   auto_switch_enabled: boolean;
   auto_switch_threshold: number;
+  auto_switch_scope_mode: string;
+  auto_switch_selected_group_ids: string[];
   codex_auto_switch_enabled: boolean;
   codex_auto_switch_primary_threshold: number;
   codex_auto_switch_secondary_threshold: number;
@@ -156,8 +165,12 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
   const [codexAutoSwitchSecondaryCustomThreshold, setCodexAutoSwitchSecondaryCustomThreshold] = useState('');
   const [codexQuotaAlertPrimaryCustomThreshold, setCodexQuotaAlertPrimaryCustomThreshold] = useState('');
   const [codexQuotaAlertSecondaryCustomThreshold, setCodexQuotaAlertSecondaryCustomThreshold] = useState('');
+  const [autoSwitchDisplayGroups, setAutoSwitchDisplayGroups] = useState<DisplayGroup[]>([]);
   const [codexShowCodeReviewQuota, setCodexShowCodeReviewQuota] = useState(
     isCodexCodeReviewQuotaVisibleByDefault,
+  );
+  const [antigravitySeamlessSwitchUnlocked, setAntigravitySeamlessSwitchUnlocked] = useState(
+    isAntigravitySeamlessSwitchFeatureUnlocked,
   );
   const modalRef = useRef<HTMLDivElement>(null);
   const refreshPresets = ['-1', '2', '5', '10', '15'];
@@ -168,8 +181,27 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
     if (isOpen) {
       loadConfig();
       setCodexShowCodeReviewQuota(isCodexCodeReviewQuotaVisibleByDefault());
+      setAntigravitySeamlessSwitchUnlocked(isAntigravitySeamlessSwitchFeatureUnlocked());
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleFeatureUnlockChanged = (event: Event) => {
+      const detail = (event as CustomEvent<FeatureUnlockChangedDetail>).detail;
+      if (!detail || detail.feature !== 'antigravity.seamless_switch') {
+        return;
+      }
+      setAntigravitySeamlessSwitchUnlocked(Boolean(detail.unlocked));
+    };
+
+    window.addEventListener(FEATURE_UNLOCK_CHANGED_EVENT, handleFeatureUnlockChanged as EventListener);
+    return () => {
+      window.removeEventListener(
+        FEATURE_UNLOCK_CHANGED_EVENT,
+        handleFeatureUnlockChanged as EventListener,
+      );
+    };
+  }, []);
 
   // Close on Escape
   useEffect(() => {
@@ -204,8 +236,12 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
   const loadConfig = async () => {
     try {
       setError(null);
-      const cfg = await invoke<GeneralConfig>('get_general_config');
+      const [cfg, groups] = await Promise.all([
+        invoke<GeneralConfig>('get_general_config'),
+        getDisplayGroups().catch(() => [] as DisplayGroup[]),
+      ]);
       setConfig(cfg);
+      setAutoSwitchDisplayGroups(groups);
       // 非预设值通过下拉中的动态选项展示，不默认进入输入态
       setRefreshEditing(false);
       setThresholdEditing(false);
@@ -292,8 +328,11 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
           ghcpLaunchOnSwitch: merged.ghcp_launch_on_switch,
           openclawAuthOverwriteOnSwitch: merged.openclaw_auth_overwrite_on_switch,
           codexLaunchOnSwitch: merged.codex_launch_on_switch,
+          antigravityDualSwitchNoRestartEnabled: merged.antigravity_dual_switch_no_restart_enabled,
           autoSwitchEnabled: merged.auto_switch_enabled,
           autoSwitchThreshold: merged.auto_switch_threshold,
+          autoSwitchScopeMode: merged.auto_switch_scope_mode,
+          autoSwitchSelectedGroupIds: merged.auto_switch_selected_group_ids,
           codexAutoSwitchEnabled: merged.codex_auto_switch_enabled,
           codexAutoSwitchPrimaryThreshold: merged.codex_auto_switch_primary_threshold,
           codexAutoSwitchSecondaryThreshold: merged.codex_auto_switch_secondary_threshold,
@@ -698,6 +737,14 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
 
   const isThresholdPreset = config ? thresholdPresets.includes(String(config.auto_switch_threshold)) : true;
   const showThresholdInput = thresholdEditing;
+  const autoSwitchScopeMode = config?.auto_switch_scope_mode === 'selected_groups'
+    ? 'selected_groups'
+    : 'any_group';
+  const autoSwitchSelectedGroupIds = config?.auto_switch_selected_group_ids ?? [];
+  const validAutoSwitchGroupIdSet = new Set(autoSwitchDisplayGroups.map((group) => group.id));
+  const normalizedAutoSwitchSelectedGroupIds = autoSwitchSelectedGroupIds.filter((groupId) =>
+    validAutoSwitchGroupIdSet.has(groupId)
+  );
   const quotaAlertEnabledKey = getQuotaAlertEnabledKeyForType(type);
   const quotaAlertThresholdKey = getQuotaAlertThresholdKeyForType(type);
   const quotaAlertEnabledValue = config ? Boolean(config[quotaAlertEnabledKey]) : false;
@@ -761,6 +808,33 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
     }
     setCustomThreshold('');
     setThresholdEditing(false);
+  };
+
+  const handleAutoSwitchScopeModeChange = (value: string) => {
+    if (value !== 'selected_groups') {
+      saveConfig({ auto_switch_scope_mode: 'any_group' });
+      return;
+    }
+    const nextSelected = normalizedAutoSwitchSelectedGroupIds.length > 0
+      ? normalizedAutoSwitchSelectedGroupIds
+      : autoSwitchDisplayGroups.map((group) => group.id);
+    saveConfig({
+      auto_switch_scope_mode: 'selected_groups',
+      auto_switch_selected_group_ids: nextSelected,
+    });
+  };
+
+  const handleAutoSwitchGroupToggle = (groupId: string) => {
+    const selected = new Set(normalizedAutoSwitchSelectedGroupIds);
+    if (selected.has(groupId)) {
+      if (selected.size === 1) {
+        return;
+      }
+      selected.delete(groupId);
+    } else {
+      selected.add(groupId);
+    }
+    saveConfig({ auto_switch_selected_group_ids: [...selected] });
   };
 
   const handleQuotaAlertThresholdSelectChange = (val: string) => {
@@ -1492,6 +1566,42 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
                   <span>{t('quickSettings.autoSwitch.title', '自动切号')}</span>
                 </div>
 
+                {antigravitySeamlessSwitchUnlocked && (
+                  <>
+                    <div className="qs-row">
+                      <div className="qs-row-label">
+                        <span>
+                          {t(
+                            'settings.general.antigravityDualSwitchNoRestart',
+                            '无感双通道切号（不重启）'
+                          )}
+                        </span>
+                      </div>
+                      <div className="qs-row-control">
+                        <label className="qs-switch">
+                          <input
+                            type="checkbox"
+                            checked={config.antigravity_dual_switch_no_restart_enabled}
+                            onChange={(e) =>
+                              saveConfig({
+                                antigravity_dual_switch_no_restart_enabled: e.target.checked,
+                              })
+                            }
+                          />
+                          <span className="qs-switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="qs-hint">
+                      {t(
+                        'settings.general.antigravityDualSwitchNoRestartDesc',
+                        '切号时同时执行本地落盘与扩展无感切号，不再自动重启 Antigravity。'
+                      )}
+                    </div>
+                  </>
+                )}
+
                 <div className="qs-row">
                   <div className="qs-row-label">
                     <span>{t('quickSettings.autoSwitch.enable', '启用自动切号')}</span>
@@ -1555,13 +1665,67 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
                         )}
                       </div>
                     </div>
+
+                    <div className="qs-row">
+                      <div className="qs-row-label">
+                        <span>{t('quickSettings.autoSwitch.triggerModel', '触发模型')}</span>
+                      </div>
+                      <div className="qs-row-control">
+                        <select
+                          className="qs-select"
+                          value={autoSwitchScopeMode}
+                          onChange={(e) => handleAutoSwitchScopeModeChange(e.target.value)}
+                        >
+                          <option value="any_group">
+                            {t('quickSettings.autoSwitch.scopeAnyGroup', '任一模型分组')}
+                          </option>
+                          <option value="selected_groups">
+                            {t('quickSettings.autoSwitch.scopeSelectedGroups', '指定模型分组')}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {autoSwitchScopeMode === 'selected_groups' && (
+                      <div className="qs-row qs-row--top">
+                        <div className="qs-row-label">
+                          <span>{t('quickSettings.autoSwitch.selectedGroups', '指定分组')}</span>
+                        </div>
+                        <div className="qs-row-control qs-row-control--fill">
+                          {autoSwitchDisplayGroups.length === 0 ? (
+                            <div className="qs-hint qs-hint--compact">
+                              {t('quickSettings.autoSwitch.selectedGroupsEmpty', '暂无可选分组')}
+                            </div>
+                          ) : (
+                            <div className="qs-check-group-inline">
+                              {autoSwitchDisplayGroups.map((group) => {
+                                const checked = normalizedAutoSwitchSelectedGroupIds.includes(group.id);
+                                return (
+                                  <label
+                                    key={group.id}
+                                    className="qs-check-item"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => handleAutoSwitchGroupToggle(group.id)}
+                                    />
+                                    <span>{group.name}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <div className="qs-hint">
                   {t(
                     'quickSettings.autoSwitch.hint',
-                    '当任意模型配额低于阈值时，自动切换到配额最高的账号。'
+                    '当命中监控的模型分组阈值时，自动切换到配额最高的账号。'
                   )}
                 </div>
 

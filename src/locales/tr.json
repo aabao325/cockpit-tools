@@ -579,7 +579,9 @@
       "sideNavLayout": "Kenar Çubuğu Düzeni",
       "sideNavLayoutDesc": "Orijinal ve klasik kenar çubuğu düzenleri arasında geçiş yapın",
       "sideNavLayoutOriginal": "Orijinal Düzen",
-      "sideNavLayoutClassic": "Klasik Düzen"
+      "sideNavLayoutClassic": "Klasik Düzen",
+      "antigravityDualSwitchNoRestart": "Yeniden başlatmadan çift geçiş",
+      "antigravityDualSwitchNoRestartDesc": "Hesap değiştirirken yerel hesap verisi yazımı ve eklentinin kesintisiz geçişi tek akışta yürütülür; Antigravity yeniden başlatılmaz."
     },
     "network": {
       "apiTitle": "Yerçekimine Karşı Kokpit API'si",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Eşleşen hesap yok",
       "filterHint": "Filtreleme için {{count}} grup seçildi",
       "filterToggle": "Bu gruba göre filtrelemek için işaretleyin"
+    },
+    "switchHistory": {
+      "title": "Geçiş geçmişi",
+      "empty": "Henüz geçiş geçmişi yok",
+      "success": "Başarılı",
+      "failed": "Başarısız",
+      "target": "Hedef hesap: {{email}}",
+      "trigger": "Tetikleyici: {{trigger}}",
+      "triggerManual": "Manuel geçiş",
+      "triggerAuto": "Otomatik geçiş",
+      "triggerUnknown": "Bilinmiyor",
+      "origin": "Başlatan: {{origin}}",
+      "originDesktop": "Masaüstü",
+      "originPlugin": "Eklenti",
+      "originUnknown": "Bilinmiyor",
+      "autoReasonLabel": "Otomatik neden: {{reason}}",
+      "autoReason": "Kural: {{rule}}; eşik: {{threshold}}%; kapsam: {{scope}}; izlenen gruplar: {{selectedGroups}}; eşik aşan gruplar: {{hitGroups}}; adaylar: {{candidates}}",
+      "autoReasonUnknown": "Otomatik geçiş tetiklendi ancak ayrıntılı neden kaydedilmedi",
+      "autoReasonRuleCurrentDisabled": "Geçerli hesap devre dışı",
+      "autoReasonRuleQuotaForbidden": "Geçerli hesabın kotası kısıtlı",
+      "autoReasonRuleGroupBelowThreshold": "Model grubu eşiğin altında",
+      "autoReasonScopeAnyGroup": "Herhangi bir model grubu",
+      "autoReasonScopeSelectedGroups": "Seçili model grupları",
+      "stageResult": "Yerel: {{local}} / Kesintisiz: {{seamless}}",
+      "duration": "Süre: toplam {{total}}ms, yerel {{local}}ms, kesintisiz {{seamless}}ms",
+      "error": "{{stage}} aşamasında hata ({{code}}): {{message}}",
+      "stageLocal": "Yerel yazım",
+      "stageClientStart": "İstemci başlatma",
+      "stageSeamless": "Eklenti kesintisiz geçişi",
+      "stageUnknown": "Bilinmeyen aşama",
+      "clear": "Geçmişi temizle",
+      "clearConfirm": "Tüm geçiş geçmişi temizlensin mi?",
+      "loadFailed": "Geçiş geçmişi yüklenemedi: {{error}}",
+      "clearFailed": "Geçiş geçmişi temizlenemedi: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Otomatik Geçiş",
       "enable": "Otomatik Geçiş",
       "threshold": "Geçiş Eşiği",
-      "thresholdDesc": "Herhangi bir modelin kotası bu yüzdenin altına düştüğünde otomatik geçiş tetiklenir",
-      "hint": "Herhangi bir modelin kotası eşiğin altına düştüğünde en yüksek kotaya sahip hesaba otomatik olarak geçiş yapar."
+      "thresholdDesc": "İzlenen model grupları bu yüzde eşiğe ulaştığında otomatik geçiş tetiklenir",
+      "hint": "İzlenen model grupları eşiğe ulaştığında otomatik olarak en yüksek kotaya sahip hesaba geçer.",
+      "triggerModel": "Tetik model",
+      "scopeAnyGroup": "Herhangi bir model grubu",
+      "scopeSelectedGroups": "Seçili model grupları",
+      "selectedGroups": "Seçili gruplar",
+      "selectedGroupsEmpty": "Kullanılabilir model grubu yok"
     },
     "quotaAlert": {
       "title": "Kota Uyarısı",

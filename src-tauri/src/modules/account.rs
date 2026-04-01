@@ -965,23 +965,283 @@ fn normalize_quota_alert_threshold(raw: i32) -> i32 {
     raw.clamp(0, 100)
 }
 
-fn should_trigger_auto_switch(account: &Account, threshold: i32) -> bool {
-    if account.disabled {
+const AUTO_SWITCH_SCOPE_ANY_GROUP: &str = "any_group";
+const AUTO_SWITCH_SCOPE_SELECTED_GROUPS: &str = "selected_groups";
+const AUTO_SWITCH_POLICY_AVG_QUOTA_DESC_LAST_USED_ASC: &str = "avg_quota_desc_then_last_used_asc";
+const AUTO_SWITCH_RULE_CURRENT_DISABLED: &str = "current_disabled";
+const AUTO_SWITCH_RULE_CURRENT_QUOTA_FORBIDDEN: &str = "current_quota_forbidden";
+const AUTO_SWITCH_RULE_GROUP_BELOW_THRESHOLD: &str = "group_below_threshold";
+
+#[derive(Debug, Clone)]
+struct AutoSwitchGroupDefinition {
+    id: String,
+    name: String,
+    models: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct AutoSwitchGroupQuota {
+    id: String,
+    name: String,
+    percentage: i32,
+}
+
+#[derive(Debug, Clone)]
+struct AutoSwitchTriggerContext {
+    rule: String,
+    threshold: i32,
+    scope_mode: String,
+    selected_group_ids: Vec<String>,
+    selected_group_names: Vec<String>,
+    hit_groups: Vec<modules::antigravity_switch_history::AntigravityAutoSwitchHitGroup>,
+}
+
+fn default_auto_switch_groups() -> Vec<AutoSwitchGroupDefinition> {
+    vec![
+        AutoSwitchGroupDefinition {
+            id: "claude_45".to_string(),
+            name: "Claude".to_string(),
+            models: vec![
+                "claude-opus-4-6-thinking".to_string(),
+                "claude-opus-4-6".to_string(),
+                "claude-opus-4-5-thinking".to_string(),
+                "claude-sonnet-4-6".to_string(),
+                "claude-sonnet-4-6-thinking".to_string(),
+                "claude-sonnet-4-5".to_string(),
+                "claude-sonnet-4-5-thinking".to_string(),
+                "gpt-oss-120b-medium".to_string(),
+                "MODEL_PLACEHOLDER_M12".to_string(),
+                "MODEL_PLACEHOLDER_M26".to_string(),
+                "MODEL_PLACEHOLDER_M35".to_string(),
+                "MODEL_CLAUDE_4_5_SONNET".to_string(),
+                "MODEL_CLAUDE_4_5_SONNET_THINKING".to_string(),
+                "MODEL_OPENAI_GPT_OSS_120B_MEDIUM".to_string(),
+            ],
+        },
+        AutoSwitchGroupDefinition {
+            id: "g3_pro".to_string(),
+            name: "Gemini Pro".to_string(),
+            models: vec![
+                "gemini-3.1-pro-high".to_string(),
+                "gemini-3.1-pro-low".to_string(),
+                "gemini-3-pro-high".to_string(),
+                "gemini-3-pro-low".to_string(),
+                "gemini-3-pro-image".to_string(),
+                "MODEL_PLACEHOLDER_M7".to_string(),
+                "MODEL_PLACEHOLDER_M8".to_string(),
+                "MODEL_PLACEHOLDER_M9".to_string(),
+                "MODEL_PLACEHOLDER_M36".to_string(),
+                "MODEL_PLACEHOLDER_M37".to_string(),
+            ],
+        },
+        AutoSwitchGroupDefinition {
+            id: "g3_flash".to_string(),
+            name: "Gemini Flash".to_string(),
+            models: vec![
+                "gemini-3-flash".to_string(),
+                "gemini-3.1-flash".to_string(),
+                "gemini-3-flash-image".to_string(),
+                "gemini-3.1-flash-image".to_string(),
+                "gemini-3-flash-lite".to_string(),
+                "gemini-3.1-flash-lite".to_string(),
+                "MODEL_PLACEHOLDER_M18".to_string(),
+            ],
+        },
+    ]
+}
+
+fn normalize_auto_switch_scope_mode(raw: &str) -> String {
+    let normalized = raw.trim().to_lowercase();
+    if normalized == AUTO_SWITCH_SCOPE_SELECTED_GROUPS {
+        AUTO_SWITCH_SCOPE_SELECTED_GROUPS.to_string()
+    } else {
+        AUTO_SWITCH_SCOPE_ANY_GROUP.to_string()
+    }
+}
+
+fn normalize_auto_switch_selected_group_ids(raw: &[String]) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut seen = HashSet::new();
+    for item in raw {
+        let normalized = item.trim().to_string();
+        if normalized.is_empty() || !seen.insert(normalized.clone()) {
+            continue;
+        }
+        result.push(normalized);
+    }
+    result
+}
+
+fn resolve_monitored_auto_switch_groups(
+    scope_mode: &str,
+    selected_group_ids: &[String],
+    groups: &[AutoSwitchGroupDefinition],
+) -> Vec<AutoSwitchGroupDefinition> {
+    if groups.is_empty() {
+        return Vec::new();
+    }
+
+    if scope_mode != AUTO_SWITCH_SCOPE_SELECTED_GROUPS {
+        return groups.to_vec();
+    }
+
+    let selected = normalize_auto_switch_selected_group_ids(selected_group_ids);
+    if selected.is_empty() {
+        return groups.to_vec();
+    }
+
+    let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let resolved: Vec<AutoSwitchGroupDefinition> = groups
+        .iter()
+        .filter(|group| selected_set.contains(group.id.as_str()))
+        .cloned()
+        .collect();
+    if resolved.is_empty() {
+        groups.to_vec()
+    } else {
+        resolved
+    }
+}
+
+fn normalize_model_for_group_match(value: &str) -> String {
+    let normalized = value.trim().to_lowercase();
+    if normalized.is_empty() {
+        return normalized;
+    }
+    match normalized.as_str() {
+        "gemini-3-pro-high" => "gemini-3.1-pro-high".to_string(),
+        "gemini-3-pro-low" => "gemini-3.1-pro-low".to_string(),
+        "claude-sonnet-4-5" => "claude-sonnet-4-6".to_string(),
+        "claude-sonnet-4-5-thinking" => "claude-sonnet-4-6".to_string(),
+        "claude-opus-4-5-thinking" => "claude-opus-4-6-thinking".to_string(),
+        _ => normalized,
+    }
+}
+
+fn model_matches_group_model(model_name: &str, group_model_id: &str) -> bool {
+    let left = normalize_model_for_group_match(model_name);
+    let right = normalize_model_for_group_match(group_model_id);
+    if left.is_empty() || right.is_empty() {
+        return false;
+    }
+    if left == right {
         return true;
+    }
+    left.starts_with(&(right.clone() + "-")) || right.starts_with(&(left + "-"))
+}
+
+fn collect_group_quotas(
+    account: &Account,
+    groups: &[AutoSwitchGroupDefinition],
+) -> Vec<AutoSwitchGroupQuota> {
+    let Some(quota) = account.quota.as_ref() else {
+        return Vec::new();
+    };
+    if quota.models.is_empty() {
+        return Vec::new();
+    }
+
+    groups
+        .iter()
+        .filter_map(|group| {
+            let mut sum = 0i32;
+            let mut count = 0usize;
+            for model in &quota.models {
+                if group
+                    .models
+                    .iter()
+                    .any(|candidate| model_matches_group_model(&model.name, candidate))
+                {
+                    sum += model.percentage;
+                    count += 1;
+                }
+            }
+            if count == 0 {
+                return None;
+            }
+            let average = ((sum as f64) / (count as f64)).round() as i32;
+            Some(AutoSwitchGroupQuota {
+                id: group.id.clone(),
+                name: group.name.clone(),
+                percentage: average,
+            })
+        })
+        .collect()
+}
+
+fn evaluate_auto_switch_trigger(
+    account: &Account,
+    threshold: i32,
+    scope_mode: &str,
+    monitored_groups: &[AutoSwitchGroupDefinition],
+) -> Option<AutoSwitchTriggerContext> {
+    if monitored_groups.is_empty() {
+        return None;
+    }
+
+    let selected_group_ids: Vec<String> = monitored_groups.iter().map(|group| group.id.clone()).collect();
+    let selected_group_names: Vec<String> = monitored_groups
+        .iter()
+        .map(|group| group.name.clone())
+        .collect();
+
+    if account.disabled {
+        return Some(AutoSwitchTriggerContext {
+            rule: AUTO_SWITCH_RULE_CURRENT_DISABLED.to_string(),
+            threshold,
+            scope_mode: scope_mode.to_string(),
+            selected_group_ids,
+            selected_group_names,
+            hit_groups: Vec::new(),
+        });
     }
 
     let Some(quota) = account.quota.as_ref() else {
-        return false;
+        return None;
     };
 
     if quota.is_forbidden {
-        return true;
+        return Some(AutoSwitchTriggerContext {
+            rule: AUTO_SWITCH_RULE_CURRENT_QUOTA_FORBIDDEN.to_string(),
+            threshold,
+            scope_mode: scope_mode.to_string(),
+            selected_group_ids,
+            selected_group_names,
+            hit_groups: Vec::new(),
+        });
     }
 
-    quota.models.iter().any(|m| m.percentage <= threshold)
+    let group_quotas = collect_group_quotas(account, monitored_groups);
+    let hit_groups: Vec<modules::antigravity_switch_history::AntigravityAutoSwitchHitGroup> =
+        group_quotas
+            .into_iter()
+            .filter(|group| group.percentage <= threshold)
+            .map(|group| modules::antigravity_switch_history::AntigravityAutoSwitchHitGroup {
+                group_id: group.id,
+                group_name: group.name,
+                percentage: group.percentage,
+            })
+            .collect();
+    if hit_groups.is_empty() {
+        return None;
+    }
+
+    Some(AutoSwitchTriggerContext {
+        rule: AUTO_SWITCH_RULE_GROUP_BELOW_THRESHOLD.to_string(),
+        threshold,
+        scope_mode: scope_mode.to_string(),
+        selected_group_ids,
+        selected_group_names,
+        hit_groups,
+    })
 }
 
-fn can_be_auto_switch_candidate(account: &Account, current_id: &str, threshold: i32) -> bool {
+fn can_be_auto_switch_candidate(
+    account: &Account,
+    current_id: &str,
+    threshold: i32,
+    monitored_groups: &[AutoSwitchGroupDefinition],
+) -> bool {
     if account.id == current_id || account.disabled {
         return false;
     }
@@ -994,7 +1254,11 @@ fn can_be_auto_switch_candidate(account: &Account, current_id: &str, threshold: 
         return false;
     }
 
-    quota.models.iter().all(|m| m.percentage >= threshold)
+    let group_quotas = collect_group_quotas(account, monitored_groups);
+    if group_quotas.len() < monitored_groups.len() {
+        return false;
+    }
+    group_quotas.iter().all(|group| group.percentage >= threshold)
 }
 
 fn can_be_quota_alert_candidate(account: &Account, current_id: &str) -> bool {
@@ -1022,6 +1286,22 @@ fn average_quota_percentage(account: &Account) -> f64 {
     }
     let sum: i32 = quota.models.iter().map(|m| m.percentage).sum();
     sum as f64 / quota.models.len() as f64
+}
+
+fn build_auto_switch_reason(
+    context: &AutoSwitchTriggerContext,
+    candidate_count: usize,
+) -> modules::antigravity_switch_history::AntigravityAutoSwitchReason {
+    modules::antigravity_switch_history::AntigravityAutoSwitchReason {
+        rule: context.rule.clone(),
+        threshold: context.threshold,
+        scope_mode: context.scope_mode.clone(),
+        selected_group_ids: context.selected_group_ids.clone(),
+        selected_group_names: context.selected_group_names.clone(),
+        hit_groups: context.hit_groups.clone(),
+        candidate_count,
+        selected_policy: AUTO_SWITCH_POLICY_AVG_QUOTA_DESC_LAST_USED_ASC.to_string(),
+    }
 }
 
 fn build_quota_alert_cooldown_key(account_id: &str, threshold: i32) -> String {
@@ -1261,6 +1541,17 @@ async fn run_auto_switch_if_needed_inner() -> Result<Option<Account>, String> {
     }
 
     let threshold = normalize_auto_switch_threshold(cfg.auto_switch_threshold);
+    let scope_mode = normalize_auto_switch_scope_mode(&cfg.auto_switch_scope_mode);
+    let all_groups = default_auto_switch_groups();
+    let monitored_groups = resolve_monitored_auto_switch_groups(
+        &scope_mode,
+        &cfg.auto_switch_selected_group_ids,
+        &all_groups,
+    );
+    if monitored_groups.is_empty() {
+        modules::logger::log_warn("[AutoSwitch] 可监控模型分组为空，跳过自动切号");
+        return Ok(None);
+    }
     let current_id = match get_current_account_id()? {
         Some(id) => id,
         None => return Ok(None),
@@ -1272,22 +1563,26 @@ async fn run_auto_switch_if_needed_inner() -> Result<Option<Account>, String> {
         None => return Ok(None),
     };
 
-    if !should_trigger_auto_switch(current, threshold) {
+    let Some(trigger_context) =
+        evaluate_auto_switch_trigger(current, threshold, &scope_mode, &monitored_groups)
+    else {
         return Ok(None);
-    }
+    };
 
     let mut candidates: Vec<Account> = accounts
         .into_iter()
-        .filter(|a| can_be_auto_switch_candidate(a, &current_id, threshold))
+        .filter(|a| can_be_auto_switch_candidate(a, &current_id, threshold, &monitored_groups))
         .collect();
 
     if candidates.is_empty() {
         modules::logger::log_warn(&format!(
-            "[AutoSwitch] 当前账号低于阈值 {}%，但没有可切换候选账号",
-            threshold
+            "[AutoSwitch] 命中自动切号条件(rule={}, threshold={}%, scope={})，但没有可切换候选账号",
+            trigger_context.rule, threshold, trigger_context.scope_mode
         ));
         return Ok(None);
     }
+
+    let reason_snapshot = build_auto_switch_reason(&trigger_context, candidates.len());
 
     candidates.sort_by(|a, b| {
         let avg_a = average_quota_percentage(a);
@@ -1300,12 +1595,24 @@ async fn run_auto_switch_if_needed_inner() -> Result<Option<Account>, String> {
 
     let target = &candidates[0];
     modules::logger::log_info(&format!(
-        "[AutoSwitch] 触发自动切号: current_id={}, target_id={}, threshold={}%",
-        current_id, target.id, threshold
+        "[AutoSwitch] 触发自动切号: current_id={}, target_id={}, threshold={}%, scope={}, rule={}",
+        current_id, target.id, threshold, scope_mode, trigger_context.rule
     ));
 
-    let switched = switch_account_internal(&target.id).await?;
-    modules::websocket::broadcast_account_switched(&switched.id, &switched.email);
+    let switched = if cfg.antigravity_dual_switch_no_restart_enabled {
+        switch_account_dual_no_restart(
+            &target.id,
+            "auto",
+            "tools.account.auto_switch",
+            "auto_switch",
+            Some(reason_snapshot),
+        )
+        .await?
+    } else {
+        let switched = switch_account_internal(&target.id).await?;
+        modules::websocket::broadcast_account_switched(&switched.id, &switched.email);
+        switched
+    };
     modules::websocket::broadcast_data_changed("auto_switch");
     Ok(Some(switched))
 }
@@ -1585,6 +1892,301 @@ pub async fn switch_account_internal(account_id: &str) -> Result<Account, String
     }
 
     modules::logger::log_info("[Switch] 账号切换完成");
+    Ok(account)
+}
+
+fn persist_switch_history(item: modules::antigravity_switch_history::AntigravitySwitchHistoryItem) {
+    if let Err(err) = modules::antigravity_switch_history::add_history_item(item) {
+        modules::logger::log_warn(&format!("写入 Antigravity 切号记录失败: {}", err));
+    }
+}
+
+fn ensure_antigravity_running_for_no_restart_switch() -> Result<bool, String> {
+    let default_settings = modules::instance::load_default_settings()?;
+    let resolved_pid = modules::process::resolve_antigravity_pid(default_settings.last_pid, None);
+    if let Some(pid) = resolved_pid {
+        if default_settings.last_pid != Some(pid) {
+            let _ = modules::instance::update_default_pid(Some(pid));
+        }
+        modules::logger::log_info(&format!(
+            "[Switch][NoRestart] 检测到 Antigravity 已运行: pid={}",
+            pid
+        ));
+        return Ok(false);
+    }
+
+    modules::logger::log_info("[Switch][NoRestart] Antigravity 未运行，尝试自动启动");
+    let extra_args = modules::process::parse_extra_args(&default_settings.extra_args);
+    let launch_result = if extra_args.is_empty() {
+        modules::process::start_antigravity()
+    } else {
+        modules::process::start_antigravity_with_args("", &extra_args)
+    };
+    match launch_result {
+        Ok(pid) => {
+            if let Err(err) = modules::instance::update_default_pid(Some(pid)) {
+                modules::logger::log_warn(&format!(
+                    "[Switch][NoRestart] 更新默认实例 PID 失败: {}",
+                    err
+                ));
+            }
+            modules::logger::log_info(&format!(
+                "[Switch][NoRestart] Antigravity 自动启动成功: pid={}",
+                pid
+            ));
+            Ok(true)
+        }
+        Err(err) => Err(err),
+    }
+}
+
+pub async fn switch_account_dual_no_restart(
+    account_id: &str,
+    trigger_type: &str,
+    trigger_source: &str,
+    reason: &str,
+    auto_switch_reason: Option<modules::antigravity_switch_history::AntigravityAutoSwitchReason>,
+) -> Result<Account, String> {
+    let started = Instant::now();
+    let history_id = Uuid::new_v4().to_string();
+    let timestamp = chrono::Utc::now().timestamp_millis();
+    let trigger_type = if trigger_type.trim().is_empty() {
+        "manual".to_string()
+    } else {
+        trigger_type.trim().to_string()
+    };
+    let trigger_source = if trigger_source.trim().is_empty() {
+        "tools.account.switch".to_string()
+    } else {
+        trigger_source.trim().to_string()
+    };
+    let target_email_fallback = load_account(account_id)
+        .map(|account| account.email)
+        .unwrap_or_else(|_| account_id.to_string());
+
+    let local_started = Instant::now();
+    let local_result = switch_account_local_no_restart(account_id).await;
+    let local_duration_ms = local_started.elapsed().as_millis() as u64;
+
+    let account = match local_result {
+        Ok(account) => account,
+        Err(error) => {
+            persist_switch_history(modules::antigravity_switch_history::AntigravitySwitchHistoryItem {
+                id: history_id,
+                timestamp,
+                account_id: account_id.to_string(),
+                target_email: target_email_fallback,
+                trigger_type: trigger_type.clone(),
+                trigger_source: trigger_source.clone(),
+                local_ok: false,
+                seamless_ok: false,
+                success: false,
+                local_duration_ms,
+                seamless_duration_ms: None,
+                total_duration_ms: started.elapsed().as_millis() as u64,
+                error_stage: Some("local".to_string()),
+                error_code: None,
+                error_message: Some(error.clone()),
+                seamless_effective_mode: None,
+                seamless_from_email: None,
+                seamless_to_email: None,
+                seamless_execution_id: None,
+                seamless_finished_at: None,
+                auto_switch_reason: auto_switch_reason.clone(),
+            });
+            return Err(error);
+        }
+    };
+
+    let was_started = match ensure_antigravity_running_for_no_restart_switch() {
+        Ok(started_now) => started_now,
+        Err(error) => {
+            modules::websocket::broadcast_account_switched(&account.id, &account.email);
+            persist_switch_history(modules::antigravity_switch_history::AntigravitySwitchHistoryItem {
+                id: history_id,
+                timestamp,
+                account_id: account.id.clone(),
+                target_email: account.email.clone(),
+                trigger_type: trigger_type.clone(),
+                trigger_source: trigger_source.clone(),
+                local_ok: true,
+                seamless_ok: false,
+                success: false,
+                local_duration_ms,
+                seamless_duration_ms: None,
+                total_duration_ms: started.elapsed().as_millis() as u64,
+                error_stage: Some("client_start".to_string()),
+                error_code: None,
+                error_message: Some(error.clone()),
+                seamless_effective_mode: None,
+                seamless_from_email: None,
+                seamless_to_email: None,
+                seamless_execution_id: None,
+                seamless_finished_at: None,
+                auto_switch_reason: auto_switch_reason.clone(),
+            });
+            if error.starts_with("APP_PATH_NOT_FOUND:") {
+                return Err(error);
+            }
+            return Err(format!("本地切换已完成，但客户端启动失败: {}", error));
+        }
+    };
+
+    let wait_timeout_ms = if was_started { 12_000 } else { 1_500 };
+    if let Err(wait_error) = modules::websocket::wait_for_connected_clients(wait_timeout_ms).await {
+        modules::logger::log_warn(&format!(
+            "[Switch][NoRestart] 扩展连接等待结束: {}",
+            wait_error
+        ));
+    }
+
+    let seamless_started = Instant::now();
+    let seamless_result = modules::websocket::request_plugin_switch_account(
+        &account.email,
+        "seamless",
+        &trigger_type,
+        &trigger_source,
+        reason,
+        12_000,
+    )
+    .await;
+    let seamless_duration_ms = seamless_started.elapsed().as_millis() as u64;
+
+    match seamless_result {
+        Ok(response) if response.success => {
+            modules::websocket::broadcast_account_switched(&account.id, &account.email);
+            persist_switch_history(modules::antigravity_switch_history::AntigravitySwitchHistoryItem {
+                id: history_id,
+                timestamp,
+                account_id: account.id.clone(),
+                target_email: account.email.clone(),
+                trigger_type: trigger_type.clone(),
+                trigger_source: trigger_source.clone(),
+                local_ok: true,
+                seamless_ok: true,
+                success: true,
+                local_duration_ms,
+                seamless_duration_ms: Some(seamless_duration_ms),
+                total_duration_ms: started.elapsed().as_millis() as u64,
+                error_stage: None,
+                error_code: None,
+                error_message: None,
+                seamless_effective_mode: Some(response.effective_mode),
+                seamless_from_email: response.from_email,
+                seamless_to_email: Some(response.to_email),
+                seamless_execution_id: Some(response.execution_id),
+                seamless_finished_at: Some(response.finished_at),
+                auto_switch_reason: auto_switch_reason.clone(),
+            });
+            Ok(account)
+        }
+        Ok(response) => {
+            modules::websocket::broadcast_account_switched(&account.id, &account.email);
+            persist_switch_history(modules::antigravity_switch_history::AntigravitySwitchHistoryItem {
+                id: history_id,
+                timestamp,
+                account_id: account.id.clone(),
+                target_email: account.email.clone(),
+                trigger_type: trigger_type.clone(),
+                trigger_source: trigger_source.clone(),
+                local_ok: true,
+                seamless_ok: false,
+                success: false,
+                local_duration_ms,
+                seamless_duration_ms: Some(seamless_duration_ms),
+                total_duration_ms: started.elapsed().as_millis() as u64,
+                error_stage: Some("seamless".to_string()),
+                error_code: response.error_code.clone(),
+                error_message: response.error_message.clone(),
+                seamless_effective_mode: Some(response.effective_mode),
+                seamless_from_email: response.from_email,
+                seamless_to_email: Some(response.to_email),
+                seamless_execution_id: Some(response.execution_id),
+                seamless_finished_at: Some(response.finished_at),
+                auto_switch_reason: auto_switch_reason.clone(),
+            });
+            Err(format!(
+                "本地切换已完成，但扩展无感切号失败: {}",
+                response
+                    .error_message
+                    .unwrap_or_else(|| "扩展未返回具体原因".to_string())
+            ))
+        }
+        Err(error) => {
+            modules::websocket::broadcast_account_switched(&account.id, &account.email);
+            persist_switch_history(modules::antigravity_switch_history::AntigravitySwitchHistoryItem {
+                id: history_id,
+                timestamp,
+                account_id: account.id.clone(),
+                target_email: account.email.clone(),
+                trigger_type,
+                trigger_source,
+                local_ok: true,
+                seamless_ok: false,
+                success: false,
+                local_duration_ms,
+                seamless_duration_ms: Some(seamless_duration_ms),
+                total_duration_ms: started.elapsed().as_millis() as u64,
+                error_stage: Some("seamless".to_string()),
+                error_code: None,
+                error_message: Some(error.clone()),
+                seamless_effective_mode: None,
+                seamless_from_email: None,
+                seamless_to_email: None,
+                seamless_execution_id: None,
+                seamless_finished_at: None,
+                auto_switch_reason,
+            });
+            Err(format!("本地切换已完成，但扩展无感切号失败: {}", error))
+        }
+    }
+}
+
+fn apply_bound_fingerprint_for_switch(account: &Account) {
+    if let Ok(storage_path) = modules::device::get_storage_path() {
+        if let Some(ref fp_id) = account.fingerprint_id {
+            if let Ok(fingerprint) = modules::fingerprint::get_fingerprint(fp_id) {
+                modules::logger::log_info("[Switch] 写入设备指纹");
+                let _ = modules::device::write_profile(&storage_path, &fingerprint.profile);
+                let _ = modules::db::write_service_machine_id(&fingerprint.profile.service_machine_id);
+                let _ = modules::fingerprint::set_current_fingerprint_id(fp_id);
+            }
+        }
+    }
+}
+
+/// 本地切号（不关闭/不重启 Antigravity）
+/// 流程：Token刷新 + 本地状态更新 + 指纹同步 + 默认实例注入
+pub async fn switch_account_local_no_restart(account_id: &str) -> Result<Account, String> {
+    modules::logger::log_info(&format!(
+        "[Switch][NoRestart] 开始本地切号: account_id={}",
+        account_id
+    ));
+
+    let mut account = prepare_account_for_injection(account_id).await?;
+    account.update_last_used();
+    save_account(&account)?;
+
+    set_current_account_id(account_id)?;
+
+    if let Err(e) =
+        modules::instance::update_default_settings(Some(Some(account_id.to_string())), None, Some(false))
+    {
+        modules::logger::log_warn(&format!(
+            "[Switch][NoRestart] 更新默认实例绑定账号失败: {}",
+            e
+        ));
+    }
+
+    apply_bound_fingerprint_for_switch(&account);
+
+    let default_dir = modules::instance::get_default_user_data_dir()?;
+    modules::instance::inject_account_to_profile(&default_dir, account_id)?;
+
+    modules::logger::log_info(&format!(
+        "[Switch][NoRestart] 本地切号完成: {}",
+        account.email
+    ));
     Ok(account)
 }
 

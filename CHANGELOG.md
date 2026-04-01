@@ -7,6 +7,16 @@ All notable changes to Cockpit Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.20.17] - 2026-04-01
+
+### Changed
+- **Antigravity auto-switch now supports model-group scope selection (`any_group` / `selected_groups`) and group-level threshold evaluation**: quick settings can target specific display groups, config now persists selected group IDs, and candidate selection follows monitored-group thresholds.
+- **Codex shared-resource link sync now force-rebuilds mismatched instance links instead of blocking with manual-merge errors**: when shared directories/files diverge from global defaults, stale instance targets are removed and recreated as symlinks automatically.
+
+### Fixed
+- **Antigravity account switch failure now rehydrates current-account state before returning errors**: the account store refetches account lists/current account and emits account-change events only when the effective current account actually changes, preventing stale UI state after failed switches.
+
+---
 ## [0.20.16] - 2026-03-31
 
 ### Added

@@ -106,6 +106,55 @@ export async function switchAccount(accountId: string): Promise<Account> {
     return await invoke('switch_account', { accountId });
 }
 
+export interface AntigravitySwitchHistoryItem {
+    id: string;
+    timestamp: number;
+    accountId: string;
+    targetEmail: string;
+    triggerType?: string;
+    triggerSource?: string;
+    localOk: boolean;
+    seamlessOk: boolean;
+    success: boolean;
+    localDurationMs: number;
+    seamlessDurationMs?: number | null;
+    totalDurationMs: number;
+    errorStage?: string | null;
+    errorCode?: string | null;
+    errorMessage?: string | null;
+    seamlessEffectiveMode?: string | null;
+    seamlessFromEmail?: string | null;
+  seamlessToEmail?: string | null;
+  seamlessExecutionId?: string | null;
+  seamlessFinishedAt?: string | null;
+  autoSwitchReason?: AntigravityAutoSwitchReason | null;
+}
+
+export interface AntigravityAutoSwitchHitGroup {
+  groupId: string;
+  groupName: string;
+  percentage: number;
+}
+
+export interface AntigravityAutoSwitchReason {
+  rule: string;
+  threshold: number;
+  scopeMode: string;
+  selectedGroupIds: string[];
+  selectedGroupNames: string[];
+  hitGroups: AntigravityAutoSwitchHitGroup[];
+  candidateCount: number;
+  selectedPolicy: string;
+}
+
+export async function loadAntigravitySwitchHistory(): Promise<AntigravitySwitchHistoryItem[]> {
+    return await invoke('load_antigravity_switch_history');
+}
+
+export async function clearAntigravitySwitchHistory(): Promise<void> {
+    return await invoke('clear_antigravity_switch_history');
+}
+
 export async function updateAccountTags(accountId: string, tags: string[]): Promise<Account> {
     return await invoke('update_account_tags', { accountId, tags });
 }

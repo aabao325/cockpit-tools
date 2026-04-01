@@ -146,6 +146,29 @@ pub async fn refresh_current_quota(app: tauri::AppHandle) -> Result<(), String> 
 /// 切换账号（完整流程：Token刷新 + 关闭程序 + 注入 + 指纹同步 + 重启）
 #[tauri::command]
 pub async fn switch_account(app: AppHandle, account_id: String) -> Result<models::Account, String> {
+    if modules::config::get_user_config().antigravity_dual_switch_no_restart_enabled {
+        let result = modules::account::switch_account_dual_no_restart(
+            &account_id,
+            "manual",
+            "tools.account.switch",
+            "dual_no_restart",
+            None,
+        )
+        .await;
+        if let Err(error) = &result {
+            if error.starts_with("APP_PATH_NOT_FOUND:") {
+                let _ = app.emit(
+                    "app:path_missing",
+                    serde_json::json!({
+                        "app": "antigravity",
+                        "retry": { "kind": "switchAccount", "accountId": account_id }
+                    }),
+                );
+            }
+        }
+        return result;
+    }
+
     modules::logger::log_info(&format!("开始切换账号: {}", account_id));
 
     // 1. 加载并验证账号存在
@@ -271,6 +294,17 @@ pub async fn switch_account(app: AppHandle, account_id: String) -> Result<models
     modules::websocket::broadcast_account_switched(&account.id, &account.email);
 
     Ok(account)
+}
+
+#[tauri::command]
+pub fn load_antigravity_switch_history(
+) -> Result<Vec<modules::antigravity_switch_history::AntigravitySwitchHistoryItem>, String> {
+    modules::antigravity_switch_history::load_history()
+}
+
+#[tauri::command]
+pub fn clear_antigravity_switch_history() -> Result<(), String> {
+    modules::antigravity_switch_history::clear_history()
 }
 
 #[tauri::command]

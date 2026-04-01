@@ -579,7 +579,9 @@
       "sideNavLayout": "Diseño de la barra lateral",
       "sideNavLayoutDesc": "Alternar entre el diseño original y clásico de la barra lateral",
       "sideNavLayoutOriginal": "Diseño original",
-      "sideNavLayoutClassic": "Diseño clásico"
+      "sideNavLayoutClassic": "Diseño clásico",
+      "antigravityDualSwitchNoRestart": "Cambio dual sin reinicio",
+      "antigravityDualSwitchNoRestartDesc": "Al cambiar cuenta, se escriben los datos locales y se ejecuta el cambio fluido de la extensión en un solo flujo, sin reiniciar Antigravity."
     },
     "network": {
       "apiTitle": "API de cabina antigravedad",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "No hay cuentas coincidentes",
       "filterHint": "{{count}} grupo(s) seleccionado(s) para filtrar",
       "filterToggle": "Marca para filtrar por este grupo"
+    },
+    "switchHistory": {
+      "title": "Historial de cambios",
+      "empty": "Todavía no hay historial de cambios",
+      "success": "Éxito",
+      "failed": "Fallido",
+      "target": "Cuenta de destino: {{email}}",
+      "trigger": "Disparador: {{trigger}}",
+      "triggerManual": "Cambio manual",
+      "triggerAuto": "Cambio automático",
+      "triggerUnknown": "Desconocido",
+      "origin": "Origen: {{origin}}",
+      "originDesktop": "Escritorio",
+      "originPlugin": "Extensión",
+      "originUnknown": "Desconocido",
+      "autoReasonLabel": "Motivo automático: {{reason}}",
+      "autoReason": "Regla: {{rule}}; umbral: {{threshold}}%; alcance: {{scope}}; grupos monitorizados: {{selectedGroups}}; grupos activados: {{hitGroups}}; candidatos: {{candidates}}",
+      "autoReasonUnknown": "Se activó el cambio automático, pero no se registró un motivo detallado",
+      "autoReasonRuleCurrentDisabled": "La cuenta actual está deshabilitada",
+      "autoReasonRuleQuotaForbidden": "La cuota de la cuenta actual está restringida",
+      "autoReasonRuleGroupBelowThreshold": "Grupo de modelos por debajo del umbral",
+      "autoReasonScopeAnyGroup": "Cualquier grupo de modelos",
+      "autoReasonScopeSelectedGroups": "Grupos de modelos seleccionados",
+      "stageResult": "Local: {{local}} / Fluido: {{seamless}}",
+      "duration": "Duración: total {{total}}ms, local {{local}}ms, fluido {{seamless}}ms",
+      "error": "Fallo en {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Escritura local",
+      "stageClientStart": "Inicio del cliente",
+      "stageSeamless": "Flujo fluido de extensión",
+      "stageUnknown": "Fase desconocida",
+      "clear": "Borrar historial",
+      "clearConfirm": "¿Borrar todo el historial de cambios?",
+      "loadFailed": "No se pudo cargar el historial de cambios: {{error}}",
+      "clearFailed": "No se pudo borrar el historial de cambios: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Cambio automático",
       "enable": "Cambio automático",
       "threshold": "Umbral de cambio",
-      "thresholdDesc": "El cambio automático se activa cuando la cuota de cualquier modelo cae por debajo de este porcentaje",
-      "hint": "Cambia automáticamente a la cuenta con la cuota más alta cuando la cuota de cualquier modelo cae por debajo del umbral."
+      "thresholdDesc": "El cambio automático se activa cuando los grupos de modelos monitorizados alcanzan este umbral porcentual",
+      "hint": "Cambia automáticamente a la cuenta con mayor cuota cuando los grupos de modelos monitorizados alcanzan el umbral.",
+      "triggerModel": "Modelo de activación",
+      "scopeAnyGroup": "Cualquier grupo de modelos",
+      "scopeSelectedGroups": "Grupos de modelos seleccionados",
+      "selectedGroups": "Grupos seleccionados",
+      "selectedGroupsEmpty": "No hay grupos de modelos disponibles"
     },
     "quotaAlert": {
       "title": "Alerta de cuota",

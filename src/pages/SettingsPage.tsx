@@ -11,6 +11,13 @@ import { showFloatingCardWindow } from '../services/floatingCardService';
 import { usePlatformRuntimeSupport } from '../hooks/usePlatformRuntimeSupport';
 import { usePlatformLayoutStore } from '../stores/usePlatformLayoutStore';
 import { SideNavLayoutMode, useSideNavLayoutStore } from '../stores/useSideNavLayoutStore';
+import { UnlockFireworksOverlay } from '../components/UnlockFireworksOverlay';
+import {
+  FEATURE_UNLOCK_CHANGED_EVENT,
+  type FeatureUnlockChangedDetail,
+  isAntigravitySeamlessSwitchFeatureUnlocked,
+  persistAntigravitySeamlessSwitchFeatureUnlocked,
+} from '../utils/featureUnlocks';
 import { ALL_PLATFORM_IDS, PlatformId } from '../types/platform';
 import { SettingsAccountTransferSection } from '../components/SettingsAccountTransferSection';
 import './settings/Settings.css';
@@ -89,6 +96,7 @@ interface GeneralConfig {
   opencode_auth_overwrite_on_switch: boolean;
   openclaw_auth_overwrite_on_switch: boolean;
   codex_launch_on_switch: boolean;
+  antigravity_dual_switch_no_restart_enabled: boolean;
   auto_switch_enabled: boolean;
   auto_switch_threshold: number;
   quota_alert_enabled: boolean;
@@ -124,6 +132,8 @@ type AppPathTarget =
 const REFRESH_PRESET_VALUES = ['-1', '2', '5', '10', '15'];
 const THRESHOLD_PRESET_VALUES = ['0', '20', '40', '60'];
 const UI_SCALE_OPTIONS = ['0.9', '1', '1.1', '1.25', '1.5'] as const;
+const ANTIGRAVITY_SEAMLESS_SWITCH_UNLOCK_REQUIRED_TAPS = 10;
+const UNLOCK_FIREWORKS_VISIBLE_MS = 6000;
 const FALLBACK_PLATFORM_SETTINGS_ORDER: Record<PlatformId, number> = {
   antigravity: 0,
   codex: 1,
@@ -255,6 +265,7 @@ export function SettingsPage() {
   const [opencodeAuthOverwriteOnSwitch, setOpencodeAuthOverwriteOnSwitch] = useState(false);
   const [openclawAuthOverwriteOnSwitch, setOpenclawAuthOverwriteOnSwitch] = useState(false);
   const [codexLaunchOnSwitch, setCodexLaunchOnSwitch] = useState(true);
+  const [antigravityDualSwitchNoRestartEnabled, setAntigravityDualSwitchNoRestartEnabled] = useState(false);
   const [autoSwitchEnabled, setAutoSwitchEnabled] = useState(false);
   const [autoSwitchThreshold, setAutoSwitchThreshold] = useState('20');
   const [quotaAlertEnabled, setQuotaAlertEnabled] = useState(false);
@@ -286,6 +297,12 @@ export function SettingsPage() {
   const [kiroQuotaAlertThresholdCustomMode, setKiroQuotaAlertThresholdCustomMode] = useState(false);
   const [cursorQuotaAlertThresholdCustomMode, setCursorQuotaAlertThresholdCustomMode] = useState(false);
   const [geminiQuotaAlertThresholdCustomMode, setGeminiQuotaAlertThresholdCustomMode] = useState(false);
+  const [antigravitySeamlessSwitchUnlocked, setAntigravitySeamlessSwitchUnlocked] = useState(
+    isAntigravitySeamlessSwitchFeatureUnlocked,
+  );
+  const [, setAboutAvatarTapCount] = useState(0);
+  const [showUnlockFireworks, setShowUnlockFireworks] = useState(false);
+  const unlockFireworksTimerRef = useRef<number | null>(null);
   const [generalLoaded, setGeneralLoaded] = useState(false);
   const generalSaveTimerRef = useRef<number | null>(null);
   const suppressGeneralSaveRef = useRef(false);
@@ -372,6 +389,32 @@ export function SettingsPage() {
       window.removeEventListener('update-check-finished', handleFinished as EventListener);
     };
   }, [t]);
+
+  useEffect(() => {
+    const handleFeatureUnlockChanged = (event: Event) => {
+      const detail = (event as CustomEvent<FeatureUnlockChangedDetail>).detail;
+      if (!detail || detail.feature !== 'antigravity.seamless_switch') {
+        return;
+      }
+      setAntigravitySeamlessSwitchUnlocked(Boolean(detail.unlocked));
+    };
+
+    window.addEventListener(FEATURE_UNLOCK_CHANGED_EVENT, handleFeatureUnlockChanged as EventListener);
+    return () => {
+      window.removeEventListener(
+        FEATURE_UNLOCK_CHANGED_EVENT,
+        handleFeatureUnlockChanged as EventListener,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (unlockFireworksTimerRef.current !== null) {
+        window.clearTimeout(unlockFireworksTimerRef.current);
+      }
+    };
+  }, []);
   
   // Network States
   const [wsEnabled, setWsEnabled] = useState(true);
@@ -522,6 +565,7 @@ export function SettingsPage() {
           opencodeAuthOverwriteOnSwitch,
           openclawAuthOverwriteOnSwitch,
           codexLaunchOnSwitch,
+          antigravityDualSwitchNoRestartEnabled,
           autoSwitchEnabled,
           autoSwitchThreshold: Number.isNaN(parsedAutoSwitchThreshold) ? 20 : parsedAutoSwitchThreshold,
           quotaAlertEnabled,
@@ -625,6 +669,7 @@ export function SettingsPage() {
     opencodeAuthOverwriteOnSwitch,
     openclawAuthOverwriteOnSwitch,
     codexLaunchOnSwitch,
+    antigravityDualSwitchNoRestartEnabled,
     autoSwitchEnabled,
     autoSwitchThreshold,
     quotaAlertEnabled,
@@ -895,6 +940,9 @@ export function SettingsPage() {
       setOpencodeAuthOverwriteOnSwitch(config.opencode_auth_overwrite_on_switch ?? false);
       setOpenclawAuthOverwriteOnSwitch(config.openclaw_auth_overwrite_on_switch ?? false);
       setCodexLaunchOnSwitch(config.codex_launch_on_switch ?? true);
+      setAntigravityDualSwitchNoRestartEnabled(
+        config.antigravity_dual_switch_no_restart_enabled ?? false
+      );
       setAutoSwitchEnabled(config.auto_switch_enabled ?? false);
       setAutoSwitchThreshold(String(config.auto_switch_threshold ?? 20));
       setQuotaAlertEnabled(config.quota_alert_enabled ?? false);
@@ -1171,6 +1219,32 @@ export function SettingsPage() {
         detail: { source: 'manual' as UpdateCheckSource },
       }),
     );
+  };
+
+  const triggerUnlockFireworks = () => {
+    if (unlockFireworksTimerRef.current !== null) {
+      window.clearTimeout(unlockFireworksTimerRef.current);
+      unlockFireworksTimerRef.current = null;
+    }
+    setShowUnlockFireworks(true);
+    unlockFireworksTimerRef.current = window.setTimeout(() => {
+      setShowUnlockFireworks(false);
+      unlockFireworksTimerRef.current = null;
+    }, UNLOCK_FIREWORKS_VISIBLE_MS);
+  };
+
+  const handleAboutAvatarTap = () => {
+    setAboutAvatarTapCount((prev) => {
+      const next = prev + 1;
+      if (next % ANTIGRAVITY_SEAMLESS_SWITCH_UNLOCK_REQUIRED_TAPS === 0) {
+        if (!antigravitySeamlessSwitchUnlocked) {
+          persistAntigravitySeamlessSwitchFeatureUnlocked(true);
+          setAntigravitySeamlessSwitchUnlocked(true);
+        }
+        triggerUnlockFireworks();
+      }
+      return next;
+    });
   };
 
   return (
@@ -1561,6 +1635,37 @@ export function SettingsPage() {
                   </div>
                 </div>
               </div>
+
+              {antigravitySeamlessSwitchUnlocked && (
+                <div className="settings-row">
+                  <div className="row-label">
+                    <div className="row-title">
+                      {t(
+                        'settings.general.antigravityDualSwitchNoRestart',
+                        '无感双通道切号（不重启）'
+                      )}
+                    </div>
+                    <div className="row-desc">
+                      {t(
+                        'settings.general.antigravityDualSwitchNoRestartDesc',
+                        '切号时同时执行本地落盘与扩展无感切号，不再自动重启 Antigravity。'
+                      )}
+                    </div>
+                  </div>
+                  <div className="row-control">
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        checked={antigravityDualSwitchNoRestartEnabled}
+                        onChange={(e) =>
+                          setAntigravityDualSwitchNoRestartEnabled(e.target.checked)
+                        }
+                      />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div className="settings-row">
                 <div className="row-label">
@@ -4319,7 +4424,11 @@ export function SettingsPage() {
         {activeTab === 'about' && (
           <div className="about-container">
             <div className="about-logo-section">
-              <div className="app-icon-squircle">
+              <div
+                className={`app-icon-squircle${showUnlockFireworks ? ' unlock-fireworks-active' : ''}`}
+                onClick={handleAboutAvatarTap}
+                onMouseDown={(event) => event.preventDefault()}
+              >
                 <Rocket size={40} />
               </div>
               <div className="app-info">
@@ -4388,6 +4497,9 @@ export function SettingsPage() {
         )}
         </div>
       </div>
+      {showUnlockFireworks && (
+        <UnlockFireworksOverlay />
+      )}
     </main>
   );
 }

@@ -579,7 +579,9 @@
       "sideNavLayout": "Layout der Seitenleiste",
       "sideNavLayoutDesc": "Wechseln Sie zwischen dem ursprünglichen und dem klassischen Layout der Seitenleiste",
       "sideNavLayoutOriginal": "Ursprüngliches Layout",
-      "sideNavLayoutClassic": "Klassisches Layout"
+      "sideNavLayoutClassic": "Klassisches Layout",
+      "antigravityDualSwitchNoRestart": "Nahtloser Doppelwechsel (ohne Neustart)",
+      "antigravityDualSwitchNoRestartDesc": "Beim Kontowechsel werden lokale Kontodaten geschrieben und der nahtlose Erweiterungswechsel in einem Ablauf ausgeführt, ohne Antigravity neu zu starten."
     },
     "network": {
       "apiTitle": "Antigravity-Cockpit-API",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Keine passenden Konten",
       "filterHint": "{{count}} Gruppe(n) zum Filtern ausgewählt",
       "filterToggle": "Aktivieren, um nach dieser Gruppe zu filtern"
+    },
+    "switchHistory": {
+      "title": "Wechselverlauf",
+      "empty": "Noch kein Wechselverlauf",
+      "success": "Erfolgreich",
+      "failed": "Fehlgeschlagen",
+      "target": "Zielkonto: {{email}}",
+      "trigger": "Auslöser: {{trigger}}",
+      "triggerManual": "Manueller Wechsel",
+      "triggerAuto": "Automatischer Wechsel",
+      "triggerUnknown": "Unbekannt",
+      "origin": "Initiator: {{origin}}",
+      "originDesktop": "Desktop-App",
+      "originPlugin": "Erweiterung",
+      "originUnknown": "Unbekannt",
+      "autoReasonLabel": "Automatischer Grund: {{reason}}",
+      "autoReason": "Regel: {{rule}}; Schwelle: {{threshold}}%; Bereich: {{scope}}; Überwachte Gruppen: {{selectedGroups}}; Treffergruppen: {{hitGroups}}; Kandidaten: {{candidates}}",
+      "autoReasonUnknown": "Automatischer Wechsel wurde ausgelöst, aber es wurde kein detaillierter Grund aufgezeichnet",
+      "autoReasonRuleCurrentDisabled": "Aktuelles Konto ist deaktiviert",
+      "autoReasonRuleQuotaForbidden": "Kontingent des aktuellen Kontos ist gesperrt",
+      "autoReasonRuleGroupBelowThreshold": "Modellgruppe unter Schwellenwert",
+      "autoReasonScopeAnyGroup": "Beliebige Modellgruppe",
+      "autoReasonScopeSelectedGroups": "Ausgewählte Modellgruppen",
+      "stageResult": "Lokal: {{local}} / Nahtlos: {{seamless}}",
+      "duration": "Dauer: gesamt {{total}}ms, lokal {{local}}ms, nahtlos {{seamless}}ms",
+      "error": "Fehler in {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Lokales Schreiben",
+      "stageClientStart": "Client-Start",
+      "stageSeamless": "Erweiterung nahtlos",
+      "stageUnknown": "Unbekannte Phase",
+      "clear": "Verlauf löschen",
+      "clearConfirm": "Gesamten Wechselverlauf löschen?",
+      "loadFailed": "Wechselverlauf konnte nicht geladen werden: {{error}}",
+      "clearFailed": "Wechselverlauf konnte nicht gelöscht werden: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Automatisch wechseln",
       "enable": "Automatisch wechseln",
       "threshold": "Wechselschwelle",
-      "thresholdDesc": "Automatischer Wechsel wird ausgelöst, wenn das Kontingent eines Modells unter diesen Prozentsatz fällt",
-      "hint": "Wechselt automatisch zum Konto mit dem höchsten Kontingent, wenn das Kontingent eines Modells unter den Schwellenwert fällt."
+      "thresholdDesc": "Automatischer Wechsel wird ausgelöst, wenn überwachte Modellgruppen diesen Prozentsatz erreichen",
+      "hint": "Wechselt automatisch zum Konto mit dem höchsten Kontingent, wenn überwachte Modellgruppen den Schwellenwert erreichen.",
+      "triggerModel": "Auslösemodell",
+      "scopeAnyGroup": "Beliebige Modellgruppe",
+      "scopeSelectedGroups": "Ausgewählte Modellgruppen",
+      "selectedGroups": "Ausgewählte Gruppen",
+      "selectedGroupsEmpty": "Keine Modellgruppen verfügbar"
     },
     "quotaAlert": {
       "title": "Kontingentwarnung",

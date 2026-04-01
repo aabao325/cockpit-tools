@@ -579,7 +579,9 @@
       "sideNavLayout": "Bố cục thanh bên",
       "sideNavLayoutDesc": "Chuyển giữa bố cục thanh bên gốc và cổ điển",
       "sideNavLayoutOriginal": "Bố cục gốc",
-      "sideNavLayoutClassic": "Bố cục cổ điển"
+      "sideNavLayoutClassic": "Bố cục cổ điển",
+      "antigravityDualSwitchNoRestart": "Chuyển đôi không cần khởi động lại",
+      "antigravityDualSwitchNoRestartDesc": "Khi chuyển tài khoản, việc ghi dữ liệu cục bộ và chuyển đổi liền mạch qua tiện ích mở rộng được thực hiện trong một luồng, không cần khởi động lại Antigravity."
     },
     "network": {
       "apiTitle": "API Antigravity Cockpit",
@@ -820,6 +822,40 @@
       "accountPickerEmpty": "Không có tài khoản phù hợp",
       "filterHint": "Đã chọn {{count}} nhóm để lọc",
       "filterToggle": "Chọn để lọc theo nhóm này"
+    },
+    "switchHistory": {
+      "title": "Lịch sử chuyển đổi",
+      "empty": "Chưa có lịch sử chuyển đổi",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "target": "Tài khoản đích: {{email}}",
+      "trigger": "Trình kích hoạt: {{trigger}}",
+      "triggerManual": "Chuyển thủ công",
+      "triggerAuto": "Chuyển tự động",
+      "triggerUnknown": "Không xác định",
+      "origin": "Nguồn kích hoạt: {{origin}}",
+      "originDesktop": "Máy tính để bàn",
+      "originPlugin": "Tiện ích mở rộng",
+      "originUnknown": "Không xác định",
+      "autoReasonLabel": "Lý do tự động: {{reason}}",
+      "autoReason": "Quy tắc: {{rule}}; ngưỡng: {{threshold}}%; phạm vi: {{scope}}; nhóm theo dõi: {{selectedGroups}}; nhóm trúng ngưỡng: {{hitGroups}}; tài khoản ứng viên: {{candidates}}",
+      "autoReasonUnknown": "Đã kích hoạt chuyển tự động nhưng không ghi lại lý do chi tiết",
+      "autoReasonRuleCurrentDisabled": "Tài khoản hiện tại đã bị vô hiệu hóa",
+      "autoReasonRuleQuotaForbidden": "Hạn mức của tài khoản hiện tại bị hạn chế",
+      "autoReasonRuleGroupBelowThreshold": "Nhóm mô hình thấp hơn ngưỡng",
+      "autoReasonScopeAnyGroup": "Bất kỳ nhóm mô hình nào",
+      "autoReasonScopeSelectedGroups": "Nhóm mô hình đã chọn",
+      "stageResult": "Cục bộ: {{local}} / Liền mạch: {{seamless}}",
+      "duration": "Thời gian: tổng {{total}}ms, cục bộ {{local}}ms, liền mạch {{seamless}}ms",
+      "error": "Lỗi ở giai đoạn {{stage}} ({{code}}): {{message}}",
+      "stageLocal": "Ghi cục bộ",
+      "stageClientStart": "Khởi động ứng dụng",
+      "stageSeamless": "Tiện ích mở rộng liền mạch",
+      "stageUnknown": "Giai đoạn không xác định",
+      "clear": "Xóa lịch sử",
+      "clearConfirm": "Xóa toàn bộ lịch sử chuyển đổi?",
+      "loadFailed": "Không thể tải lịch sử chuyển đổi: {{error}}",
+      "clearFailed": "Không thể xóa lịch sử chuyển đổi: {{error}}"
     }
   },
   "overview": {
@@ -1725,8 +1761,13 @@
       "title": "Tự động chuyển đổi",
       "enable": "Tự động chuyển đổi",
       "threshold": "Ngưỡng chuyển đổi",
-      "thresholdDesc": "Tự động chuyển đổi được kích hoạt khi hạn ngạch của bất kỳ mô hình nào giảm xuống dưới tỷ lệ phần trăm này",
-      "hint": "Tự động chuyển sang tài khoản có hạn ngạch cao nhất khi hạn ngạch của bất kỳ mô hình nào giảm xuống dưới ngưỡng."
+      "thresholdDesc": "Tự động chuyển sẽ kích hoạt khi các nhóm mô hình đang theo dõi chạm ngưỡng phần trăm này",
+      "hint": "Tự động chuyển sang tài khoản có hạn mức cao nhất khi các nhóm mô hình đang theo dõi chạm ngưỡng.",
+      "triggerModel": "Mô hình kích hoạt",
+      "scopeAnyGroup": "Bất kỳ nhóm mô hình nào",
+      "scopeSelectedGroups": "Nhóm mô hình đã chọn",
+      "selectedGroups": "Nhóm đã chọn",
+      "selectedGroupsEmpty": "Không có nhóm mô hình nào khả dụng"
     },
     "quotaAlert": {
       "title": "Cảnh báo hạn mức",
