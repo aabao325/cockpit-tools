@@ -2295,7 +2295,13 @@ fn import_account_struct(account: CodexAccount) -> Result<CodexAccount, String> 
         );
     }
 
-    upsert_account(account.tokens)
+    let imported_auth_file_plan_type =
+        normalize_auth_file_plan_type(account.auth_file_plan_type.as_deref());
+    let mut imported = upsert_account(account.tokens)?;
+    if apply_auth_file_plan_type(&mut imported, imported_auth_file_plan_type) {
+        save_account(&imported)?;
+    }
+    Ok(imported)
 }
 
 /// 从 JSON 字符串导入账号
@@ -2468,6 +2474,53 @@ pub struct CodexFileImportFailure {
     pub error: String,
 }
 
+fn normalize_auth_file_plan_type(value: Option<&str>) -> Option<String> {
+    let normalized = normalize_optional_ref(value)?
+        .to_ascii_lowercase()
+        .replace('_', "-")
+        .replace(' ', "-");
+
+    match normalized.as_str() {
+        "prolite" | "pro-lite" => Some("prolite".to_string()),
+        "promax" | "pro-max" => Some("promax".to_string()),
+        _ => None,
+    }
+}
+
+fn detect_auth_file_plan_type_from_path(path: &std::path::Path) -> Option<String> {
+    let stem = path.file_stem()?.to_str()?;
+    let normalized = stem
+        .trim()
+        .to_ascii_lowercase()
+        .replace('_', "-")
+        .replace(' ', "-");
+
+    if normalized.ends_with("-prolite") || normalized.ends_with("-pro-lite") {
+        return Some("prolite".to_string());
+    }
+    if normalized.ends_with("-promax") || normalized.ends_with("-pro-max") {
+        return Some("promax".to_string());
+    }
+
+    None
+}
+
+fn apply_auth_file_plan_type(
+    account: &mut CodexAccount,
+    auth_file_plan_type: Option<String>,
+) -> bool {
+    let Some(normalized) = normalize_auth_file_plan_type(auth_file_plan_type.as_deref()) else {
+        return false;
+    };
+
+    if account.auth_file_plan_type.as_deref() == Some(normalized.as_str()) {
+        return false;
+    }
+
+    account.auth_file_plan_type = Some(normalized);
+    true
+}
+
 /// 从单个 JSON 值中提取 CodexTokens
 fn extract_codex_tokens_from_value(
     obj: &serde_json::Value,
@@ -2529,9 +2582,10 @@ fn extract_codex_tokens_from_value(
 #[cfg(test)]
 mod tests {
     use super::{
-        build_account_storage_id, extract_codex_tokens_from_value, get_accounts_dir,
-        get_accounts_storage_path, get_current_account, list_accounts_checked, load_account,
-        load_account_index, read_api_provider_from_config_toml, read_quick_config_from_config_toml,
+        build_account_storage_id, detect_auth_file_plan_type_from_path,
+        extract_codex_tokens_from_value, get_accounts_dir, get_accounts_storage_path,
+        get_current_account, list_accounts_checked, load_account, load_account_index,
+        read_api_provider_from_config_toml, read_quick_config_from_config_toml,
         resolve_api_provider_config, save_account, save_account_index, sync_account_from_auth_dir,
         validate_api_key_credentials, write_api_provider_to_config_toml,
         write_quick_config_to_config_toml, ApiProviderConfig, CodexAccountIndex,
@@ -2735,6 +2789,22 @@ mod tests {
         assert_eq!(tokens.access_token, "access.jwt.token");
         assert_eq!(tokens.refresh_token.as_deref(), Some("rt_456"));
         assert_eq!(account_id_hint.as_deref(), Some("acc_2"));
+    }
+
+    #[test]
+    fn detect_auth_file_plan_type_from_filename() {
+        let prolite = detect_auth_file_plan_type_from_path(std::path::Path::new(
+            "/tmp/codex-demo@example.com-prolite.json",
+        ));
+        let promax = detect_auth_file_plan_type_from_path(std::path::Path::new(
+            "/tmp/codex-demo@example.com-pro-max.json",
+        ));
+        let team =
+            detect_auth_file_plan_type_from_path(std::path::Path::new("/tmp/codex-demo-team.json"));
+
+        assert_eq!(prolite.as_deref(), Some("prolite"));
+        assert_eq!(promax.as_deref(), Some("promax"));
+        assert_eq!(team, None);
     }
 
     #[test]
@@ -3057,8 +3127,8 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
         file_paths.len()
     ));
 
-    // 收集所有候选: (CodexTokens, account_id_hint, label)
-    let mut candidates: Vec<(CodexTokens, Option<String>, String)> = Vec::new();
+    // 收集所有候选: (CodexTokens, account_id_hint, label, auth_file_plan_type)
+    let mut candidates: Vec<(CodexTokens, Option<String>, String, Option<String>)> = Vec::new();
 
     for file_path in &file_paths {
         let path = Path::new(file_path);
@@ -3076,6 +3146,7 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
+        let auth_file_plan_type = detect_auth_file_plan_type_from_path(path);
 
         let parsed: serde_json::Value = match serde_json::from_str(&content) {
             Ok(v) => v,
@@ -3088,7 +3159,7 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
         match &parsed {
             serde_json::Value::Object(_) => {
                 if let Some((tokens, hint)) = extract_codex_tokens_from_value(&parsed) {
-                    candidates.push((tokens, hint, filename_label));
+                    candidates.push((tokens, hint, filename_label, auth_file_plan_type.clone()));
                 } else {
                     logger::log_error(&format!("未找到有效 Token {:?}", file_path));
                 }
@@ -3101,7 +3172,7 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
                             .and_then(|v| v.as_str())
                             .unwrap_or(&filename_label)
                             .to_string();
-                        candidates.push((tokens, hint, label));
+                        candidates.push((tokens, hint, label, auth_file_plan_type.clone()));
                     }
                 }
             }
@@ -3124,7 +3195,9 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
     let mut failed: Vec<CodexFileImportFailure> = Vec::new();
     let total = candidates.len();
 
-    for (index, (tokens, account_id_hint, label)) in candidates.into_iter().enumerate() {
+    for (index, (tokens, account_id_hint, label, auth_file_plan_type)) in
+        candidates.into_iter().enumerate()
+    {
         // 发送进度事件
         if let Some(app_handle) = crate::get_app_handle() {
             use tauri::Emitter;
@@ -3139,7 +3212,10 @@ pub fn import_from_files(file_paths: Vec<String>) -> Result<CodexFileImportResul
         }
 
         match upsert_account_with_hints(tokens, account_id_hint, None) {
-            Ok(account) => {
+            Ok(mut account) => {
+                if apply_auth_file_plan_type(&mut account, auth_file_plan_type) {
+                    save_account(&account)?;
+                }
                 logger::log_info(&format!("Codex 导入成功: {}", account.email));
                 imported.push(account);
             }
