@@ -40,6 +40,7 @@ import {
 import type { Account } from '../types/account';
 import type { CodexAccount, CodexQuickConfig } from '../types/codex';
 import { getDisplayGroups, type DisplayGroup } from '../services/groupService';
+import { usePlatformRuntimeSupport } from '../hooks/usePlatformRuntimeSupport';
 import {
   readAccountsOverviewFilterPersistenceEnabled,
   resolveAccountsOverviewScopeFromQuickSettingsType,
@@ -291,6 +292,7 @@ const normalizeAutoSwitchAccountScopeMode = (
 
 export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
   const { t } = useTranslation();
+  const isWindows = usePlatformRuntimeSupport('windows-only');
   const overviewFilterScope = useMemo(
     () => resolveAccountsOverviewScopeFromQuickSettingsType(type),
     [type],
@@ -1790,6 +1792,33 @@ export function QuickSettingsPopover({ type }: QuickSettingsPopoverProps) {
                     'settings.general.codexLocalAccessEntryVisibleDesc',
                     '仅控制 Codex 总览中的 API 服务入口显示，不会停止本地 API 服务；关闭后可在这里重新打开。',
                   )}
+                </div>
+              </div>
+            )}
+
+            {type === 'gemini' && isWindows && (
+              <div className="qs-section">
+                <div className="qs-row">
+                  <div className="qs-row-label">
+                    <span>
+                      {t('quickSettings.gemini.syncWsl', '同步 WSL 配置')}
+                    </span>
+                  </div>
+                  <div className="qs-row-control">
+                    <label className="qs-switch">
+                      <input
+                        type="checkbox"
+                        checked={config.gemini_sync_wsl}
+                        onChange={(e) =>
+                          saveConfig({ gemini_sync_wsl: e.target.checked })
+                        }
+                      />
+                      <span className="qs-switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                <div className="qs-hint">
+                  {t('quickSettings.gemini.syncWslDesc', '切号时自动覆盖 WSL 下的 .gemini 配置')}
                 </div>
               </div>
             )}
