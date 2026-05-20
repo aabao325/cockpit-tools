@@ -5,6 +5,7 @@ import { ALL_PLATFORM_IDS, PlatformId } from '../types/platform';
 const PLATFORM_LAYOUT_STORAGE_KEY = 'agtools.platform_layout.v1';
 const LEGACY_TRAY_CORE_IDS: PlatformId[] = ['antigravity', 'codex', 'github-copilot', 'windsurf'];
 const TRAY_MIGRATED_PLATFORM_IDS: PlatformId[] = [
+  'antigravity_ide',
   'zed',
   'kiro',
   'cursor',
@@ -16,6 +17,7 @@ const TRAY_MIGRATED_PLATFORM_IDS: PlatformId[] = [
   'workbuddy',
 ];
 const DEFAULT_CODEBUDDY_GROUP_ID = 'codebuddy-suite';
+const DEFAULT_ANTIGRAVITY_GROUP_ID = 'antigravity-suite';
 
 const PLATFORM_ENTRY_PREFIX = 'platform:';
 const GROUP_ENTRY_PREFIX = 'group:';
@@ -236,6 +238,18 @@ export function resolveEntryPlatformIds(
 function defaultPlatformGroups(): PlatformLayoutGroup[] {
   return [
     {
+      id: DEFAULT_ANTIGRAVITY_GROUP_ID,
+      name: 'Antigravity',
+      platformIds: ['antigravity', 'antigravity_ide'],
+      defaultPlatformId: 'antigravity_ide',
+      iconKind: 'platform',
+      iconPlatformId: 'antigravity_ide',
+      childConfigs: [
+        { platformId: 'antigravity', name: 'Antigravity' },
+        { platformId: 'antigravity_ide', name: 'Antigravity IDE' },
+      ],
+    },
+    {
       id: DEFAULT_CODEBUDDY_GROUP_ID,
       name: 'CodeBuddy',
       platformIds: ['codebuddy', 'codebuddy_cn', 'workbuddy'],
@@ -322,13 +336,16 @@ function normalizeGroupName(raw: unknown, fallbackPlatform: PlatformId): string 
   if (typeof raw === 'string') {
     const name = raw.trim();
     if (name) {
-      if (fallbackPlatform === 'antigravity' && name === 'Antigravity') {
+      if (fallbackPlatform === 'antigravity_ide' && name === 'Antigravity') {
         return 'Antigravity IDE';
       }
       return name;
     }
   }
   if (fallbackPlatform === 'antigravity') {
+    return 'Antigravity';
+  }
+  if (fallbackPlatform === 'antigravity_ide') {
     return 'Antigravity IDE';
   }
   if (fallbackPlatform === 'codebuddy_cn') {
@@ -363,7 +380,7 @@ function normalizeGroupChildName(raw: unknown, platformId: PlatformId): string |
   if (!value) {
     return undefined;
   }
-  if (platformId === 'antigravity' && value === 'Antigravity') {
+  if (platformId === 'antigravity_ide' && value === 'Antigravity') {
     return 'Antigravity IDE';
   }
   return value;
@@ -472,6 +489,28 @@ function normalizePlatformGroups(raw: unknown, fallbackToDefault: boolean): Plat
     });
     usedGroupIds.add(groupId);
   });
+
+  if (!usedPlatformIds.has('antigravity_ide')) {
+    const antigravityGroup = result.find((group) => group.platformIds.includes('antigravity'));
+    if (antigravityGroup) {
+      antigravityGroup.platformIds = [...antigravityGroup.platformIds, 'antigravity_ide'];
+      antigravityGroup.defaultPlatformId = 'antigravity_ide';
+      antigravityGroup.iconPlatformId =
+        antigravityGroup.iconKind === 'custom' ? antigravityGroup.iconPlatformId : 'antigravity_ide';
+      if (antigravityGroup.name === 'Antigravity IDE' || antigravityGroup.name === 'Antigravity') {
+        antigravityGroup.name = 'Antigravity';
+      }
+      antigravityGroup.childConfigs = normalizeGroupChildConfigs(
+        [
+          ...(antigravityGroup.childConfigs ?? []),
+          { platformId: 'antigravity', name: 'Antigravity' },
+          { platformId: 'antigravity_ide', name: 'Antigravity IDE' },
+        ],
+        antigravityGroup.platformIds,
+      );
+      usedPlatformIds.add('antigravity_ide');
+    }
+  }
 
   for (const platformId of ALL_PLATFORM_IDS) {
     if (usedPlatformIds.has(platformId)) {
@@ -655,8 +694,8 @@ function deriveEntryVisibilityFromLegacyPlatforms(
 ): PlatformLayoutEntryId[] {
   const legacySet = new Set(legacyIds);
   return orderedEntryIds.filter((entryId) => {
-    const platformId = resolveEntryDefaultPlatformId(entryId, groups);
-    return !!platformId && legacySet.has(platformId);
+    const platformIds = resolveEntryPlatformIds(entryId, groups);
+    return platformIds.some((platformId) => legacySet.has(platformId));
   });
 }
 

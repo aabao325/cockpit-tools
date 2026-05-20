@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { AntigravityRuntimeTarget } from '../utils/antigravityRuntimeTarget';
 
 export interface AntigravityInstalledVersionInfo {
   product_name: string;
@@ -7,6 +8,10 @@ export interface AntigravityInstalledVersionInfo {
   source: string;
 }
 
-export async function getAntigravityInstalledVersionInfo(): Promise<AntigravityInstalledVersionInfo | null> {
-  return invoke<AntigravityInstalledVersionInfo | null>('get_antigravity_installed_version_info');
+export async function getAntigravityInstalledVersionInfo(
+  target?: AntigravityRuntimeTarget,
+): Promise<AntigravityInstalledVersionInfo | null> {
+  return invoke<AntigravityInstalledVersionInfo | null>('get_antigravity_installed_version_info', {
+    target,
+  });
 }

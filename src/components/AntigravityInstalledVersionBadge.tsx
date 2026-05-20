@@ -4,15 +4,18 @@ import {
   AntigravityInstalledVersionInfo,
   getAntigravityInstalledVersionInfo,
 } from '../services/antigravityRuntimeService';
+import { useAntigravityRuntimeTarget } from '../hooks/useAntigravityRuntimeTarget';
 
 export function AntigravityInstalledVersionBadge() {
   const { t } = useTranslation();
+  const runtimeTarget = useAntigravityRuntimeTarget();
   const [info, setInfo] = useState<AntigravityInstalledVersionInfo | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    getAntigravityInstalledVersionInfo()
+    setLoaded(false);
+    getAntigravityInstalledVersionInfo(runtimeTarget)
       .then((nextInfo) => {
         if (!cancelled) {
           setInfo(nextInfo);
@@ -33,7 +36,7 @@ export function AntigravityInstalledVersionBadge() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [runtimeTarget]);
 
   const title = useMemo(() => {
     if (!loaded) {

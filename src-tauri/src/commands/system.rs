@@ -519,22 +519,57 @@ fn push_unique_antigravity_candidate(candidates: &mut Vec<PathBuf>, path: PathBu
     }
 }
 
-fn antigravity_metadata_candidates() -> Vec<PathBuf> {
+fn normalize_antigravity_metadata_target(target: Option<&str>) -> Option<&'static str> {
+    match target.unwrap_or("").trim().to_ascii_lowercase().as_str() {
+        "antigravity" => Some("antigravity"),
+        "antigravity_ide" | "antigravity-ide" | "ide" => Some("antigravity_ide"),
+        _ => None,
+    }
+}
+
+fn antigravity_metadata_root_matches_target(root: &Path, target: Option<&str>) -> bool {
+    let Some(target) = normalize_antigravity_metadata_target(target) else {
+        return true;
+    };
+    let value = root.to_string_lossy().to_ascii_lowercase();
+    match target {
+        "antigravity" => {
+            value.contains("antigravity.app")
+                || value.ends_with("antigravity")
+                || value.ends_with("antigravity.exe")
+        }
+        "antigravity_ide" => {
+            value.contains("antigravity ide.app")
+                || value.contains("antigravity ide")
+                || value.contains("antigravity-ide")
+        }
+        _ => true,
+    }
+}
+
+fn antigravity_metadata_candidates(target: Option<&str>) -> Vec<PathBuf> {
     let mut candidates = Vec::new();
     let config_path = config::get_user_config().antigravity_app_path;
     let config_path = config_path.trim();
     if !config_path.is_empty() {
         if let Some(root) = normalize_antigravity_metadata_root(Path::new(config_path)) {
-            push_unique_antigravity_candidate(&mut candidates, root);
+            if antigravity_metadata_root_matches_target(&root, target) {
+                push_unique_antigravity_candidate(&mut candidates, root);
+            }
         }
     }
 
     #[cfg(target_os = "macos")]
     {
-        for path in [
-            "/Applications/Antigravity.app",
-            "/Applications/Antigravity IDE.app",
-        ] {
+        let paths: &[&str] = match normalize_antigravity_metadata_target(target) {
+            Some("antigravity") => &["/Applications/Antigravity.app"],
+            Some("antigravity_ide") => &["/Applications/Antigravity IDE.app"],
+            _ => &[
+                "/Applications/Antigravity.app",
+                "/Applications/Antigravity IDE.app",
+            ],
+        };
+        for path in paths {
             let path = PathBuf::from(path);
             if path.exists() {
                 push_unique_antigravity_candidate(&mut candidates, path);
@@ -547,18 +582,36 @@ fn antigravity_metadata_candidates() -> Vec<PathBuf> {
         let mut roots: Vec<PathBuf> = Vec::new();
         if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
             let base = PathBuf::from(local_appdata).join("Programs");
-            roots.push(base.join("Antigravity"));
-            roots.push(base.join("Antigravity IDE"));
+            match normalize_antigravity_metadata_target(target) {
+                Some("antigravity") => roots.push(base.join("Antigravity")),
+                Some("antigravity_ide") => roots.push(base.join("Antigravity IDE")),
+                _ => {
+                    roots.push(base.join("Antigravity"));
+                    roots.push(base.join("Antigravity IDE"));
+                }
+            }
         }
         if let Ok(program_files) = std::env::var("PROGRAMFILES") {
             let base = PathBuf::from(program_files);
-            roots.push(base.join("Antigravity"));
-            roots.push(base.join("Antigravity IDE"));
+            match normalize_antigravity_metadata_target(target) {
+                Some("antigravity") => roots.push(base.join("Antigravity")),
+                Some("antigravity_ide") => roots.push(base.join("Antigravity IDE")),
+                _ => {
+                    roots.push(base.join("Antigravity"));
+                    roots.push(base.join("Antigravity IDE"));
+                }
+            }
         }
         if let Ok(program_files_x86) = std::env::var("PROGRAMFILES(X86)") {
             let base = PathBuf::from(program_files_x86);
-            roots.push(base.join("Antigravity"));
-            roots.push(base.join("Antigravity IDE"));
+            match normalize_antigravity_metadata_target(target) {
+                Some("antigravity") => roots.push(base.join("Antigravity")),
+                Some("antigravity_ide") => roots.push(base.join("Antigravity IDE")),
+                _ => {
+                    roots.push(base.join("Antigravity"));
+                    roots.push(base.join("Antigravity IDE"));
+                }
+            }
         }
         for path in roots {
             if path.exists() {
@@ -570,8 +623,10 @@ fn antigravity_metadata_candidates() -> Vec<PathBuf> {
     candidates
 }
 
-fn resolve_antigravity_installed_version_info() -> Option<AntigravityInstalledVersionInfo> {
-    for root in antigravity_metadata_candidates() {
+pub fn resolve_antigravity_installed_version_info_for_target(
+    target: Option<&str>,
+) -> Option<AntigravityInstalledVersionInfo> {
+    for root in antigravity_metadata_candidates(target) {
         if let Some(info) = read_antigravity_product_json_metadata(&root) {
             return Some(info);
         }
@@ -2300,8 +2355,11 @@ pub fn detect_app_path(app: String, force: Option<bool>) -> Result<Option<String
 
 #[tauri::command]
 pub fn get_antigravity_installed_version_info(
+    target: Option<String>,
 ) -> Result<Option<AntigravityInstalledVersionInfo>, String> {
-    Ok(resolve_antigravity_installed_version_info())
+    Ok(resolve_antigravity_installed_version_info_for_target(
+        target.as_deref(),
+    ))
 }
 
 /// 通知插件关闭/开启唤醒功能（互斥）

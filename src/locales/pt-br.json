@@ -1363,6 +1363,7 @@
     "batchDeleteConfirm": "Tem certeza que deseja excluir as {{count}} contas selecionadas?",
     "switched": "Trocado para {{email}}",
     "switchFailed": "Falha ao trocar: {{error}}",
+    "antigravityLegacyUnsupported": "Antigravity 2.0.0 e versões posteriores não são compatíveis aqui. Selecione Antigravity IDE.",
     "importSuccess": "Importadas com sucesso {{count}} contas",
     "importLocalSuccess": "Conta importada com sucesso: {{email}}",
     "importFailed": "Falha na importação: {{error}}",
@@ -2578,6 +2579,14 @@
       "inject": "Troca com um clique: esta ferramenta lê o material de criptografia local do VS Code (DPAPI/Keychain/Secret Service), descriptografa a sessão de autenticação em state.vscdb, substitui o token do GitHub Copilot e criptografa novamente — tudo localmente na sua máquina.",
       "reason": "Escopo de permissões: ler o banco de autenticação do VS Code (state.vscdb) e chamar a criptografia do sistema (Windows DPAPI / macOS Keychain / Linux Secret Service) para descriptografar e gravar de volta.",
       "storage": "Escopo de dados: a importação local lê as sessões de login do GitHub no VS Code, e a troca atualiza essas entradas; OAuth, importação de token, validação da importação local e atualização de cotas chamam as APIs oficiais do GitHub com os campos de autenticação necessários. state.vscdb e chaves do sistema não são enviados."
+    }
+  },
+  "runtime": {
+    "installedVersion": {
+      "loading": "Detectando a versão instalada",
+      "missing": "Nenhuma versão instalada detectada",
+      "detecting": "Detectando",
+      "notFound": "Nenhuma versão detectada"
     }
   },
   "dashboard": {

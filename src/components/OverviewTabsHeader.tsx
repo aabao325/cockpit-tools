@@ -14,6 +14,7 @@ import {
 } from '../stores/usePlatformLayoutStore';
 import { getPlatformLabel } from '../utils/platformMeta';
 import { PlatformGroupSwitcher } from './platform/PlatformGroupSwitcher';
+import { useAntigravityRuntimeTarget } from '../hooks/useAntigravityRuntimeTarget';
 
 interface OverviewTabsHeaderProps {
   active: Page;
@@ -39,7 +40,7 @@ export function OverviewTabsHeader({
   void subtitle;
   const { t } = useTranslation();
   const { platformGroups } = usePlatformLayoutStore();
-  const currentPlatformId: PlatformId = 'antigravity';
+  const currentPlatformId: PlatformId = useAntigravityRuntimeTarget();
   const currentGroup = useMemo(
     () => findGroupByPlatform(platformGroups, currentPlatformId),
     [platformGroups, currentPlatformId],
