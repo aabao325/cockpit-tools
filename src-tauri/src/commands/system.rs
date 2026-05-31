@@ -639,6 +639,26 @@ fn antigravity_metadata_candidates(
         }
     }
 
+    #[cfg(target_os = "linux")]
+    {
+        let paths: &[&str] = match normalize_antigravity_metadata_target(target) {
+            Some("antigravity") => &["/usr/share/antigravity", "/opt/antigravity"],
+            Some("antigravity_ide") => &["/usr/share/antigravity-ide", "/opt/antigravity-ide"],
+            _ => &[
+                "/usr/share/antigravity",
+                "/usr/share/antigravity-ide",
+                "/opt/antigravity",
+                "/opt/antigravity-ide",
+            ],
+        };
+        for path in paths {
+            let path = PathBuf::from(path);
+            if path.exists() {
+                push_unique_antigravity_candidate(&mut candidates, path);
+            }
+        }
+    }
+
     #[cfg(target_os = "windows")]
     {
         let mut roots: Vec<PathBuf> = Vec::new();
