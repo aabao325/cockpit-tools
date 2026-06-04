@@ -960,14 +960,1668 @@ async fn dispatch_invoke(cmd: &str, args: &Value) -> Result<Value, String> {
         "workbuddy_list_instances" => {
             to_value(crate::commands::workbuddy_instance::workbuddy_list_instances().await)
         }
+        other => dispatch_registered_app_command(other, args).await,
+    }
+}
 
+async fn dispatch_registered_app_command(cmd: &str, args: &Value) -> Result<Value, String> {
+    match cmd {
+        // account
+        "add_account" => {
+            to_value(crate::commands::account::add_account(arg(args, "refreshToken")?).await)
+        }
+        "delete_account" => {
+            to_value(crate::commands::account::delete_account(arg(args, "accountId")?).await)
+        }
+        "delete_accounts" => {
+            to_value(crate::commands::account::delete_accounts(arg(args, "accountIds")?).await)
+        }
+        "reorder_accounts" => {
+            to_value(crate::commands::account::reorder_accounts(arg(args, "accountIds")?).await)
+        }
+        "load_antigravity_switch_history" => {
+            to_value(crate::commands::account::load_antigravity_switch_history())
+        }
+        "clear_antigravity_switch_history" => {
+            to_value(crate::commands::account::clear_antigravity_switch_history())
+        }
+        "bind_account_fingerprint" => to_value(
+            crate::commands::account::bind_account_fingerprint(
+                arg(args, "accountId")?,
+                arg(args, "fingerprintId")?,
+            )
+            .await,
+        ),
+        "get_bound_accounts" => to_value(
+            crate::commands::account::get_bound_accounts(arg(args, "fingerprintId")?).await,
+        ),
+        "sync_current_from_client" => {
+            to_value(crate::commands::account::sync_current_from_client(app_handle()?).await)
+        }
+        "sync_from_extension" => {
+            to_value(crate::commands::account::sync_from_extension(app_handle()?).await)
+        }
+        // device
+        "get_device_profiles" => {
+            to_value(crate::commands::device::get_device_profiles(arg(args, "accountId")?).await)
+        }
+        "bind_device_profile" => to_value(
+            crate::commands::device::bind_device_profile(
+                arg(args, "accountId")?,
+                arg(args, "mode")?,
+            )
+            .await,
+        ),
+        "bind_device_profile_with_profile" => to_value(
+            crate::commands::device::bind_device_profile_with_profile(
+                arg(args, "accountId")?,
+                arg(args, "profile")?,
+            )
+            .await,
+        ),
+        "list_device_versions" => {
+            to_value(crate::commands::device::list_device_versions(arg(args, "accountId")?).await)
+        }
+        "restore_device_version" => to_value(
+            crate::commands::device::restore_device_version(
+                arg(args, "accountId")?,
+                arg(args, "versionId")?,
+            )
+            .await,
+        ),
+        "delete_device_version" => to_value(
+            crate::commands::device::delete_device_version(
+                arg(args, "accountId")?,
+                arg(args, "versionId")?,
+            )
+            .await,
+        ),
+        "restore_original_device" => {
+            to_value(crate::commands::device::restore_original_device().await)
+        }
+        "open_device_folder" => to_value(crate::commands::device::open_device_folder().await),
+        "preview_generate_profile" => {
+            to_value(crate::commands::device::preview_generate_profile().await)
+        }
+        "preview_current_profile" => {
+            to_value(crate::commands::device::preview_current_profile().await)
+        }
+        "list_fingerprints" => to_value(crate::commands::device::list_fingerprints().await),
+        "get_fingerprint" => {
+            to_value(crate::commands::device::get_fingerprint(arg(args, "fingerprintId")?).await)
+        }
+        "generate_new_fingerprint" => {
+            to_value(crate::commands::device::generate_new_fingerprint(arg(args, "name")?).await)
+        }
+        "capture_current_fingerprint" => {
+            to_value(crate::commands::device::capture_current_fingerprint(arg(args, "name")?).await)
+        }
+        "create_fingerprint_with_profile" => to_value(
+            crate::commands::device::create_fingerprint_with_profile(
+                arg(args, "name")?,
+                arg(args, "profile")?,
+            )
+            .await,
+        ),
+        "apply_fingerprint" => {
+            to_value(crate::commands::device::apply_fingerprint(arg(args, "fingerprintId")?).await)
+        }
+        "delete_fingerprint" => {
+            to_value(crate::commands::device::delete_fingerprint(arg(args, "fingerprintId")?).await)
+        }
+        "delete_unbound_fingerprints" => {
+            to_value(crate::commands::device::delete_unbound_fingerprints().await)
+        }
+        "rename_fingerprint" => to_value(
+            crate::commands::device::rename_fingerprint(
+                arg(args, "fingerprintId")?,
+                arg(args, "name")?,
+            )
+            .await,
+        ),
+        "get_current_fingerprint_id" => {
+            to_value(crate::commands::device::get_current_fingerprint_id().await)
+        }
+        // oauth
+        "start_oauth_login" => {
+            to_value(crate::commands::oauth::start_oauth_login(app_handle()?).await)
+        }
+        "prepare_oauth_url" => {
+            to_value(crate::commands::oauth::prepare_oauth_url(app_handle()?).await)
+        }
+        "complete_oauth_login" => {
+            to_value(crate::commands::oauth::complete_oauth_login(app_handle()?).await)
+        }
+        "submit_oauth_callback_url" => to_value(
+            crate::commands::oauth::submit_oauth_callback_url(
+                app_handle()?,
+                arg(args, "callbackUrl")?,
+            )
+            .await,
+        ),
+        "cancel_oauth_login" => to_value(crate::commands::oauth::cancel_oauth_login().await),
+        // import
+        "import_from_old_tools" => to_value(crate::commands::import::import_from_old_tools().await),
+        "import_fingerprints_from_old_tools" => {
+            to_value(crate::commands::import::import_fingerprints_from_old_tools().await)
+        }
+        "import_fingerprints_from_json" => to_value(
+            crate::commands::import::import_fingerprints_from_json(arg(args, "jsonContent")?).await,
+        ),
+        "import_from_local" => {
+            to_value(crate::commands::import::import_from_local(app_handle()?).await)
+        }
+        "import_from_json" => {
+            to_value(crate::commands::import::import_from_json(arg(args, "jsonContent")?).await)
+        }
+        "import_from_files" => {
+            to_value(crate::commands::import::import_from_files(arg(args, "filePaths")?).await)
+        }
+        "export_accounts" => {
+            to_value(crate::commands::import::export_accounts(arg(args, "accountIds")?).await)
+        }
+        // data_transfer
+        "data_transfer_get_user_config" => {
+            to_value(crate::commands::data_transfer::data_transfer_get_user_config())
+        }
+        "data_transfer_apply_user_config" => to_value(
+            crate::commands::data_transfer::data_transfer_apply_user_config(
+                app_handle()?,
+                arg(args, "config")?,
+            ),
+        ),
+        "data_transfer_get_instance_store" => to_value(
+            crate::commands::data_transfer::data_transfer_get_instance_store(arg(
+                args, "platform",
+            )?),
+        ),
+        "data_transfer_replace_instance_store" => to_value(
+            crate::commands::data_transfer::data_transfer_replace_instance_store(
+                arg(args, "platform")?,
+                arg(args, "store")?,
+            ),
+        ),
+        // system
+        "save_text_file" => to_value(
+            crate::commands::system::save_text_file(arg(args, "path")?, arg(args, "content")?)
+                .await,
+        ),
+        "get_downloads_dir" => to_value(crate::commands::system::get_downloads_dir()),
+        "handle_window_close" => Ok(Value::Null),
+        "delete_corrupted_file" => {
+            to_value(crate::commands::system::delete_corrupted_file(arg(args, "path")?).await)
+        }
+        // update
+        "save_pending_update_notes" => {
+            to_value(crate::commands::update::save_pending_update_notes(
+                arg(args, "version")?,
+                arg(args, "releaseNotes")?,
+                arg(args, "releaseNotesZh")?,
+            ))
+        }
+        "install_linux_update" => to_value(
+            crate::commands::update::install_linux_update(
+                app_handle()?,
+                opt_arg(args, "expectedVersion")?,
+            )
+            .await,
+        ),
+        // group
+        "save_group_settings" => to_value(crate::commands::group::save_group_settings(
+            app_handle()?,
+            arg(args, "groupMappings")?,
+            arg(args, "groupNames")?,
+            arg(args, "groupOrder")?,
+        )),
+        "set_model_group" => to_value(crate::commands::group::set_model_group(
+            app_handle()?,
+            arg(args, "modelId")?,
+            arg(args, "groupId")?,
+        )),
+        "remove_model_group" => to_value(crate::commands::group::remove_model_group(
+            app_handle()?,
+            arg(args, "modelId")?,
+        )),
+        "set_group_name" => to_value(crate::commands::group::set_group_name(
+            app_handle()?,
+            arg(args, "groupId")?,
+            arg(args, "name")?,
+        )),
+        "delete_group" => to_value(crate::commands::group::delete_group(
+            app_handle()?,
+            arg(args, "groupId")?,
+        )),
+        "update_group_order" => to_value(crate::commands::group::update_group_order(
+            app_handle()?,
+            arg(args, "order")?,
+        )),
+        // codex
+        "get_codex_config_toml_path" => {
+            to_value(crate::commands::codex::get_codex_config_toml_path())
+        }
+        "open_codex_config_toml" => {
+            to_value(crate::commands::codex::open_codex_config_toml(app_handle()?))
+        }
+        "update_codex_account_app_speed" => {
+            to_value(crate::commands::codex::update_codex_account_app_speed(
+                arg(args, "accountId")?,
+                arg(args, "speed")?,
+            ))
+        }
+        "delete_codex_account" => to_value(crate::commands::codex::delete_codex_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_codex_accounts" => to_value(crate::commands::codex::delete_codex_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_codex_from_local" => {
+            to_value(crate::commands::codex::import_codex_from_local(app_handle()?).await)
+        }
+        "import_codex_from_json" => to_value(
+            crate::commands::codex::import_codex_from_json(
+                app_handle()?,
+                arg(args, "jsonContent")?,
+            )
+            .await,
+        ),
+        "export_codex_accounts" => to_value(crate::commands::codex::export_codex_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_codex_from_files" => to_value(
+            crate::commands::codex::import_codex_from_files(app_handle()?, arg(args, "filePaths")?)
+                .await,
+        ),
+        "codex_oauth_login_start" => {
+            to_value(crate::commands::codex::codex_oauth_login_start(app_handle()?).await)
+        }
+        "codex_oauth_login_completed" => to_value(
+            crate::commands::codex::codex_oauth_login_completed(arg(args, "loginId")?).await,
+        ),
+        "codex_oauth_submit_callback_url" => {
+            to_value(crate::commands::codex::codex_oauth_submit_callback_url(
+                app_handle()?,
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ))
+        }
+        "codex_oauth_login_cancel" => to_value(crate::commands::codex::codex_oauth_login_cancel(
+            opt_arg(args, "loginId")?,
+        )),
+        "add_codex_account_with_token" => to_value(
+            crate::commands::codex::add_codex_account_with_token(
+                arg(args, "idToken")?,
+                arg(args, "accessToken")?,
+                opt_arg(args, "refreshToken")?,
+            )
+            .await,
+        ),
+        "add_codex_account_with_api_key" => {
+            to_value(crate::commands::codex::add_codex_account_with_api_key(
+                arg(args, "apiKey")?,
+                opt_arg(args, "apiBaseUrl")?,
+                opt_arg(args, "apiProviderMode")?,
+                opt_arg(args, "apiProviderId")?,
+                opt_arg(args, "apiProviderName")?,
+            ))
+        }
+        "update_codex_account_name" => to_value(crate::commands::codex::update_codex_account_name(
+            arg(args, "accountId")?,
+            arg(args, "name")?,
+        )),
+        "update_codex_api_key_credentials" => {
+            to_value(crate::commands::codex::update_codex_api_key_credentials(
+                arg(args, "accountId")?,
+                arg(args, "apiKey")?,
+                opt_arg(args, "apiBaseUrl")?,
+                opt_arg(args, "apiProviderMode")?,
+                opt_arg(args, "apiProviderId")?,
+                opt_arg(args, "apiProviderName")?,
+            ))
+        }
+        "update_codex_api_key_bound_oauth_account" => to_value(
+            crate::commands::codex::update_codex_api_key_bound_oauth_account(
+                arg(args, "accountId")?,
+                opt_arg(args, "boundOauthAccountId")?,
+            )
+            .await,
+        ),
+        "is_codex_oauth_port_in_use" => {
+            to_value(crate::commands::codex::is_codex_oauth_port_in_use())
+        }
+        "close_codex_oauth_port" => to_value(crate::commands::codex::close_codex_oauth_port()),
+        "update_codex_account_tags" => to_value(
+            crate::commands::codex::update_codex_account_tags(
+                arg(args, "accountId")?,
+                arg(args, "tags")?,
+            )
+            .await,
+        ),
+        "update_codex_account_note" => to_value(
+            crate::commands::codex::update_codex_account_note(
+                arg(args, "accountId")?,
+                arg(args, "note")?,
+            )
+            .await,
+        ),
+        "load_codex_model_providers" => {
+            to_value(crate::commands::codex::load_codex_model_providers().await)
+        }
+        "save_codex_model_providers" => {
+            to_value(crate::commands::codex::save_codex_model_providers(arg(args, "data")?).await)
+        }
+        "codex_local_access_save_accounts" => to_value(
+            crate::commands::codex::codex_local_access_save_accounts(
+                arg(args, "accountIds")?,
+                opt_arg(args, "restrictFreeAccounts")?,
+            )
+            .await,
+        ),
+        "codex_local_access_remove_account" => to_value(
+            crate::commands::codex::codex_local_access_remove_account(arg(args, "accountId")?)
+                .await,
+        ),
+        "codex_local_access_rotate_api_key" => {
+            to_value(crate::commands::codex::codex_local_access_rotate_api_key().await)
+        }
+        "codex_local_access_update_bound_oauth_account" => to_value(
+            crate::commands::codex::codex_local_access_update_bound_oauth_account(opt_arg(
+                args,
+                "boundOauthAccountId",
+            )?)
+            .await,
+        ),
+        "codex_local_access_clear_stats" => {
+            to_value(crate::commands::codex::codex_local_access_clear_stats().await)
+        }
+        "codex_local_access_query_request_logs" => to_value(
+            crate::commands::codex::codex_local_access_query_request_logs(
+                arg(args, "page")?,
+                arg(args, "pageSize")?,
+                opt_arg(args, "statsRange")?,
+                opt_arg(args, "modelQuery")?,
+                opt_arg(args, "accountQuery")?,
+                opt_arg(args, "apiKeyQuery")?,
+                opt_arg(args, "gatewayMode")?,
+                opt_arg(args, "requestKind")?,
+                opt_arg(args, "success")?,
+                opt_arg(args, "errorCategory")?,
+            )
+            .await,
+        ),
+        "codex_local_access_prepare_restart" => {
+            to_value(crate::commands::codex::codex_local_access_prepare_restart().await)
+        }
+        "codex_local_access_kill_port" => {
+            to_value(crate::commands::codex::codex_local_access_kill_port().await)
+        }
+        "codex_local_access_update_port" => to_value(
+            crate::commands::codex::codex_local_access_update_port(arg(args, "port")?).await,
+        ),
+        "codex_local_access_update_routing_strategy" => to_value(
+            crate::commands::codex::codex_local_access_update_routing_strategy(arg(
+                args, "strategy",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_custom_routing" => to_value(
+            crate::commands::codex::codex_local_access_update_custom_routing(arg(args, "rules")?)
+                .await,
+        ),
+        "codex_local_access_update_account_model_rules" => to_value(
+            crate::commands::codex::codex_local_access_update_account_model_rules(arg(
+                args, "rules",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_model_rules" => to_value(
+            crate::commands::codex::codex_local_access_update_model_rules(
+                arg(args, "modelAliases")?,
+                arg(args, "excludedModels")?,
+            )
+            .await,
+        ),
+        "codex_local_access_update_model_pricings" => to_value(
+            crate::commands::codex::codex_local_access_update_model_pricings(arg(
+                args,
+                "modelPricings",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_routing_options" => to_value(
+            crate::commands::codex::codex_local_access_update_routing_options(
+                arg(args, "sessionAffinity")?,
+                arg(args, "sessionAffinityTtlMs")?,
+                arg(args, "maxRetryCredentials")?,
+                arg(args, "maxRetryIntervalMs")?,
+                arg(args, "disableCooling")?,
+            )
+            .await,
+        ),
+        "codex_local_access_update_timeouts" => to_value(
+            crate::commands::codex::codex_local_access_update_timeouts(
+                arg(args, "timeouts")?,
+                opt_arg(args, "activeTimeoutPresetId")?,
+            )
+            .await,
+        ),
+        "codex_local_access_update_timeout_presets" => to_value(
+            crate::commands::codex::codex_local_access_update_timeout_presets(
+                arg(args, "timeoutPresets")?,
+                opt_arg(args, "activeTimeoutPresetId")?,
+            )
+            .await,
+        ),
+        "codex_local_access_update_upstream_proxy_config" => to_value(
+            crate::commands::codex::codex_local_access_update_upstream_proxy_config(opt_arg(
+                args,
+                "upstreamProxyUrl",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_gateway_mode" => to_value(
+            crate::commands::codex::codex_local_access_update_gateway_mode(arg(
+                args,
+                "gatewayMode",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_debug_logs" => to_value(
+            crate::commands::codex::codex_local_access_update_debug_logs(arg(args, "debugLogs")?)
+                .await,
+        ),
+        "codex_local_access_update_access_scope" => to_value(
+            crate::commands::codex::codex_local_access_update_access_scope(arg(
+                args,
+                "accessScope",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_client_base_url_host" => to_value(
+            crate::commands::codex::codex_local_access_update_client_base_url_host(arg(
+                args,
+                "clientBaseUrlHost",
+            )?)
+            .await,
+        ),
+        "codex_local_access_update_image_generation_mode" => to_value(
+            crate::commands::codex::codex_local_access_update_image_generation_mode(arg(
+                args,
+                "imageGenerationMode",
+            )?)
+            .await,
+        ),
+        "codex_local_access_create_api_key" => to_value(
+            crate::commands::codex::codex_local_access_create_api_key(opt_arg(args, "label")?)
+                .await,
+        ),
+        "codex_local_access_update_api_key" => to_value(
+            crate::commands::codex::codex_local_access_update_api_key(
+                arg(args, "apiKeyId")?,
+                opt_arg(args, "label")?,
+                opt_arg(args, "enabled")?,
+                opt_arg(args, "modelPrefix")?,
+                opt_arg(args, "allowedModels")?,
+                opt_arg(args, "excludedModels")?,
+            )
+            .await,
+        ),
+        "codex_local_access_rotate_named_api_key" => to_value(
+            crate::commands::codex::codex_local_access_rotate_named_api_key(arg(args, "apiKeyId")?)
+                .await,
+        ),
+        "codex_local_access_delete_api_key" => to_value(
+            crate::commands::codex::codex_local_access_delete_api_key(arg(args, "apiKeyId")?).await,
+        ),
+        "codex_local_access_set_enabled" => to_value(
+            crate::commands::codex::codex_local_access_set_enabled(arg(args, "enabled")?).await,
+        ),
+        "codex_local_access_activate" => {
+            to_value(crate::commands::codex::codex_local_access_activate(app_handle()?).await)
+        }
+        "codex_local_access_test" => {
+            to_value(crate::commands::codex::codex_local_access_test().await)
+        }
+        "codex_local_access_chat_test" => to_value(
+            crate::commands::codex::codex_local_access_chat_test(
+                arg(args, "modelId")?,
+                arg(args, "messages")?,
+            )
+            .await,
+        ),
+        "codex_local_access_chat_test_stream" => to_value(
+            crate::commands::codex::codex_local_access_chat_test_stream(
+                app_handle()?,
+                arg(args, "sessionId")?,
+                arg(args, "modelId")?,
+                arg(args, "messages")?,
+            )
+            .await,
+        ),
+        // github_copilot
+        "delete_github_copilot_account" => to_value(
+            crate::commands::github_copilot::delete_github_copilot_account(arg(args, "accountId")?),
+        ),
+        "delete_github_copilot_accounts" => to_value(
+            crate::commands::github_copilot::delete_github_copilot_accounts(arg(
+                args,
+                "accountIds",
+            )?),
+        ),
+        "import_github_copilot_from_json" => to_value(
+            crate::commands::github_copilot::import_github_copilot_from_json(arg(
+                args,
+                "jsonContent",
+            )?),
+        ),
+        "import_github_copilot_from_local" => to_value(
+            crate::commands::github_copilot::import_github_copilot_from_local(app_handle()?).await,
+        ),
+        "export_github_copilot_accounts" => to_value(
+            crate::commands::github_copilot::export_github_copilot_accounts(arg(
+                args,
+                "accountIds",
+            )?),
+        ),
+        "github_copilot_oauth_login_start" => {
+            to_value(crate::commands::github_copilot::github_copilot_oauth_login_start().await)
+        }
+        "github_copilot_oauth_login_complete" => to_value(
+            crate::commands::github_copilot::github_copilot_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "github_copilot_oauth_login_cancel" => to_value(
+            crate::commands::github_copilot::github_copilot_oauth_login_cancel(opt_arg(
+                args, "loginId",
+            )?),
+        ),
+        "add_github_copilot_account_with_token" => to_value(
+            crate::commands::github_copilot::add_github_copilot_account_with_token(
+                app_handle()?,
+                arg(args, "githubAccessToken")?,
+            )
+            .await,
+        ),
+        "get_github_copilot_accounts_index_path" => {
+            to_value(crate::commands::github_copilot::get_github_copilot_accounts_index_path())
+        }
+        // github_copilot_instance
+        "github_copilot_create_instance" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "github_copilot_update_instance" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "github_copilot_delete_instance" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_delete_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "github_copilot_start_instance" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_start_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "github_copilot_stop_instance" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_stop_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "github_copilot_open_instance_window" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_open_instance_window(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "github_copilot_close_all_instances" => to_value(
+            crate::commands::github_copilot_instance::github_copilot_close_all_instances().await,
+        ),
+        // windsurf
+        "delete_windsurf_account" => to_value(crate::commands::windsurf::delete_windsurf_account(
+            arg(args, "accountId")?,
+        )),
+        "delete_windsurf_accounts" => to_value(
+            crate::commands::windsurf::delete_windsurf_accounts(arg(args, "accountIds")?),
+        ),
+        "import_windsurf_from_json" => to_value(
+            crate::commands::windsurf::import_windsurf_from_json(arg(args, "jsonContent")?),
+        ),
+        "import_windsurf_from_local" => {
+            to_value(crate::commands::windsurf::import_windsurf_from_local(app_handle()?).await)
+        }
+        "export_windsurf_accounts" => to_value(
+            crate::commands::windsurf::export_windsurf_accounts(arg(args, "accountIds")?),
+        ),
+        "windsurf_oauth_login_start" => {
+            to_value(crate::commands::windsurf::windsurf_oauth_login_start().await)
+        }
+        "windsurf_oauth_login_complete" => to_value(
+            crate::commands::windsurf::windsurf_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "windsurf_oauth_submit_callback_url" => to_value(
+            crate::commands::windsurf::windsurf_oauth_submit_callback_url(
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ),
+        ),
+        "windsurf_oauth_login_cancel" => to_value(
+            crate::commands::windsurf::windsurf_oauth_login_cancel(opt_arg(args, "loginId")?),
+        ),
+        "add_windsurf_account_with_token" => to_value(
+            crate::commands::windsurf::add_windsurf_account_with_token(
+                app_handle()?,
+                arg(args, "githubAccessToken")?,
+            )
+            .await,
+        ),
+        "add_windsurf_account_with_password" => to_value(
+            crate::commands::windsurf::add_windsurf_account_with_password(
+                app_handle()?,
+                arg(args, "email")?,
+                arg(args, "password")?,
+            )
+            .await,
+        ),
+        "add_windsurf_accounts_with_password" => to_value(
+            crate::commands::windsurf::add_windsurf_accounts_with_password(
+                app_handle()?,
+                arg(args, "credentials")?,
+            )
+            .await,
+        ),
+        "get_windsurf_accounts_index_path" => {
+            to_value(crate::commands::windsurf::get_windsurf_accounts_index_path())
+        }
+        // kiro
+        "delete_kiro_account" => to_value(crate::commands::kiro::delete_kiro_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_kiro_accounts" => to_value(crate::commands::kiro::delete_kiro_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_kiro_from_json" => to_value(crate::commands::kiro::import_kiro_from_json(arg(
+            args,
+            "jsonContent",
+        )?)),
+        "import_kiro_from_local" => {
+            to_value(crate::commands::kiro::import_kiro_from_local(app_handle()?).await)
+        }
+        "export_kiro_accounts" => to_value(crate::commands::kiro::export_kiro_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "kiro_oauth_login_start" => to_value(crate::commands::kiro::kiro_oauth_login_start().await),
+        "kiro_oauth_login_complete" => to_value(
+            crate::commands::kiro::kiro_oauth_login_complete(app_handle()?, arg(args, "loginId")?)
+                .await,
+        ),
+        "kiro_oauth_submit_callback_url" => {
+            to_value(crate::commands::kiro::kiro_oauth_submit_callback_url(
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ))
+        }
+        "kiro_oauth_login_cancel" => to_value(crate::commands::kiro::kiro_oauth_login_cancel(
+            opt_arg(args, "loginId")?,
+        )),
+        "add_kiro_account_with_token" => to_value(
+            crate::commands::kiro::add_kiro_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            )
+            .await,
+        ),
+        "get_kiro_accounts_index_path" => {
+            to_value(crate::commands::kiro::get_kiro_accounts_index_path())
+        }
+        // codebuddy
+        "delete_codebuddy_account" => to_value(
+            crate::commands::codebuddy::delete_codebuddy_account(arg(args, "accountId")?),
+        ),
+        "delete_codebuddy_accounts" => to_value(
+            crate::commands::codebuddy::delete_codebuddy_accounts(arg(args, "accountIds")?),
+        ),
+        "import_codebuddy_from_json" => to_value(
+            crate::commands::codebuddy::import_codebuddy_from_json(arg(args, "jsonContent")?),
+        ),
+        "import_codebuddy_from_local" => {
+            to_value(crate::commands::codebuddy::import_codebuddy_from_local(app_handle()?).await)
+        }
+        "export_codebuddy_accounts" => to_value(
+            crate::commands::codebuddy::export_codebuddy_accounts(arg(args, "accountIds")?),
+        ),
+        "codebuddy_oauth_login_start" => {
+            to_value(crate::commands::codebuddy::codebuddy_oauth_login_start().await)
+        }
+        "codebuddy_oauth_login_complete" => to_value(
+            crate::commands::codebuddy::codebuddy_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "codebuddy_oauth_login_cancel" => to_value(
+            crate::commands::codebuddy::codebuddy_oauth_login_cancel(opt_arg(args, "loginId")?),
+        ),
+        "add_codebuddy_account_with_token" => to_value(
+            crate::commands::codebuddy::add_codebuddy_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            )
+            .await,
+        ),
+        "get_codebuddy_accounts_index_path" => {
+            to_value(crate::commands::codebuddy::get_codebuddy_accounts_index_path())
+        }
+        // codebuddy_cn
+        "delete_codebuddy_cn_account" => to_value(
+            crate::commands::codebuddy_cn::delete_codebuddy_cn_account(arg(args, "accountId")?),
+        ),
+        "delete_codebuddy_cn_accounts" => to_value(
+            crate::commands::codebuddy_cn::delete_codebuddy_cn_accounts(arg(args, "accountIds")?),
+        ),
+        "import_codebuddy_cn_from_json" => to_value(
+            crate::commands::codebuddy_cn::import_codebuddy_cn_from_json(arg(args, "jsonContent")?),
+        ),
+        "import_codebuddy_cn_from_local" => to_value(
+            crate::commands::codebuddy_cn::import_codebuddy_cn_from_local(app_handle()?).await,
+        ),
+        "export_codebuddy_cn_accounts" => to_value(
+            crate::commands::codebuddy_cn::export_codebuddy_cn_accounts(arg(args, "accountIds")?),
+        ),
+        "codebuddy_cn_oauth_login_start" => {
+            to_value(crate::commands::codebuddy_cn::codebuddy_cn_oauth_login_start().await)
+        }
+        "codebuddy_cn_oauth_login_complete" => to_value(
+            crate::commands::codebuddy_cn::codebuddy_cn_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "codebuddy_cn_oauth_login_cancel" => to_value(
+            crate::commands::codebuddy_cn::codebuddy_cn_oauth_login_cancel(opt_arg(
+                args, "loginId",
+            )?),
+        ),
+        "add_codebuddy_cn_account_with_token" => to_value(
+            crate::commands::codebuddy_cn::add_codebuddy_cn_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            )
+            .await,
+        ),
+        "get_codebuddy_cn_accounts_index_path" => {
+            to_value(crate::commands::codebuddy_cn::get_codebuddy_cn_accounts_index_path())
+        }
+        "sync_codebuddy_cn_to_workbuddy" => to_value(
+            crate::commands::codebuddy_cn::sync_codebuddy_cn_to_workbuddy(app_handle()?).await,
+        ),
+        // workbuddy
+        "delete_workbuddy_account" => to_value(
+            crate::commands::workbuddy::delete_workbuddy_account(arg(args, "accountId")?),
+        ),
+        "delete_workbuddy_accounts" => to_value(
+            crate::commands::workbuddy::delete_workbuddy_accounts(arg(args, "accountIds")?),
+        ),
+        "import_workbuddy_from_json" => to_value(
+            crate::commands::workbuddy::import_workbuddy_from_json(arg(args, "jsonContent")?),
+        ),
+        "import_workbuddy_from_local" => {
+            to_value(crate::commands::workbuddy::import_workbuddy_from_local(app_handle()?).await)
+        }
+        "export_workbuddy_accounts" => to_value(
+            crate::commands::workbuddy::export_workbuddy_accounts(arg(args, "accountIds")?),
+        ),
+        "workbuddy_oauth_login_start" => {
+            to_value(crate::commands::workbuddy::workbuddy_oauth_login_start().await)
+        }
+        "workbuddy_oauth_login_complete" => to_value(
+            crate::commands::workbuddy::workbuddy_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "workbuddy_oauth_login_cancel" => to_value(
+            crate::commands::workbuddy::workbuddy_oauth_login_cancel(opt_arg(args, "loginId")?),
+        ),
+        "add_workbuddy_account_with_token" => to_value(
+            crate::commands::workbuddy::add_workbuddy_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            )
+            .await,
+        ),
+        "get_workbuddy_accounts_index_path" => {
+            to_value(crate::commands::workbuddy::get_workbuddy_accounts_index_path())
+        }
+        "sync_workbuddy_to_codebuddy_cn" => to_value(
+            crate::commands::workbuddy::sync_workbuddy_to_codebuddy_cn(app_handle()?).await,
+        ),
+        "get_checkin_status_workbuddy" => to_value(
+            crate::commands::workbuddy::get_checkin_status_workbuddy(arg(args, "accountId")?).await,
+        ),
+        "checkin_workbuddy" => to_value(
+            crate::commands::workbuddy::checkin_workbuddy(app_handle()?, arg(args, "accountId")?)
+                .await,
+        ),
+        // workbuddy_instance
+        "workbuddy_create_instance" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "workbuddy_update_instance" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "workbuddy_delete_instance" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_delete_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "workbuddy_start_instance" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_start_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "workbuddy_stop_instance" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_stop_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "workbuddy_open_instance_window" => to_value(
+            crate::commands::workbuddy_instance::workbuddy_open_instance_window(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "workbuddy_close_all_instances" => {
+            to_value(crate::commands::workbuddy_instance::workbuddy_close_all_instances().await)
+        }
+        // codebuddy_instance
+        "codebuddy_create_instance" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "codebuddy_update_instance" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "codebuddy_delete_instance" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_delete_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_start_instance" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_start_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "codebuddy_stop_instance" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_stop_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "codebuddy_open_instance_window" => to_value(
+            crate::commands::codebuddy_instance::codebuddy_open_instance_window(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_close_all_instances" => {
+            to_value(crate::commands::codebuddy_instance::codebuddy_close_all_instances().await)
+        }
+        // codebuddy_cn_instance
+        "codebuddy_cn_create_instance" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "codebuddy_cn_update_instance" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "codebuddy_cn_delete_instance" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_delete_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_cn_start_instance" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_start_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_cn_stop_instance" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_stop_instance(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_cn_open_instance_window" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_open_instance_window(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codebuddy_cn_close_all_instances" => to_value(
+            crate::commands::codebuddy_cn_instance::codebuddy_cn_close_all_instances().await,
+        ),
+        // qoder
+        "delete_qoder_account" => to_value(crate::commands::qoder::delete_qoder_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_qoder_accounts" => to_value(crate::commands::qoder::delete_qoder_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_qoder_from_json" => to_value(crate::commands::qoder::import_qoder_from_json(arg(
+            args,
+            "jsonContent",
+        )?)),
+        "import_qoder_from_local" => to_value(crate::commands::qoder::import_qoder_from_local(
+            app_handle()?,
+        )),
+        "qoder_oauth_login_start" => {
+            to_value(crate::commands::qoder::qoder_oauth_login_start().await)
+        }
+        "qoder_oauth_login_peek" => {
+            serialize_value(crate::commands::qoder::qoder_oauth_login_peek())
+        }
+        "qoder_oauth_login_complete" => to_value(
+            crate::commands::qoder::qoder_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "qoder_oauth_login_cancel" => to_value(crate::commands::qoder::qoder_oauth_login_cancel(
+            opt_arg(args, "loginId")?,
+        )),
+        "export_qoder_accounts" => to_value(crate::commands::qoder::export_qoder_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "get_qoder_accounts_index_path" => {
+            to_value(crate::commands::qoder::get_qoder_accounts_index_path())
+        }
+        // zed
+        "delete_zed_account" => to_value(crate::commands::zed::delete_zed_account(
+            app_handle()?,
+            arg(args, "accountId")?,
+        )),
+        "delete_zed_accounts" => to_value(crate::commands::zed::delete_zed_accounts(
+            app_handle()?,
+            arg(args, "accountIds")?,
+        )),
+        "import_zed_from_json" => to_value(crate::commands::zed::import_zed_from_json(
+            app_handle()?,
+            arg(args, "jsonContent")?,
+        )),
+        "import_zed_from_local" => {
+            to_value(crate::commands::zed::import_zed_from_local(app_handle()?).await)
+        }
+        "export_zed_accounts" => to_value(crate::commands::zed::export_zed_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "zed_oauth_login_start" => to_value(crate::commands::zed::zed_oauth_login_start().await),
+        "zed_oauth_login_peek" => serialize_value(crate::commands::zed::zed_oauth_login_peek()),
+        "zed_oauth_login_complete" => to_value(
+            crate::commands::zed::zed_oauth_login_complete(app_handle()?, arg(args, "loginId")?)
+                .await,
+        ),
+        "zed_oauth_login_cancel" => to_value(crate::commands::zed::zed_oauth_login_cancel(
+            opt_arg(args, "loginId")?,
+        )),
+        "zed_oauth_submit_callback_url" => {
+            to_value(crate::commands::zed::zed_oauth_submit_callback_url(
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ))
+        }
+        "zed_logout_current_account" => {
+            to_value(crate::commands::zed::zed_logout_current_account(app_handle()?).await)
+        }
+        "zed_get_runtime_status" => to_value(crate::commands::zed::zed_get_runtime_status()),
+        "zed_start_default_session" => to_value(crate::commands::zed::zed_start_default_session()),
+        "zed_stop_default_session" => to_value(crate::commands::zed::zed_stop_default_session()),
+        "zed_restart_default_session" => {
+            to_value(crate::commands::zed::zed_restart_default_session())
+        }
+        "zed_focus_default_session" => to_value(crate::commands::zed::zed_focus_default_session()),
+        // qoder_instance
+        "qoder_create_instance" => to_value(
+            crate::commands::qoder_instance::qoder_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "qoder_update_instance" => to_value(
+            crate::commands::qoder_instance::qoder_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "qoder_delete_instance" => to_value(
+            crate::commands::qoder_instance::qoder_delete_instance(arg(args, "instanceId")?).await,
+        ),
+        "qoder_start_instance" => to_value(
+            crate::commands::qoder_instance::qoder_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "qoder_stop_instance" => to_value(
+            crate::commands::qoder_instance::qoder_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "qoder_open_instance_window" => to_value(
+            crate::commands::qoder_instance::qoder_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "qoder_close_all_instances" => {
+            to_value(crate::commands::qoder_instance::qoder_close_all_instances().await)
+        }
+        // trae
+        "delete_trae_account" => to_value(crate::commands::trae::delete_trae_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_trae_accounts" => to_value(crate::commands::trae::delete_trae_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_trae_from_json" => to_value(crate::commands::trae::import_trae_from_json(arg(
+            args,
+            "jsonContent",
+        )?)),
+        "import_trae_from_local" => {
+            to_value(crate::commands::trae::import_trae_from_local(app_handle()?).await)
+        }
+        "trae_oauth_login_start" => to_value(crate::commands::trae::trae_oauth_login_start().await),
+        "trae_oauth_login_complete" => to_value(
+            crate::commands::trae::trae_oauth_login_complete(app_handle()?, arg(args, "loginId")?)
+                .await,
+        ),
+        "trae_oauth_submit_callback_url" => {
+            to_value(crate::commands::trae::trae_oauth_submit_callback_url(
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ))
+        }
+        "trae_oauth_login_cancel" => to_value(crate::commands::trae::trae_oauth_login_cancel(
+            opt_arg(args, "loginId")?,
+        )),
+        "export_trae_accounts" => to_value(crate::commands::trae::export_trae_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "add_trae_account_with_token" => {
+            to_value(crate::commands::trae::add_trae_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            ))
+        }
+        "get_trae_accounts_index_path" => {
+            to_value(crate::commands::trae::get_trae_accounts_index_path())
+        }
+        // trae_instance
+        "trae_create_instance" => to_value(
+            crate::commands::trae_instance::trae_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "trae_update_instance" => to_value(
+            crate::commands::trae_instance::trae_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "trae_delete_instance" => to_value(
+            crate::commands::trae_instance::trae_delete_instance(arg(args, "instanceId")?).await,
+        ),
+        "trae_start_instance" => to_value(
+            crate::commands::trae_instance::trae_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "trae_stop_instance" => to_value(
+            crate::commands::trae_instance::trae_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "trae_open_instance_window" => to_value(
+            crate::commands::trae_instance::trae_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "trae_close_all_instances" => {
+            to_value(crate::commands::trae_instance::trae_close_all_instances().await)
+        }
+        // cursor
+        "delete_cursor_account" => to_value(crate::commands::cursor::delete_cursor_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_cursor_accounts" => to_value(crate::commands::cursor::delete_cursor_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_cursor_from_json" => to_value(crate::commands::cursor::import_cursor_from_json(
+            arg(args, "jsonContent")?,
+        )),
+        "import_cursor_from_local" => to_value(crate::commands::cursor::import_cursor_from_local(
+            app_handle()?,
+        )),
+        "export_cursor_accounts" => to_value(crate::commands::cursor::export_cursor_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "add_cursor_account_with_token" => {
+            to_value(crate::commands::cursor::add_cursor_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            ))
+        }
+        "get_cursor_accounts_index_path" => {
+            to_value(crate::commands::cursor::get_cursor_accounts_index_path())
+        }
+        "cursor_oauth_login_start" => to_value(crate::commands::cursor::cursor_oauth_login_start()),
+        "cursor_oauth_login_complete" => to_value(
+            crate::commands::cursor::cursor_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "cursor_oauth_login_cancel" => to_value(
+            crate::commands::cursor::cursor_oauth_login_cancel(opt_arg(args, "loginId")?),
+        ),
+        // gemini
+        "delete_gemini_account" => to_value(crate::commands::gemini::delete_gemini_account(arg(
+            args,
+            "accountId",
+        )?)),
+        "delete_gemini_accounts" => to_value(crate::commands::gemini::delete_gemini_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "import_gemini_from_json" => to_value(
+            crate::commands::gemini::import_gemini_from_json(
+                app_handle()?,
+                arg(args, "jsonContent")?,
+            )
+            .await,
+        ),
+        "import_gemini_from_local" => {
+            to_value(crate::commands::gemini::import_gemini_from_local(app_handle()?).await)
+        }
+        "export_gemini_accounts" => to_value(crate::commands::gemini::export_gemini_accounts(arg(
+            args,
+            "accountIds",
+        )?)),
+        "gemini_oauth_login_start" => {
+            to_value(crate::commands::gemini::gemini_oauth_login_start().await)
+        }
+        "gemini_oauth_login_complete" => to_value(
+            crate::commands::gemini::gemini_oauth_login_complete(
+                app_handle()?,
+                arg(args, "loginId")?,
+            )
+            .await,
+        ),
+        "gemini_oauth_submit_callback_url" => {
+            to_value(crate::commands::gemini::gemini_oauth_submit_callback_url(
+                arg(args, "loginId")?,
+                arg(args, "callbackUrl")?,
+            ))
+        }
+        "gemini_oauth_login_cancel" => to_value(
+            crate::commands::gemini::gemini_oauth_login_cancel(opt_arg(args, "loginId")?),
+        ),
+        "add_gemini_account_with_token" => to_value(
+            crate::commands::gemini::add_gemini_account_with_token(
+                app_handle()?,
+                arg(args, "accessToken")?,
+            )
+            .await,
+        ),
+        "get_gemini_accounts_index_path" => {
+            to_value(crate::commands::gemini::get_gemini_accounts_index_path())
+        }
+        // gemini_instance
+        "gemini_create_instance" => to_value(
+            crate::commands::gemini_instance::gemini_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "workingDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "gemini_update_instance" => to_value(
+            crate::commands::gemini_instance::gemini_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "workingDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "gemini_delete_instance" => to_value(
+            crate::commands::gemini_instance::gemini_delete_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "gemini_start_instance" => to_value(
+            crate::commands::gemini_instance::gemini_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "gemini_stop_instance" => to_value(
+            crate::commands::gemini_instance::gemini_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "gemini_open_instance_window" => to_value(
+            crate::commands::gemini_instance::gemini_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "gemini_close_all_instances" => {
+            to_value(crate::commands::gemini_instance::gemini_close_all_instances().await)
+        }
+        "gemini_get_instance_launch_command" => to_value(
+            crate::commands::gemini_instance::gemini_get_instance_launch_command(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "gemini_execute_instance_launch_command" => to_value(
+            crate::commands::gemini_instance::gemini_execute_instance_launch_command(
+                arg(args, "instanceId")?,
+                opt_arg(args, "terminal")?,
+            )
+            .await,
+        ),
+        // cursor_instance
+        "cursor_create_instance" => to_value(
+            crate::commands::cursor_instance::cursor_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "cursor_update_instance" => to_value(
+            crate::commands::cursor_instance::cursor_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "cursor_delete_instance" => to_value(
+            crate::commands::cursor_instance::cursor_delete_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "cursor_start_instance" => to_value(
+            crate::commands::cursor_instance::cursor_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "cursor_stop_instance" => to_value(
+            crate::commands::cursor_instance::cursor_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "cursor_open_instance_window" => to_value(
+            crate::commands::cursor_instance::cursor_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "cursor_close_all_instances" => {
+            to_value(crate::commands::cursor_instance::cursor_close_all_instances().await)
+        }
+        // windsurf_instance
+        "windsurf_create_instance" => to_value(
+            crate::commands::windsurf_instance::windsurf_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "windsurf_update_instance" => to_value(
+            crate::commands::windsurf_instance::windsurf_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "windsurf_delete_instance" => to_value(
+            crate::commands::windsurf_instance::windsurf_delete_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "windsurf_start_instance" => to_value(
+            crate::commands::windsurf_instance::windsurf_start_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "windsurf_stop_instance" => to_value(
+            crate::commands::windsurf_instance::windsurf_stop_instance(arg(args, "instanceId")?)
+                .await,
+        ),
+        "windsurf_open_instance_window" => to_value(
+            crate::commands::windsurf_instance::windsurf_open_instance_window(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "windsurf_close_all_instances" => {
+            to_value(crate::commands::windsurf_instance::windsurf_close_all_instances().await)
+        }
+        // kiro_instance
+        "kiro_create_instance" => to_value(
+            crate::commands::kiro_instance::kiro_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "kiro_update_instance" => to_value(
+            crate::commands::kiro_instance::kiro_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "kiro_delete_instance" => to_value(
+            crate::commands::kiro_instance::kiro_delete_instance(arg(args, "instanceId")?).await,
+        ),
+        "kiro_start_instance" => to_value(
+            crate::commands::kiro_instance::kiro_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "kiro_stop_instance" => to_value(
+            crate::commands::kiro_instance::kiro_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "kiro_open_instance_window" => to_value(
+            crate::commands::kiro_instance::kiro_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "kiro_close_all_instances" => {
+            to_value(crate::commands::kiro_instance::kiro_close_all_instances().await)
+        }
+        // codex_instance
+        "codex_get_instance_quick_config" => to_value(
+            crate::commands::codex_instance::codex_get_instance_quick_config(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codex_save_instance_quick_config" => to_value(
+            crate::commands::codex_instance::codex_save_instance_quick_config(
+                arg(args, "instanceId")?,
+                opt_arg(args, "modelContextWindow")?,
+                opt_arg(args, "autoCompactTokenLimit")?,
+            )
+            .await,
+        ),
+        "codex_open_instance_config_toml" => to_value(
+            crate::commands::codex_instance::codex_open_instance_config_toml(
+                app_handle()?,
+                arg(args, "instanceId")?,
+            )
+            .await,
+        ),
+        "codex_sync_threads_across_instances" => {
+            to_value(crate::commands::codex_instance::codex_sync_threads_across_instances().await)
+        }
+        "codex_sync_sessions_to_instance" => to_value(
+            crate::commands::codex_instance::codex_sync_sessions_to_instance(
+                arg(args, "sessionIds")?,
+                arg(args, "targetInstanceId")?,
+            )
+            .await,
+        ),
+        "codex_repair_session_visibility_across_instances" => to_value(
+            crate::commands::codex_instance::codex_repair_session_visibility_across_instances()
+                .await,
+        ),
+        "codex_list_sessions_across_instances" => {
+            to_value(crate::commands::codex_instance::codex_list_sessions_across_instances().await)
+        }
+        "codex_get_session_token_stats_across_instances" => to_value(
+            crate::commands::codex_instance::codex_get_session_token_stats_across_instances(arg(
+                args,
+                "sessionIds",
+            )?)
+            .await,
+        ),
+        "codex_move_sessions_to_trash_across_instances" => to_value(
+            crate::commands::codex_instance::codex_move_sessions_to_trash_across_instances(arg(
+                args,
+                "sessionIds",
+            )?)
+            .await,
+        ),
+        "codex_list_trashed_sessions_across_instances" => to_value(
+            crate::commands::codex_instance::codex_list_trashed_sessions_across_instances().await,
+        ),
+        "codex_restore_sessions_from_trash_across_instances" => to_value(
+            crate::commands::codex_instance::codex_restore_sessions_from_trash_across_instances(
+                arg(args, "sessionIds")?,
+            )
+            .await,
+        ),
+        "codex_create_instance" => to_value(
+            crate::commands::codex_instance::codex_create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "workingDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+                opt_arg(args, "launchMode")?,
+                opt_arg(args, "appSpeed")?,
+            )
+            .await,
+        ),
+        "codex_update_instance" => to_value(
+            crate::commands::codex_instance::codex_update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "workingDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+                opt_arg(args, "launchMode")?,
+                opt_arg(args, "appSpeed")?,
+                opt_arg(args, "autoSyncThreads")?,
+            )
+            .await,
+        ),
+        "codex_delete_instance" => to_value(
+            crate::commands::codex_instance::codex_delete_instance(arg(args, "instanceId")?).await,
+        ),
+        "codex_start_instance" => to_value(
+            crate::commands::codex_instance::codex_start_instance(arg(args, "instanceId")?).await,
+        ),
+        "codex_stop_instance" => to_value(
+            crate::commands::codex_instance::codex_stop_instance(arg(args, "instanceId")?).await,
+        ),
+        "codex_open_instance_window" => to_value(
+            crate::commands::codex_instance::codex_open_instance_window(arg(args, "instanceId")?)
+                .await,
+        ),
+        "codex_close_all_instances" => {
+            to_value(crate::commands::codex_instance::codex_close_all_instances().await)
+        }
+        "codex_get_instance_launch_command" => to_value(
+            crate::commands::codex_instance::codex_get_instance_launch_command(arg(
+                args,
+                "instanceId",
+            )?)
+            .await,
+        ),
+        "codex_execute_instance_launch_command" => to_value(
+            crate::commands::codex_instance::codex_execute_instance_launch_command(
+                arg(args, "instanceId")?,
+                opt_arg(args, "terminal")?,
+            )
+            .await,
+        ),
+        // instance
+        "get_instance_defaults" => {
+            to_value(crate::commands::instance::get_instance_defaults().await)
+        }
+        "list_instances" => to_value(crate::commands::instance::list_instances().await),
+        "create_instance" => to_value(
+            crate::commands::instance::create_instance(
+                arg(args, "name")?,
+                arg(args, "userDataDir")?,
+                opt_arg(args, "extraArgs")?,
+                opt_arg(args, "bindAccountId")?,
+                opt_arg(args, "copySourceInstanceId")?,
+                opt_arg(args, "initMode")?,
+            )
+            .await,
+        ),
+        "update_instance" => to_value(
+            crate::commands::instance::update_instance(
+                arg(args, "instanceId")?,
+                opt_arg(args, "name")?,
+                opt_arg(args, "extraArgs")?,
+                opt_nullable_arg(args, "bindAccountId")?,
+                opt_arg(args, "followLocalAccount")?,
+            )
+            .await,
+        ),
+        "delete_instance" => {
+            to_value(crate::commands::instance::delete_instance(arg(args, "instanceId")?).await)
+        }
+        "start_instance" => {
+            to_value(crate::commands::instance::start_instance(arg(args, "instanceId")?).await)
+        }
+        "stop_instance" => {
+            to_value(crate::commands::instance::stop_instance(arg(args, "instanceId")?).await)
+        }
+        "open_instance_window" => to_value(
+            crate::commands::instance::open_instance_window(arg(args, "instanceId")?).await,
+        ),
+        "close_all_instances" => to_value(crate::commands::instance::close_all_instances().await),
         other => Err(format!(
             "Command '{}' is not exposed through the local web console yet",
             other
         )),
     }
 }
-
 fn to_value<T: Serialize>(result: Result<T, String>) -> Result<Value, String> {
     serde_json::to_value(result?).map_err(|err| format!("serialize response failed: {}", err))
 }
@@ -1104,6 +2758,19 @@ fn opt_arg<T: DeserializeOwned>(args: &Value, key: &str) -> Result<Option<T>, St
         Some(Value::Null) | None => Ok(None),
         Some(value) => serde_json::from_value(value.clone())
             .map(Some)
+            .map_err(|err| format!("invalid argument '{}': {}", key, err)),
+    }
+}
+
+fn opt_nullable_arg<T: DeserializeOwned>(
+    args: &Value,
+    key: &str,
+) -> Result<Option<Option<T>>, String> {
+    match args.get(key) {
+        None => Ok(None),
+        Some(Value::Null) => Ok(Some(None)),
+        Some(value) => serde_json::from_value(value.clone())
+            .map(|value| Some(Some(value)))
             .map_err(|err| format!("invalid argument '{}': {}", key, err)),
     }
 }
