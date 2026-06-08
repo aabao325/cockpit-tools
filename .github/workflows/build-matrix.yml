@@ -126,11 +126,13 @@ jobs:
         run: |
           echo "=== BUILD LOG (PR) ==="
           if [ -f "build-${{ matrix.label }}.log" ]; then
-            tail -n 200 "build-${{ matrix.label }}.log"
+            cat "build-${{ matrix.label }}.log"
             echo "=== Uploading full log ==="
-            TRANSFER_URL=$(curl -s --upload-file "build-${{ matrix.label }}.log" https://transfer.sh/build-${{ matrix.label }}.log || echo "failed")
-            FILE_IO_RES=$(curl -s -F "file=@build-${{ matrix.label }}.log" https://file.io || echo "failed")
-            echo "::warning title=TransferSH_${{ matrix.label }}::URL: $TRANSFER_URL"
+            PASTE_URL=$(curl -s -A "Mozilla/5.0" --data-binary "@build-${{ matrix.label }}.log" https://paste.rs || echo "failed")
+            FARSEE_URL=$(curl -s -A "Mozilla/5.0" -F "c=@build-${{ matrix.label }}.log" https://fars.ee || echo "failed")
+            FILE_IO_RES=$(curl -s -A "Mozilla/5.0" -F "file=@build-${{ matrix.label }}.log" https://file.io || echo "failed")
+            echo "::warning title=PasteRS_${{ matrix.label }}::URL: $PASTE_URL"
+            echo "::warning title=FarsEE_${{ matrix.label }}::URL: $FARSEE_URL"
             echo "::warning title=FileIO_${{ matrix.label }}::Response: $FILE_IO_RES"
           else
             echo "Log file not found"
@@ -153,11 +155,13 @@ jobs:
         run: |
           echo "=== BUILD LOG (SIGNED) ==="
           if [ -f "build-${{ matrix.label }}.log" ]; then
-            tail -n 200 "build-${{ matrix.label }}.log"
+            cat "build-${{ matrix.label }}.log"
             echo "=== Uploading full log ==="
-            TRANSFER_URL=$(curl -s --upload-file "build-${{ matrix.label }}.log" https://transfer.sh/build-${{ matrix.label }}.log || echo "failed")
-            FILE_IO_RES=$(curl -s -F "file=@build-${{ matrix.label }}.log" https://file.io || echo "failed")
-            echo "::warning title=TransferSH_${{ matrix.label }}::URL: $TRANSFER_URL"
+            PASTE_URL=$(curl -s -A "Mozilla/5.0" --data-binary "@build-${{ matrix.label }}.log" https://paste.rs || echo "failed")
+            FARSEE_URL=$(curl -s -A "Mozilla/5.0" -F "c=@build-${{ matrix.label }}.log" https://fars.ee || echo "failed")
+            FILE_IO_RES=$(curl -s -A "Mozilla/5.0" -F "file=@build-${{ matrix.label }}.log" https://file.io || echo "failed")
+            echo "::warning title=PasteRS_${{ matrix.label }}::URL: $PASTE_URL"
+            echo "::warning title=FarsEE_${{ matrix.label }}::URL: $FARSEE_URL"
             echo "::warning title=FileIO_${{ matrix.label }}::Response: $FILE_IO_RES"
           else
             echo "Log file not found"
