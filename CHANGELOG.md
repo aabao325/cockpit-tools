@@ -7,6 +7,17 @@ All notable changes to Cockpit Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.26.6] - 2026-06-22
+
+### Changed
+- **Codex referral invites now open in their own dialog**: reset-credit confirmation keeps the reset action focused, while invite email entry, consent, success state, current account context, and localized eligibility rules live in a separate modal.
+- **Account transfer now preserves Antigravity overview preferences**: backups include Antigravity view, filter, sort, grouping, active group, and privacy-mode state, and restoring them refreshes the account overview without requiring a restart.
+- **Close confirmation actions now report failures inside the dialog**: window close handling is delegated through the app shell so failed minimize or quit actions keep the dialog open and show the error in place.
+
+### Fixed
+- **Antigravity free-tier quota reset times are clearer**: Claude and Gemini 5-hour rows can fall back to weekly reset data when free-plan usage is capped by the weekly window, avoiding misleading empty reset times.
+
+---
 ## [0.26.5] - 2026-06-20
 
 ### Added

@@ -1645,7 +1645,8 @@
     "minimizeDesc": "アプリはバックグラウンドで実行を続けます",
     "quit": "アプリを終了",
     "quitDesc": "アプリケーションを完全に終了します",
-    "remember": "この選択を記憶し、次回から表示しない"
+    "remember": "この選択を記憶し、次回から表示しない",
+    "actionFailed": "操作に失敗しました: {{error}}"
   },
   "group_settings": {
     "title": "グループ管理",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "報酬上限に達しました",
       "limitReachedCardDesc": "引き続き Codex に招待できますが、このアカウントではキャンペーン報酬を受け取れません。",
       "eligibilityCriteria": "対象条件",
+      "rules": {
+        "maxInvites": "キャンペーン期間中に送信できる招待は最大 {{count}} 件です。",
+        "notSelf": "自分自身に招待を送ることはできません。",
+        "inactiveMonths": "招待される人は過去 {{count}} か月間 Codex を使用していない必要があります。",
+        "noActiveInvite": "招待される人が有効な招待をすでに持っている場合は対象外です。"
+      },
       "rulesLoadFailed": "対象条件の読み込みに失敗しました: {{error}}",
       "viewFullTerms": "利用規約を表示",
       "send": "送信",

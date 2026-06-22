@@ -1691,7 +1691,8 @@
     "minimizeDesc": "سيستمر التطبيق في العمل في الخلفية",
     "quit": "إنهاء التطبيق",
     "quitDesc": "إغلاق التطبيق بالكامل",
-    "remember": "تذكّر اختياري ولا تسأل مرة أخرى"
+    "remember": "تذكّر اختياري ولا تسأل مرة أخرى",
+    "actionFailed": "فشل الإجراء: {{error}}"
   },
   "group_settings": {
     "title": "إدارة المجموعات",
@@ -3227,6 +3228,12 @@
       "limitReachedCardTitle": "تم بلوغ حد المكافآت",
       "limitReachedCardDesc": "لا يزال بإمكانك دعوة أشخاص إلى Codex، لكن هذا الحساب لن يتلقى مكافأة الحملة.",
       "eligibilityCriteria": "الأهلية",
+      "rules": {
+        "maxInvites": "خلال الحملة، يمكنك إرسال ما يصل إلى {{count}} دعوات.",
+        "notSelf": "لا يمكنك إرسال دعوة إلى نفسك.",
+        "inactiveMonths": "يجب ألا يكون المدعو قد استخدم Codex خلال آخر {{count}} شهرًا.",
+        "noActiveInvite": "يجب ألا يكون لدى المدعو دعوة نشطة بالفعل."
+      },
       "rulesLoadFailed": "تعذر تحميل الأهلية: {{error}}",
       "viewFullTerms": "عرض الشروط كاملة",
       "send": "إرسال",

@@ -1645,7 +1645,8 @@
     "minimizeDesc": "앱은 백그라운드에서 계속 실행됩니다",
     "quit": "앱 종료",
     "quitDesc": "애플리케이션을 완전히 종료합니다",
-    "remember": "내 선택을 기억하고 다시 묻지 않기"
+    "remember": "내 선택을 기억하고 다시 묻지 않기",
+    "actionFailed": "작업 실패: {{error}}"
   },
   "group_settings": {
     "title": "그룹 관리",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "보상 한도 도달",
       "limitReachedCardDesc": "여전히 Codex에 사람들을 초대할 수 있지만 이 계정은 캠페인 보상을 받지 않습니다.",
       "eligibilityCriteria": "대상 여부",
+      "rules": {
+        "maxInvites": "캠페인 기간 동안 최대 {{count}}개의 초대를 보낼 수 있습니다.",
+        "notSelf": "자기 자신에게는 초대를 보낼 수 없습니다.",
+        "inactiveMonths": "초대받는 사람은 지난 {{count}}개월 동안 Codex를 사용하지 않았어야 합니다.",
+        "noActiveInvite": "초대받는 사람에게 이미 유효한 초대가 있으면 안 됩니다."
+      },
       "rulesLoadFailed": "대상 조건을 불러오지 못했습니다: {{error}}",
       "viewFullTerms": "전체 약관 보기",
       "send": "보내기",

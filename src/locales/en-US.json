@@ -1843,7 +1843,8 @@
     "minimizeDesc": "App will continue running in the background",
     "quit": "Quit Application",
     "quitDesc": "Completely close the application",
-    "remember": "Remember my choice, don't ask again"
+    "remember": "Remember my choice, don't ask again",
+    "actionFailed": "Action failed: {{error}}"
   },
   "group_settings": {
     "title": "Group Management",
@@ -2763,6 +2764,12 @@
       "limitReachedCardTitle": "Reward limit reached",
       "limitReachedCardDesc": "You can still invite people to Codex, but this account will not receive a campaign reward.",
       "eligibilityCriteria": "Eligibility",
+      "rules": {
+        "maxInvites": "During the campaign, you can send up to {{count}} invites.",
+        "notSelf": "You cannot send an invite to yourself.",
+        "inactiveMonths": "Invitees must not have used Codex in the past {{count}} months.",
+        "noActiveInvite": "Invitees must not already have an active invite."
+      },
       "rulesLoadFailed": "Failed to load eligibility: {{error}}",
       "viewFullTerms": "View full terms",
       "send": "Send",

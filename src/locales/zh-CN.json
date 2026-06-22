@@ -1843,7 +1843,8 @@
     "minimizeDesc": "应用将在后台继续运行",
     "quit": "退出应用",
     "quitDesc": "完全关闭应用程序",
-    "remember": "记住我的选择，不再询问"
+    "remember": "记住我的选择，不再询问",
+    "actionFailed": "操作失败：{{error}}"
   },
   "group_settings": {
     "title": "分组管理",
@@ -2763,6 +2764,12 @@
       "limitReachedCardTitle": "奖励名额已用完",
       "limitReachedCardDesc": "可以继续邀请别人使用 Codex，但当前账号不会获得本次活动奖励。",
       "eligibilityCriteria": "资格条件",
+      "rules": {
+        "maxInvites": "活动期间最多可发送 {{count}} 个邀请。",
+        "notSelf": "不能给自己发送邀请。",
+        "inactiveMonths": "受邀者须在过去 {{count}} 个月内未使用过 Codex。",
+        "noActiveInvite": "受邀者不能已拥有有效的邀请。"
+      },
       "rulesLoadFailed": "资格条件加载失败：{{error}}",
       "viewFullTerms": "查看完整条款",
       "send": "发送",

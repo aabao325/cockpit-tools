@@ -1645,7 +1645,8 @@
     "minimizeDesc": "Ứng dụng sẽ tiếp tục chạy nền",
     "quit": "Thoát ứng dụng",
     "quitDesc": "Đóng hoàn toàn ứng dụng",
-    "remember": "Ghi nhớ lựa chọn của tôi và không hỏi lại"
+    "remember": "Ghi nhớ lựa chọn của tôi và không hỏi lại",
+    "actionFailed": "Thao tác thất bại: {{error}}"
   },
   "group_settings": {
     "title": "Quản lý nhóm",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Đã đạt giới hạn phần thưởng",
       "limitReachedCardDesc": "Bạn vẫn có thể mời người khác vào Codex, nhưng tài khoản này sẽ không nhận thưởng từ chiến dịch.",
       "eligibilityCriteria": "Điều kiện",
+      "rules": {
+        "maxInvites": "Trong thời gian chiến dịch, bạn có thể gửi tối đa {{count}} lời mời.",
+        "notSelf": "Bạn không thể gửi lời mời cho chính mình.",
+        "inactiveMonths": "Người được mời chưa được dùng Codex trong {{count}} tháng gần đây.",
+        "noActiveInvite": "Người được mời không được đang có lời mời còn hiệu lực."
+      },
       "rulesLoadFailed": "Không tải được điều kiện: {{error}}",
       "viewFullTerms": "Xem đầy đủ điều khoản",
       "send": "Gửi",

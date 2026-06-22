@@ -398,6 +398,45 @@ function getCodexReferralMaxEmails(
   return CODEX_REFERRAL_MAX_EMAILS;
 }
 
+function getCodexReferralRuleMaxInvites(
+  rules?: CodexReferralEligibilityRules | null,
+): number {
+  const totals =
+    rules?.time_frame_rules
+      ?.map((rule) => rule.invites_total)
+      .filter((value) => Number.isFinite(value) && value > 0) ?? [];
+  if (totals.length > 0) return Math.max(...totals);
+
+  for (const rule of rules?.rules ?? []) {
+    if (!/invite|referral/i.test(rule)) continue;
+    const match = rule.match(/\b(\d+)\b/);
+    if (match) return Number(match[1]);
+  }
+
+  return 3;
+}
+
+function getCodexReferralRuleInactiveMonths(
+  rules?: CodexReferralEligibilityRules | null,
+): number {
+  for (const rule of rules?.rules ?? []) {
+    if (!/month|past|used/i.test(rule)) continue;
+    const match = rule.match(/\b(\d+)\b/);
+    if (match) return Number(match[1]);
+  }
+
+  return 2;
+}
+
+function hasCodexReferralRuleDetails(
+  rules?: CodexReferralEligibilityRules | null,
+): boolean {
+  return Boolean(
+    (rules?.rules?.length ?? 0) > 0 ||
+      (rules?.time_frame_rules?.length ?? 0) > 0,
+  );
+}
+
 function splitCodexReferralEmailInput(value: string): string[] {
   return value
     .split(/[\s,;]+/)
@@ -1017,7 +1056,7 @@ export function CodexAccountsPage() {
   const [referralInviteRulesError, setReferralInviteRulesError] =
     useState<string | null>(null);
   const referralInviteRulesRequestSeqRef = useRef(0);
-  const [referralInvitePanelOpen, setReferralInvitePanelOpen] = useState(false);
+  const [referralInviteModalOpen, setReferralInviteModalOpen] = useState(false);
   const [referralInviteEmails, setReferralInviteEmails] = useState<string[]>(
     [],
   );
@@ -2465,11 +2504,8 @@ export function CodexAccountsPage() {
     ? resettingResetCreditAccountId === resetCreditConfirmAccount.id
     : false;
 
-  const resetCodexReferralInviteForm = useCallback(() => {
-    setReferralInviteRules(null);
-    setReferralInviteRulesLoading(false);
-    setReferralInviteRulesError(null);
-    setReferralInvitePanelOpen(false);
+  const resetCodexReferralInviteDraft = useCallback(() => {
+    setReferralInviteModalOpen(false);
     setReferralInviteEmails([]);
     setReferralInviteEmailInput("");
     setReferralInviteInvalidEmails(new Set());
@@ -2479,6 +2515,13 @@ export function CodexAccountsPage() {
     setReferralInviteSuccessEmails(null);
     setReferralInviteError(null);
   }, [setReferralInviteError]);
+
+  const resetCodexReferralInviteForm = useCallback(() => {
+    setReferralInviteRules(null);
+    setReferralInviteRulesLoading(false);
+    setReferralInviteRulesError(null);
+    resetCodexReferralInviteDraft();
+  }, [resetCodexReferralInviteDraft]);
 
   const clearCodexReferralInviteState = useCallback(() => {
     referralInviteEligibilityRequestSeqRef.current += 1;
@@ -2677,6 +2720,32 @@ export function CodexAccountsPage() {
   );
   const referralInviteRequiresConsent =
     referralInviteRules?.requires_explicit_confirmation !== false;
+  const referralInviteRuleItems = useMemo(() => {
+    if (!hasCodexReferralRuleDetails(referralInviteRules)) return [];
+    const maxInvites = getCodexReferralRuleMaxInvites(referralInviteRules);
+    const inactiveMonths =
+      getCodexReferralRuleInactiveMonths(referralInviteRules);
+    return [
+      t("codex.referralInvite.rules.maxInvites", {
+        count: maxInvites,
+        defaultValue:
+          "活动期间最多可发送 {{count}} 个邀请。",
+      }),
+      t(
+        "codex.referralInvite.rules.notSelf",
+        "不能给自己发送邀请。",
+      ),
+      t("codex.referralInvite.rules.inactiveMonths", {
+        count: inactiveMonths,
+        defaultValue:
+          "受邀者须在过去 {{count}} 个月内未使用过 Codex。",
+      }),
+      t(
+        "codex.referralInvite.rules.noActiveInvite",
+        "受邀者不能已拥有有效的邀请。",
+      ),
+    ];
+  }, [referralInviteRules, t]);
   const referralInviteHasValidEmails =
     referralInviteEmails.length > 0 &&
     referralInviteEmails.every(isValidCodexReferralEmail);
@@ -2717,14 +2786,26 @@ export function CodexAccountsPage() {
     : t("codex.referralInvite.inviteCoworkerShort", "邀请同事");
   const referralInviteTriggerDisabled =
     referralInviteEligibilityLoading || !referralInviteAvailable;
-  const referralInvitePanelVisible =
-    referralInviteSuccessEmails != null ||
-    (referralInvitePanelOpen && referralInviteAvailable);
+  const referralInviteModalVisible =
+    referralInviteModalOpen && referralInviteAvailable;
+  const referralInviteModalTitle = referralInviteIsPersonal
+    ? t("codex.referralInvite.titlePersonal", "邀请好友")
+    : t("codex.referralInvite.titleWorkspace", "邀请同事");
 
-  const handleOpenCodexReferralInvitePanel = useCallback(() => {
+  const handleOpenCodexReferralInviteModal = useCallback(() => {
     if (referralInviteEligibilityLoading || !referralInviteAvailable) return;
-    setReferralInvitePanelOpen(true);
-  }, [referralInviteAvailable, referralInviteEligibilityLoading]);
+    setReferralInviteError(null);
+    setReferralInviteModalOpen(true);
+  }, [
+    referralInviteAvailable,
+    referralInviteEligibilityLoading,
+    setReferralInviteError,
+  ]);
+
+  const closeCodexReferralInviteModal = useCallback(() => {
+    if (referralInviteSubmitting) return;
+    resetCodexReferralInviteDraft();
+  }, [referralInviteSubmitting, resetCodexReferralInviteDraft]);
 
   const handleConfirmConsumeResetCredit = useCallback(async () => {
     const account = resetCreditConfirmAccount;
@@ -14594,12 +14675,11 @@ export function CodexAccountsPage() {
                   <button
                     type="button"
                     className="btn codex-reset-credit-confirm-invite-trigger"
-                    onClick={handleOpenCodexReferralInvitePanel}
+                    onClick={handleOpenCodexReferralInviteModal}
                     disabled={referralInviteTriggerDisabled}
-                    aria-pressed={
-                      referralInviteAvailable &&
-                      (referralInvitePanelOpen ||
-                        referralInviteSuccessEmails != null)
+                    aria-haspopup="dialog"
+                    aria-expanded={
+                      referralInviteAvailable && referralInviteModalOpen
                     }
                   >
                     {referralInviteEligibilityLoading && (
@@ -14698,298 +14778,6 @@ export function CodexAccountsPage() {
                       </div>
                     )}
                   </div>
-                  {referralInvitePanelVisible && (
-                    <div className="codex-reset-credit-confirm-referral">
-                      <div className="codex-reset-credit-confirm-referral-head">
-                        <div>
-                          <div className="codex-reset-credit-confirm-referral-title">
-                            {referralInviteIsPersonal
-                              ? t("codex.referralInvite.titlePersonal", "邀请好友")
-                              : t("codex.referralInvite.titleWorkspace", "邀请同事")}
-                          </div>
-                          <p className="codex-reset-credit-confirm-referral-subtitle">
-                            {referralInviteSectionDescription}
-                          </p>
-                        </div>
-                      </div>
-
-                      {referralInviteSuccessEmails ? (
-                        <div className="codex-reset-credit-confirm-referral-success">
-                          <div className="codex-referral-invite-success-mark">
-                            <Check size={24} />
-                          </div>
-                          <h3 className="codex-reset-credit-confirm-referral-success-title">
-                            {t(
-                              "codex.referralInvite.successTitle",
-                              "邀请已发送",
-                            )}
-                          </h3>
-                          <p className="codex-reset-credit-confirm-referral-success-desc">
-                            {referralInviteRewardType === "rateLimitReset"
-                              ? t(
-                                  "codex.referralInvite.successResetDesc",
-                                  "对方加入 Codex 并发送第一条消息后，双方都会获得重置机会。",
-                                )
-                              : t(
-                                  "codex.referralInvite.successCreditsDesc",
-                                  "对方加入 Codex 并发送第一条消息后，双方都会获得 credits。",
-                                )}
-                          </p>
-                          <div className="codex-referral-invite-success-list">
-                            {referralInviteSuccessEmails.map((email) => (
-                              <span key={email}>{email}</span>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <form
-                          className="codex-reset-credit-confirm-referral-form"
-                          onSubmit={(event) => {
-                            event.preventDefault();
-                            void handleSendCodexReferralInvites();
-                          }}
-                        >
-                          <label
-                            className="codex-referral-invite-field-label"
-                            htmlFor="codex-referral-invite-email-input"
-                          >
-                            {t("codex.referralInvite.emailLabel", "邮箱")}
-                          </label>
-                          <div
-                            className={
-                              "codex-referral-invite-email-box " +
-                              (referralInviteError ? "has-error" : "")
-                            }
-                          >
-                            {referralInviteEmails.map((email) => (
-                              <span
-                                key={email}
-                                className={
-                                  "codex-referral-invite-chip " +
-                                  (referralInviteInvalidEmails.has(email)
-                                    ? "invalid"
-                                    : "")
-                                }
-                              >
-                                <span>{email}</span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    removeCodexReferralInviteEmail(email)
-                                  }
-                                  disabled={
-                                    referralInviteSubmitting ||
-                                    isResetCreditConfirmSubmitting
-                                  }
-                                  aria-label={t(
-                                    "codex.referralInvite.removeEmail",
-                                    {
-                                      email,
-                                      defaultValue: "移除 {{email}}",
-                                    },
-                                  )}
-                                >
-                                  <X size={12} />
-                                </button>
-                              </span>
-                            ))}
-                            <input
-                              id="codex-referral-invite-email-input"
-                              className="codex-referral-invite-email-input"
-                              type="text"
-                              inputMode="email"
-                              value={referralInviteEmailInput}
-                              onChange={(event) => {
-                                setReferralInviteEmailInput(event.target.value);
-                                if (referralInviteError) {
-                                  setReferralInviteError(null);
-                                }
-                              }}
-                              onBlur={() => {
-                                if (referralInviteEmailInput.trim()) {
-                                  addCodexReferralInviteEmails(
-                                    referralInviteEmailInput,
-                                  );
-                                }
-                              }}
-                              onKeyDown={handleCodexReferralInviteKeyDown}
-                              onPaste={handleCodexReferralInvitePaste}
-                              placeholder={
-                                referralInviteEmails.length >=
-                                referralInviteMaxEmails
-                                  ? t(
-                                      "codex.referralInvite.maxReached",
-                                      "已达上限",
-                                    )
-                                  : t(
-                                      "codex.referralInvite.emailPlaceholder",
-                                      "输入邮箱",
-                                    )
-                              }
-                              disabled={
-                                referralInviteSubmitting ||
-                                isResetCreditConfirmSubmitting ||
-                                referralInviteEmails.length >=
-                                  referralInviteMaxEmails
-                              }
-                            />
-                          </div>
-                          <div className="codex-referral-invite-hint">
-                            {t("codex.referralInvite.maxEmailsHint", {
-                              count: referralInviteMaxEmails,
-                              defaultValue:
-                                "一次最多发送 {{count}} 个邮箱，可用逗号、分号或空格分隔。",
-                            })}
-                          </div>
-                          {referralInviteRequiresConsent &&
-                            referralInviteEmails.length > 0 && (
-                              <label className="codex-referral-invite-consent">
-                                <input
-                                  type="checkbox"
-                                  checked={referralInviteConsent}
-                                  onChange={(event) =>
-                                    setReferralInviteConsent(
-                                      event.target.checked,
-                                    )
-                                  }
-                                  disabled={
-                                    referralInviteSubmitting ||
-                                    isResetCreditConfirmSubmitting
-                                  }
-                                />
-                                <span>
-                                  {referralInviteEmails.length <= 1
-                                    ? t(
-                                        "codex.referralInvite.consentSingle",
-                                        "我已获得此人同意发送邀请",
-                                      )
-                                    : t(
-                                        "codex.referralInvite.consentMultiple",
-                                        "我已获得这些人同意发送邀请",
-                                      )}
-                                </span>
-                              </label>
-                            )}
-                          {referralInviteLimitReached && (
-                            <div className="codex-referral-invite-limit-card">
-                              <Info size={16} />
-                              <div>
-                                <strong>
-                                  {t(
-                                    "codex.referralInvite.limitReachedCardTitle",
-                                    "奖励名额已用完",
-                                  )}
-                                </strong>
-                                <p>
-                                  {t(
-                                    "codex.referralInvite.limitReachedCardDesc",
-                                    "可以继续邀请别人使用 Codex，但当前账号不会获得本次活动奖励。",
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {(referralInviteRulesLoading ||
-                            referralInviteRulesError ||
-                            (referralInviteRules?.rules.length ?? 0) > 0) && (
-                            <div className="codex-referral-invite-rules">
-                              <button
-                                type="button"
-                                className="codex-referral-invite-rules-toggle"
-                                onClick={() =>
-                                  setReferralInviteRulesExpanded(
-                                    (value) => !value,
-                                  )
-                                }
-                              >
-                                <span>
-                                  {t(
-                                    "codex.referralInvite.eligibilityCriteria",
-                                    "资格条件",
-                                  )}
-                                </span>
-                                <ChevronRight
-                                  size={15}
-                                  className={
-                                    referralInviteRulesExpanded
-                                      ? "expanded"
-                                      : ""
-                                  }
-                                />
-                              </button>
-                              {referralInviteRulesExpanded && (
-                                <div className="codex-referral-invite-rules-body">
-                                  {referralInviteRulesLoading ? (
-                                    <div className="codex-referral-invite-rules-empty">
-                                      <RefreshCw
-                                        size={14}
-                                        className="loading-spinner"
-                                      />
-                                      {t("common.loading", "加载中...")}
-                                    </div>
-                                  ) : referralInviteRulesError ? (
-                                    <div className="codex-referral-invite-rules-empty error">
-                                      {t("codex.referralInvite.rulesLoadFailed", {
-                                        error: referralInviteRulesError,
-                                        defaultValue:
-                                          "资格条件加载失败：{{error}}",
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <ol>
-                                      {(referralInviteRules?.rules ?? []).map(
-                                        (rule, index) => (
-                                          <li key={index + "-" + rule}>
-                                            {rule}
-                                          </li>
-                                        ),
-                                      )}
-                                    </ol>
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="codex-referral-invite-terms-link"
-                                    onClick={() =>
-                                      void openUrl(CODEX_REFERRAL_TERMS_URL)
-                                    }
-                                  >
-                                    {t(
-                                      "codex.referralInvite.viewFullTerms",
-                                      "查看完整条款",
-                                    )}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <ModalErrorMessage
-                            message={referralInviteError}
-                            scrollKey={referralInviteErrorScrollKey}
-                            position="bottom"
-                          />
-                          <div className="codex-reset-credit-confirm-referral-actions">
-                            <button
-                              type="submit"
-                              className="btn btn-secondary"
-                              disabled={!referralInviteCanSubmit}
-                            >
-                              {referralInviteSubmitting ? (
-                                <>
-                                  <RefreshCw
-                                    size={14}
-                                    className="loading-spinner"
-                                  />
-                                  {t("common.processing", "处理中...")}
-                                </>
-                              ) : (
-                                t("codex.referralInvite.send", "发送")
-                              )}
-                            </button>
-                          </div>
-                        </form>
-                      )}
-                    </div>
-                  )}
                   <ModalErrorMessage
                     message={resetCreditConfirmError}
                     scrollKey={resetCreditConfirmErrorScrollKey}
@@ -15023,6 +14811,314 @@ export function CodexAccountsPage() {
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {referralInviteModalVisible && referralInviteAccount && (
+            <div className="modal-overlay codex-referral-invite-overlay">
+              <div
+                className="modal codex-referral-invite-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="codex-referral-invite-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="modal-header codex-referral-invite-header">
+                  <div>
+                    <h2 id="codex-referral-invite-title">
+                      {referralInviteModalTitle}
+                    </h2>
+                    <p>{referralInviteSectionDescription}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={closeCodexReferralInviteModal}
+                    aria-label={t("common.close", "关闭")}
+                    disabled={referralInviteSubmitting}
+                  >
+                    <X />
+                  </button>
+                </div>
+
+                {referralInviteSuccessEmails ? (
+                  <>
+                    <div className="modal-body codex-referral-invite-body">
+                      <div className="codex-referral-invite-success-mark">
+                        <Check size={24} />
+                      </div>
+                      <h3>
+                        {t("codex.referralInvite.successTitle", "邀请已发送")}
+                      </h3>
+                      <p>
+                        {referralInviteRewardType === "rateLimitReset"
+                          ? t(
+                              "codex.referralInvite.successResetDesc",
+                              "对方加入 Codex 并发送第一条消息后，双方都会获得重置机会。",
+                            )
+                          : t(
+                              "codex.referralInvite.successCreditsDesc",
+                              "对方加入 Codex 并发送第一条消息后，双方都会获得 credits。",
+                            )}
+                      </p>
+                      <div className="codex-referral-invite-success-list">
+                        {referralInviteSuccessEmails.map((email) => (
+                          <span key={email}>{email}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="modal-footer codex-referral-invite-footer">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={closeCodexReferralInviteModal}
+                      >
+                        {t("codex.referralInvite.done", "完成")}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <form
+                    className="codex-referral-invite-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleSendCodexReferralInvites();
+                    }}
+                  >
+                    <div className="modal-body codex-referral-invite-body">
+                      <div className="codex-referral-invite-account">
+                        <span>{t("common.shared.columns.email", "账号")}</span>
+                        <strong>
+                          {maskAccountText(
+                            resolvePresentation(referralInviteAccount)
+                              .displayName,
+                          )}
+                        </strong>
+                      </div>
+                      <label
+                        className="codex-referral-invite-field-label"
+                        htmlFor="codex-referral-invite-email-input"
+                      >
+                        {t("codex.referralInvite.emailLabel", "邮箱")}
+                      </label>
+                      <div
+                        className={
+                          "codex-referral-invite-email-box " +
+                          (referralInviteError ? "has-error" : "")
+                        }
+                      >
+                        {referralInviteEmails.map((email) => (
+                          <span
+                            key={email}
+                            className={
+                              "codex-referral-invite-chip " +
+                              (referralInviteInvalidEmails.has(email)
+                                ? "invalid"
+                                : "")
+                            }
+                          >
+                            <span>{email}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeCodexReferralInviteEmail(email)
+                              }
+                              disabled={
+                                referralInviteSubmitting ||
+                                isResetCreditConfirmSubmitting
+                              }
+                              aria-label={t(
+                                "codex.referralInvite.removeEmail",
+                                {
+                                  email,
+                                  defaultValue: "移除 {{email}}",
+                                },
+                              )}
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                        <input
+                          id="codex-referral-invite-email-input"
+                          className="codex-referral-invite-email-input"
+                          type="text"
+                          inputMode="email"
+                          value={referralInviteEmailInput}
+                          onChange={(event) => {
+                            setReferralInviteEmailInput(event.target.value);
+                            if (referralInviteError) {
+                              setReferralInviteError(null);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (referralInviteEmailInput.trim()) {
+                              addCodexReferralInviteEmails(
+                                referralInviteEmailInput,
+                              );
+                            }
+                          }}
+                          onKeyDown={handleCodexReferralInviteKeyDown}
+                          onPaste={handleCodexReferralInvitePaste}
+                          placeholder={
+                            referralInviteEmails.length >= referralInviteMaxEmails
+                              ? t("codex.referralInvite.maxReached", "已达上限")
+                              : t(
+                                  "codex.referralInvite.emailPlaceholder",
+                                  "输入邮箱",
+                                )
+                          }
+                          disabled={
+                            referralInviteSubmitting ||
+                            isResetCreditConfirmSubmitting ||
+                            referralInviteEmails.length >=
+                              referralInviteMaxEmails
+                          }
+                        />
+                      </div>
+                      <div className="codex-referral-invite-hint">
+                        {t("codex.referralInvite.maxEmailsHint", {
+                          count: referralInviteMaxEmails,
+                          defaultValue:
+                            "一次最多发送 {{count}} 个邮箱，可用逗号、分号或空格分隔。",
+                        })}
+                      </div>
+                      {referralInviteRequiresConsent &&
+                        referralInviteEmails.length > 0 && (
+                          <label className="codex-referral-invite-consent">
+                            <input
+                              type="checkbox"
+                              checked={referralInviteConsent}
+                              onChange={(event) =>
+                                setReferralInviteConsent(event.target.checked)
+                              }
+                              disabled={
+                                referralInviteSubmitting ||
+                                isResetCreditConfirmSubmitting
+                              }
+                            />
+                            <span>
+                              {referralInviteEmails.length <= 1
+                                ? t(
+                                    "codex.referralInvite.consentSingle",
+                                    "我已获得此人同意发送邀请",
+                                  )
+                                : t(
+                                    "codex.referralInvite.consentMultiple",
+                                    "我已获得这些人同意发送邀请",
+                                  )}
+                            </span>
+                          </label>
+                        )}
+                      {referralInviteLimitReached && (
+                        <div className="codex-referral-invite-limit-card">
+                          <Info size={16} />
+                          <div>
+                            <strong>
+                              {t(
+                                "codex.referralInvite.limitReachedCardTitle",
+                                "奖励名额已用完",
+                              )}
+                            </strong>
+                            <p>
+                              {t(
+                                "codex.referralInvite.limitReachedCardDesc",
+                                "可以继续邀请别人使用 Codex，但当前账号不会获得本次活动奖励。",
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {(referralInviteRulesLoading ||
+                        referralInviteRulesError ||
+                        referralInviteRuleItems.length > 0) && (
+                        <div className="codex-referral-invite-rules">
+                          <button
+                            type="button"
+                            className="codex-referral-invite-rules-toggle"
+                            onClick={() =>
+                              setReferralInviteRulesExpanded((value) => !value)
+                            }
+                          >
+                            <span>
+                              {t(
+                                "codex.referralInvite.eligibilityCriteria",
+                                "资格条件",
+                              )}
+                            </span>
+                            <ChevronRight
+                              size={15}
+                              className={
+                                referralInviteRulesExpanded ? "expanded" : ""
+                              }
+                            />
+                          </button>
+                          {referralInviteRulesExpanded && (
+                            <div className="codex-referral-invite-rules-body">
+                              {referralInviteRulesLoading ? (
+                                <div className="codex-referral-invite-rules-empty">
+                                  <RefreshCw
+                                    size={14}
+                                    className="loading-spinner"
+                                  />
+                                  {t("common.loading", "加载中...")}
+                                </div>
+                              ) : referralInviteRulesError ? (
+                                <div className="codex-referral-invite-rules-empty error">
+                                  {t("codex.referralInvite.rulesLoadFailed", {
+                                    error: referralInviteRulesError,
+                                    defaultValue:
+                                      "资格条件加载失败：{{error}}",
+                                  })}
+                                </div>
+                              ) : (
+                                <ol>
+                                  {referralInviteRuleItems.map((rule, index) => (
+                                    <li key={index + "-" + rule}>{rule}</li>
+                                  ))}
+                                </ol>
+                              )}
+                              <button
+                                type="button"
+                                className="codex-referral-invite-terms-link"
+                                onClick={() =>
+                                  void openUrl(CODEX_REFERRAL_TERMS_URL)
+                                }
+                              >
+                                {t(
+                                  "codex.referralInvite.viewFullTerms",
+                                  "查看完整条款",
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <ModalErrorMessage
+                        message={referralInviteError}
+                        scrollKey={referralInviteErrorScrollKey}
+                        position="bottom"
+                      />
+                    </div>
+                    <div className="modal-footer codex-referral-invite-footer">
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={!referralInviteCanSubmit}
+                      >
+                        {referralInviteSubmitting ? (
+                          <>
+                            <RefreshCw size={14} className="loading-spinner" />
+                            {t("common.processing", "处理中...")}
+                          </>
+                        ) : (
+                          t("codex.referralInvite.send", "发送")
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           )}

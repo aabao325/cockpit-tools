@@ -1645,7 +1645,8 @@
     "minimizeDesc": "Aplikace bude dál běžet na pozadí",
     "quit": "Ukončit aplikaci",
     "quitDesc": "Zcela ukončí aplikaci",
-    "remember": "Zapamatovat mou volbu a už se neptat"
+    "remember": "Zapamatovat mou volbu a už se neptat",
+    "actionFailed": "Akce selhala: {{error}}"
   },
   "group_settings": {
     "title": "Správa skupin",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Limit odměn dosažen",
       "limitReachedCardDesc": "Do Codex můžete stále zvát další lidi, ale tento účet už nezíská odměnu kampaně.",
       "eligibilityCriteria": "Způsobilost",
+      "rules": {
+        "maxInvites": "Během kampaně můžete odeslat až {{count}} pozvánky.",
+        "notSelf": "Nemůžete poslat pozvánku sami sobě.",
+        "inactiveMonths": "Pozvaná osoba nesměla v posledních {{count}} měsících používat Codex.",
+        "noActiveInvite": "Pozvaná osoba nesmí mít již aktivní pozvánku."
+      },
       "rulesLoadFailed": "Načtení podmínek selhalo: {{error}}",
       "viewFullTerms": "Zobrazit úplné podmínky",
       "send": "Odeslat",

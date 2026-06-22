@@ -1645,7 +1645,8 @@
     "minimizeDesc": "Die App läuft im Hintergrund weiter",
     "quit": "Anwendung beenden",
     "quitDesc": "Die Anwendung vollständig schließen",
-    "remember": "Auswahl merken, nicht mehr fragen"
+    "remember": "Auswahl merken, nicht mehr fragen",
+    "actionFailed": "Aktion fehlgeschlagen: {{error}}"
   },
   "group_settings": {
     "title": "Gruppenverwaltung",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Prämienlimit erreicht",
       "limitReachedCardDesc": "Sie können weiterhin Personen zu Codex einladen, aber dieses Konto erhält keine Kampagnenprämie.",
       "eligibilityCriteria": "Berechtigung",
+      "rules": {
+        "maxInvites": "Während der Kampagne können Sie bis zu {{count}} Einladungen senden.",
+        "notSelf": "Sie können keine Einladung an sich selbst senden.",
+        "inactiveMonths": "Eingeladene Personen dürfen Codex in den letzten {{count}} Monaten nicht verwendet haben.",
+        "noActiveInvite": "Eingeladene Personen dürfen nicht bereits eine aktive Einladung haben."
+      },
       "rulesLoadFailed": "Berechtigung konnte nicht geladen werden: {{error}}",
       "viewFullTerms": "Vollständige Bedingungen anzeigen",
       "send": "Senden",

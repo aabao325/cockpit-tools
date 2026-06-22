@@ -93,7 +93,8 @@ import { QuickSettingsPopover } from '../components/QuickSettingsPopover'
 import {
   isPrivacyModeEnabledByDefault,
   maskSensitiveValue,
-  persistPrivacyModeEnabled
+  persistPrivacyModeEnabled,
+  PRIVACY_MODE_CHANGED_EVENT
 } from '../utils/privacy'
 import { useExportJsonModal } from '../hooks/useExportJsonModal'
 import { MultiSelectFilterDropdown, type MultiSelectFilterOption } from '../components/MultiSelectFilterDropdown'
@@ -287,6 +288,8 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       }
     }
   }, [storeError])
+
+
 
   const initialFilterPersistenceEnabled = readAccountsOverviewFilterPersistenceEnabled(
     ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
@@ -640,7 +643,99 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     return total.toFixed(2).replace(/\.?0+$/, '')
   }
 
+
+
+  const loadPersistedOverviewFilters = useCallback(() => {
+      const savedViewMode = readAccountsOverviewFilterField<unknown>(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+        ANTIGRAVITY_FILTER_FIELD_VIEW_MODE,
+        'grid',
+      )
+      if (savedViewMode === 'grid' || savedViewMode === 'list' || savedViewMode === 'compact') {
+        setViewMode(savedViewMode)
+      }
+
+      setFilterTypes(
+        readAccountsOverviewFilterStringArray(
+          ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+          ANTIGRAVITY_FILTER_FIELD_FILTER_TYPES,
+        ) as AccountsFilterType[]
+      )
+
+      setTagFilter(
+        readAccountsOverviewFilterStringArray(
+          ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+          ANTIGRAVITY_FILTER_FIELD_TAG_FILTER,
+        )
+      )
+
+      setGroupByTag(
+        Boolean(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_GROUP_BY_TAG,
+            false,
+          ),
+        )
+      )
+
+      const savedActiveGroupId = readAccountsOverviewFilterField<string | null>(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+        ANTIGRAVITY_FILTER_FIELD_ACTIVE_GROUP_ID,
+        null,
+      )
+      setActiveGroupId(typeof savedActiveGroupId === 'string' && savedActiveGroupId.trim() ? savedActiveGroupId : null)
+
+      setSortBy(
+        normalizeAntigravitySortBy(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_SORT_BY,
+            DEFAULT_ANTIGRAVITY_SORT_BY,
+          ) as string,
+        )
+      )
+
+      setSortDirection(
+        normalizeAntigravitySortDirection(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_SORT_DIRECTION,
+            'desc',
+          ) as string | null,
+        )
+      )
+  }, [])
+
+  const resetOverviewFilters = useCallback(() => {
+    setViewMode('grid')
+    setFilterTypes([])
+    setTagFilter([])
+    setGroupByTag(false)
+    setActiveGroupId(null)
+    setSortBy(DEFAULT_ANTIGRAVITY_SORT_BY)
+    setSortDirection('desc')
+  }, [])
+
   useEffect(() => {
+    const handleConfigUpdated = () => {
+      const nextFilterPersistenceEnabled = readAccountsOverviewFilterPersistenceEnabled(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+      )
+      setFilterPersistenceEnabled(nextFilterPersistenceEnabled)
+      if (nextFilterPersistenceEnabled) {
+        loadPersistedOverviewFilters()
+      } else {
+        resetOverviewFilters()
+      }
+      setPrivacyModeEnabled(isPrivacyModeEnabledByDefault())
+    }
+
+    const handlePrivacyModeChanged = (event: Event) => {
+      const isEnabled = (event as CustomEvent<boolean>).detail
+      setPrivacyModeEnabled(isEnabled)
+    }
+
     const handleFilterPersistenceChanged = (event: Event) => {
       const detail = (event as CustomEvent<AccountsOverviewFilterPersistenceChangedDetail>).detail
       if (!detail || detail.scope !== ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE) {
@@ -648,17 +743,23 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       }
       setFilterPersistenceEnabled(Boolean(detail.enabled))
     }
+
+    window.addEventListener('config-updated', handleConfigUpdated)
+    window.addEventListener(PRIVACY_MODE_CHANGED_EVENT, handlePrivacyModeChanged as EventListener)
     window.addEventListener(
       ACCOUNTS_OVERVIEW_FILTER_PERSISTENCE_CHANGED_EVENT,
       handleFilterPersistenceChanged as EventListener,
     )
+
     return () => {
+      window.removeEventListener('config-updated', handleConfigUpdated)
+      window.removeEventListener(PRIVACY_MODE_CHANGED_EVENT, handlePrivacyModeChanged as EventListener)
       window.removeEventListener(
         ACCOUNTS_OVERVIEW_FILTER_PERSISTENCE_CHANGED_EVENT,
         handleFilterPersistenceChanged as EventListener,
       )
     }
-  }, [])
+  }, [loadPersistedOverviewFilters, resetOverviewFilters])
 
   useEffect(() => {
     if (!filterPersistenceEnabled) {

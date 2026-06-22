@@ -1645,7 +1645,8 @@
     "minimizeDesc": "L'application continuera à s'exécuter en arrière-plan",
     "quit": "Quitter l'application",
     "quitDesc": "Ferme complètement l'application",
-    "remember": "Se souvenir de mon choix, ne plus demander"
+    "remember": "Se souvenir de mon choix, ne plus demander",
+    "actionFailed": "Action échouée : {{error}}"
   },
   "group_settings": {
     "title": "Gestion des groupes",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Limite de récompenses atteinte",
       "limitReachedCardDesc": "Vous pouvez encore inviter des personnes sur Codex, mais ce compte ne recevra pas la récompense de campagne.",
       "eligibilityCriteria": "Éligibilité",
+      "rules": {
+        "maxInvites": "Pendant la campagne, vous pouvez envoyer jusqu’à {{count}} invitations.",
+        "notSelf": "Vous ne pouvez pas vous envoyer une invitation à vous-même.",
+        "inactiveMonths": "Les personnes invitées ne doivent pas avoir utilisé Codex au cours des {{count}} derniers mois.",
+        "noActiveInvite": "Les personnes invitées ne doivent pas déjà disposer d’une invitation active."
+      },
       "rulesLoadFailed": "Échec du chargement de l’éligibilité : {{error}}",
       "viewFullTerms": "Voir les conditions complètes",
       "send": "Envoyer",

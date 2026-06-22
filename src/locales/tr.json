@@ -1645,7 +1645,8 @@
     "minimizeDesc": "Uygulama arka planda çalışmaya devam eder",
     "quit": "Uygulamadan çık",
     "quitDesc": "Uygulamayı tamamen kapat",
-    "remember": "Seçimimi hatırla, tekrar sorma"
+    "remember": "Seçimimi hatırla, tekrar sorma",
+    "actionFailed": "İşlem başarısız: {{error}}"
   },
   "group_settings": {
     "title": "Grup yönetimi",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Ödül sınırına ulaşıldı",
       "limitReachedCardDesc": "Yine de Codex’e insan davet edebilirsiniz, ancak bu hesap kampanya ödülü almayacak.",
       "eligibilityCriteria": "Uygunluk",
+      "rules": {
+        "maxInvites": "Kampanya boyunca en fazla {{count}} davet gönderebilirsiniz.",
+        "notSelf": "Kendinize davet gönderemezsiniz.",
+        "inactiveMonths": "Davet edilen kişi son {{count}} ay içinde Codex kullanmamış olmalıdır.",
+        "noActiveInvite": "Davet edilen kişinin zaten etkin bir daveti olmamalıdır."
+      },
       "rulesLoadFailed": "Uygunluk yüklenemedi: {{error}}",
       "viewFullTerms": "Tüm şartları görüntüle",
       "send": "Gönder",

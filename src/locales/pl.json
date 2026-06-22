@@ -1645,7 +1645,8 @@
     "minimizeDesc": "Aplikacja będzie działać w tle",
     "quit": "Zakończ aplikację",
     "quitDesc": "Całkowicie zamyka aplikację",
-    "remember": "Zapamiętaj mój wybór i nie pytaj ponownie"
+    "remember": "Zapamiętaj mój wybór i nie pytaj ponownie",
+    "actionFailed": "Akcja nie powiodła się: {{error}}"
   },
   "group_settings": {
     "title": "Zarządzanie grupami",
@@ -3181,6 +3182,12 @@
       "limitReachedCardTitle": "Osiągnięto limit nagród",
       "limitReachedCardDesc": "Nadal możesz zapraszać osoby do Codex, ale to konto nie otrzyma nagrody z kampanii.",
       "eligibilityCriteria": "Uprawnienia",
+      "rules": {
+        "maxInvites": "W trakcie kampanii możesz wysłać maksymalnie {{count}} zaproszenia.",
+        "notSelf": "Nie możesz wysłać zaproszenia do siebie.",
+        "inactiveMonths": "Zaproszona osoba nie mogła używać Codex w ciągu ostatnich {{count}} miesięcy.",
+        "noActiveInvite": "Zaproszona osoba nie może mieć już aktywnego zaproszenia."
+      },
       "rulesLoadFailed": "Nie udało się wczytać uprawnień: {{error}}",
       "viewFullTerms": "Zobacz pełne warunki",
       "send": "Wyślij",

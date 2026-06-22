@@ -2458,7 +2458,7 @@
   color: #1e40af;
 }
 
-.codex-reset-credit-confirm-invite-trigger[aria-pressed="true"] {
+.codex-reset-credit-confirm-invite-trigger[aria-expanded="true"] {
   border-color: rgba(59, 130, 246, 0.4);
   background: linear-gradient(
     135deg,
@@ -2863,7 +2863,7 @@
   color: #dbeafe;
 }
 
-[data-theme="dark"] .codex-reset-credit-confirm-invite-trigger[aria-pressed="true"] {
+[data-theme="dark"] .codex-reset-credit-confirm-invite-trigger[aria-expanded="true"] {
   border-color: rgba(96, 165, 250, 0.42);
   background: linear-gradient(
     135deg,
@@ -2966,6 +2966,7 @@
 }
 
 .codex-referral-invite-overlay {
+  z-index: 10010;
   background: rgba(15, 23, 42, 0.48);
   backdrop-filter: blur(6px);
 }
@@ -3015,6 +3016,13 @@
   min-height: 0;
   overflow-y: auto;
   padding: 20px 24px;
+}
+
+.codex-referral-invite-form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .codex-referral-invite-account {
@@ -3273,13 +3281,18 @@
 
 .codex-referral-invite-footer {
   gap: 10px;
-  padding: 0 24px 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px 24px;
   border-top: 0;
   background: var(--bg-surface);
 }
 
 .codex-referral-invite-footer .btn {
-  min-width: 110px;
+  width: 100%;
+  min-height: 42px;
+  border-radius: 999px;
+  font-weight: 800;
 }
 
 .codex-referral-invite-success-mark {

@@ -233,6 +233,15 @@ export interface DataTransferConfigBundle {
   compact_group_colors?: unknown;
   compact_hidden_groups?: unknown;
   app_language?: string;
+  antigravity_filter_persistence_enabled?: unknown;
+  antigravity_view_mode?: unknown;
+  antigravity_sort_by?: unknown;
+  antigravity_sort_direction?: unknown;
+  antigravity_filter_types?: unknown;
+  antigravity_tag_filter?: unknown;
+  antigravity_group_by_tag?: unknown;
+  antigravity_active_group_id?: unknown;
+  privacy_mode_enabled?: unknown;
 }
 
 export interface DataTransferBundle {
@@ -1023,6 +1032,15 @@ async function exportConfigBundle(registry: AccountRegistry): Promise<DataTransf
     compact_group_colors: safeGetLocalStorageItem('compactGroupColors'),
     compact_hidden_groups: safeGetLocalStorageItem('compactHiddenGroups'),
     app_language: localStorage.getItem('app-language') ?? undefined,
+    antigravity_filter_persistence_enabled: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.persist_enabled'),
+    antigravity_view_mode: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.view_mode'),
+    antigravity_sort_by: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.sort_by'),
+    antigravity_sort_direction: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.sort_direction'),
+    antigravity_filter_types: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.filter_types'),
+    antigravity_tag_filter: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.tag_filter'),
+    antigravity_group_by_tag: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.group_by_tag'),
+    antigravity_active_group_id: safeGetLocalStorageItem('agtools.antigravity.accounts_overview_filters.active_group_id'),
+    privacy_mode_enabled: safeGetLocalStorageItem('agtools.privacy_mode_enabled'),
   };
 }
 
@@ -1120,6 +1138,40 @@ async function importConfigBundle(bundle: DataTransferConfigBundle): Promise<Dat
   if (bundle.compact_hidden_groups !== undefined) safeSetLocalStorageItem('compactHiddenGroups', bundle.compact_hidden_groups);
   if (bundle.app_language !== undefined) {
     localStorage.setItem('app-language', bundle.app_language);
+  }
+  if (bundle.antigravity_filter_persistence_enabled !== undefined) {
+    safeSetLocalStorageItem(
+      'agtools.antigravity.accounts_overview_filters.persist_enabled',
+      bundle.antigravity_filter_persistence_enabled,
+    );
+  }
+  if (bundle.antigravity_view_mode !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.view_mode', bundle.antigravity_view_mode);
+  }
+  if (bundle.antigravity_sort_by !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.sort_by', bundle.antigravity_sort_by);
+  }
+  if (bundle.antigravity_sort_direction !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.sort_direction', bundle.antigravity_sort_direction);
+  }
+  if (bundle.antigravity_filter_types !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.filter_types', bundle.antigravity_filter_types);
+  }
+  if (bundle.antigravity_tag_filter !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.tag_filter', bundle.antigravity_tag_filter);
+  }
+  if (bundle.antigravity_group_by_tag !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.group_by_tag', bundle.antigravity_group_by_tag);
+  }
+  if (bundle.antigravity_active_group_id !== undefined) {
+    safeSetLocalStorageItem('agtools.antigravity.accounts_overview_filters.active_group_id', bundle.antigravity_active_group_id);
+  }
+  if (bundle.privacy_mode_enabled !== undefined) {
+    safeSetLocalStorageItem('agtools.privacy_mode_enabled', bundle.privacy_mode_enabled);
+    if (typeof window !== 'undefined') {
+      const isEnabled = bundle.privacy_mode_enabled === true || bundle.privacy_mode_enabled === 'true' || bundle.privacy_mode_enabled === 1 || bundle.privacy_mode_enabled === '1';
+      window.dispatchEvent(new CustomEvent('agtools:privacy-mode-changed', { detail: isEnabled }));
+    }
   }
 
   saveCurrentAccountRefreshMinutesMap(bundle.current_account_refresh_minutes);

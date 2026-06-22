@@ -3372,7 +3372,10 @@ function MainApp() {
       {/* 关闭确认对话框 */}
       {showCloseDialog && (
         <Suspense fallback={null}>
-          <CloseConfirmDialog onClose={() => setShowCloseDialog(false)} />
+          <CloseConfirmDialog
+            onClose={() => setShowCloseDialog(false)}
+            onAction={(action, remember) => invoke('handle_window_close', { action, remember })}
+          />
         </Suspense>
       )}
 
