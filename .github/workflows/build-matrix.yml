@@ -288,7 +288,6 @@ jobs:
         with:
           pattern: bundles-*
           path: test-release-assets
-          merge-multiple: true
 
       - name: Build and upload test updater JSON
         shell: bash
@@ -299,16 +298,70 @@ jobs:
             version="$(node -p "require('./package.json').version")"
           fi
 
+          rm -rf test-release-flat
           mkdir -p test-release-flat
-          find test-release-assets -type f \( \
-            -name '*.sig' -o \
-            -name '*.AppImage' -o \
-            -name '*.deb' -o \
-            -name '*.rpm' -o \
-            -name '*.msi' -o \
-            -name '*.exe' -o \
-            -name '*.app.tar.gz' \
-          \) -exec cp {} test-release-flat/ \;
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const sourceRoot = path.resolve('test-release-assets');
+          const targetRoot = path.resolve('test-release-flat');
+          const allowed = [
+            '.sig',
+            '.AppImage',
+            '.deb',
+            '.rpm',
+            '.msi',
+            '.exe',
+            '.app.tar.gz',
+          ];
+          const macArchByArtifact = new Map([
+            ['bundles-macos-aarch64', 'aarch64'],
+            ['bundles-macos-x86_64', 'x64'],
+            ['bundles-macos-universal', 'universal'],
+          ]);
+
+          function walk(dir, files = []) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const fullPath = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                walk(fullPath, files);
+              } else if (entry.isFile()) {
+                files.push(fullPath);
+              }
+            }
+            return files;
+          }
+
+          function isAllowed(fileName) {
+            return allowed.some((suffix) => fileName.endsWith(suffix));
+          }
+
+          function macRename(fileName, artifactName) {
+            const arch = macArchByArtifact.get(artifactName);
+            if (!arch) return fileName;
+            if (/(?:_aarch64|_x64|_universal)\.app\.tar\.gz(?:\.sig)?$/u.test(fileName)) {
+              return fileName;
+            }
+            if (fileName.endsWith('.app.tar.gz.sig')) {
+              return fileName.replace(/\.app\.tar\.gz\.sig$/u, `_${arch}.app.tar.gz.sig`);
+            }
+            if (fileName.endsWith('.app.tar.gz')) {
+              return fileName.replace(/\.app\.tar\.gz$/u, `_${arch}.app.tar.gz`);
+            }
+            return fileName;
+          }
+
+          for (const filePath of walk(sourceRoot)) {
+            const relative = path.relative(sourceRoot, filePath);
+            const [artifactName] = relative.split(path.sep);
+            const baseName = path.basename(filePath);
+            if (!isAllowed(baseName)) continue;
+            const targetName = macRename(baseName, artifactName);
+            fs.copyFileSync(filePath, path.join(targetRoot, targetName));
+          }
+          NODE
+          find test-release-flat -maxdepth 1 -type f -print | sort
 
           cat > test-release-notes.md <<EOF
           Cockpit Tools test channel build ${version}.

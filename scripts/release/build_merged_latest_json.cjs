@@ -57,6 +57,17 @@ function findAsset(assets, pattern, label) {
   return hit;
 }
 
+function findOptionalAsset(assets, pattern) {
+  return assets.find((name) => pattern.test(name));
+}
+
+function findAssetWithFallback(assets, pattern, label, fallback) {
+  const hit = findOptionalAsset(assets, pattern);
+  if (hit) return hit;
+  if (fallback) return fallback;
+  throw new Error(`Missing required updater asset for ${label}. Pattern: ${pattern}`);
+}
+
 function buildPlatformEntry(assetName, signatures, repo, releaseTag) {
   const signature = signatures.get(assetName);
   if (!signature) {
@@ -104,8 +115,19 @@ function main() {
     (name) => !name.endsWith('.sig') && name !== 'latest.json' && name !== 'SHA256SUMS.txt'
   );
 
-  const darwinAarch64Tar = findAsset(assets, /_aarch64\.app\.tar\.gz$/, 'darwin-aarch64');
-  const darwinX64Tar = findAsset(assets, /_x64\.app\.tar\.gz$/, 'darwin-x86_64');
+  const darwinUniversalTar = findOptionalAsset(assets, /_universal\.app\.tar\.gz$/);
+  const darwinAarch64Tar = findAssetWithFallback(
+    assets,
+    /_aarch64\.app\.tar\.gz$/,
+    'darwin-aarch64',
+    darwinUniversalTar,
+  );
+  const darwinX64Tar = findAssetWithFallback(
+    assets,
+    /_x64\.app\.tar\.gz$/,
+    'darwin-x86_64',
+    darwinUniversalTar,
+  );
   const windowsMsi = findAsset(assets, /_x64_en-US\.msi$/, 'windows-x86_64-msi');
   const windowsNsis = findAsset(assets, /_x64-setup\.exe$/, 'windows-x86_64-nsis');
   const linuxX64AppImage = findAsset(assets, /_amd64\.AppImage$/, 'linux-x86_64-appimage');
