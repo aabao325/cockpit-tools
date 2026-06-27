@@ -1003,6 +1003,10 @@ function verifyPackagingTooling() {
     '--update-index',
     'verifyWindowsAdapterManifestBuild',
     'windows-common-controls-v6.manifest',
+    'createPackageStagingRoot',
+    'copyPackageSourceToStaging',
+    "parts[0] === 'adapter'",
+    'createZip(stagedPackageRoot, zipPath)',
   ]) {
     assertIncludes(relative(PACKAGE_PLATFORM_SCRIPT_PATH), packageScript, expected);
   }

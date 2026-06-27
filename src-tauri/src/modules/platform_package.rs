@@ -25,6 +25,9 @@ const PREPARED_DIR: &str = "prepared";
 const BOOTSTRAP_DIR: &str = "bootstrap";
 const BOOTSTRAP_DIST_DIR: &str = "dist";
 const BOOTSTRAP_INDEX_FILE: &str = "index.json";
+const PLATFORM_PACKAGE_BOOTSTRAP_ENV: &str = "COCKPIT_PLATFORM_PACKAGE_BOOTSTRAP";
+const PLATFORM_PACKAGE_WORKSPACE_INDEX_ENV: &str = "COCKPIT_PLATFORM_PACKAGE_WORKSPACE_INDEX";
+const PLATFORM_PACKAGE_PREFER_LOCAL_SOURCE_ENV: &str = "COCKPIT_PLATFORM_PACKAGE_PREFER_LOCAL_SOURCE";
 const ANTIGRAVITY_PLATFORM_ID: &str = "antigravity";
 const ANTIGRAVITY_IDE_PLATFORM_ID: &str = "antigravity_ide";
 const ZED_PLATFORM_ID: &str = "zed";
@@ -724,11 +727,22 @@ fn strict_local_source_validation_enabled() -> bool {
     cfg!(debug_assertions)
         || std::env::var("COCKPIT_PLATFORM_PACKAGE_STRICT_LOCAL_SOURCE")
             .ok()
-            .map(|value| {
-                let normalized = value.trim().to_ascii_lowercase();
-                normalized == "1" || normalized == "true" || normalized == "yes"
-            })
+            .map(|value| env_flag_value_enabled(&value))
             .unwrap_or(false)
+}
+
+fn env_flag_value_enabled(value: &str) -> bool {
+    matches!(
+        value.trim().to_ascii_lowercase().as_str(),
+        "1" | "true" | "yes" | "on"
+    )
+}
+
+fn env_flag_enabled(name: &str) -> bool {
+    std::env::var(name)
+        .ok()
+        .map(|value| env_flag_value_enabled(&value))
+        .unwrap_or(false)
 }
 
 fn validate_remote_download_url(raw: &str) -> Result<(), String> {
@@ -1135,14 +1149,16 @@ fn workspace_package_index_candidates() -> Vec<PathBuf> {
         candidates.push(data_dir.join(PLATFORM_PACKAGE_INDEX_LOCAL_OVERRIDE_FILE));
     }
 
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    if let Some(repo_root) = manifest_dir.parent() {
-        candidates.push(
-            repo_root
-                .join(PLATFORM_PACKAGE_DIR)
-                .join("index.local.json"),
-        );
-        candidates.push(repo_root.join(PLATFORM_PACKAGE_DIR).join("index.json"));
+    if env_flag_enabled(PLATFORM_PACKAGE_WORKSPACE_INDEX_ENV) {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if let Some(repo_root) = manifest_dir.parent() {
+            candidates.push(
+                repo_root
+                    .join(PLATFORM_PACKAGE_DIR)
+                    .join("index.local.json"),
+            );
+            candidates.push(repo_root.join(PLATFORM_PACKAGE_DIR).join("index.json"));
+        }
     }
 
     candidates
@@ -1211,6 +1227,14 @@ fn load_bundled_seed_index(app: &AppHandle) -> Result<Option<PlatformPackageRemo
 }
 
 fn bundled_bootstrap_index_candidates(app: &AppHandle) -> Vec<PathBuf> {
+    if cfg!(debug_assertions) && !env_flag_enabled(PLATFORM_PACKAGE_BOOTSTRAP_ENV) {
+        logger::log_info(&format!(
+            "[PlatformPackage] dev bootstrap 已禁用；如需测试 Full/Bootstrap 包，设置 {}=1",
+            PLATFORM_PACKAGE_BOOTSTRAP_ENV
+        ));
+        return Vec::new();
+    }
+
     let mut candidates = Vec::new();
     if let Ok(resource_dir) = app.path().resource_dir() {
         candidates.push(
@@ -1635,24 +1659,35 @@ fn read_remote_source(
     }
 }
 
-fn pick_latest_source(
+fn prefer_local_source_on_equal_version() -> bool {
+    env_flag_enabled(PLATFORM_PACKAGE_PREFER_LOCAL_SOURCE_ENV)
+}
+
+fn pick_latest_source_with_preference(
     remote: Option<PlatformPackageSource>,
     local: Option<PlatformPackageSource>,
+    prefer_local_on_equal: bool,
 ) -> Option<PlatformPackageSource> {
     match (remote, local) {
         (Some(remote), Some(local)) => {
-            if compare_versions(&remote.manifest().version, &local.manifest().version)
-                == Ordering::Greater
-            {
-                Some(remote)
-            } else {
-                Some(local)
+            match compare_versions(&remote.manifest().version, &local.manifest().version) {
+                Ordering::Greater => Some(remote),
+                Ordering::Less => Some(local),
+                Ordering::Equal if prefer_local_on_equal => Some(local),
+                Ordering::Equal => Some(remote),
             }
         }
         (Some(remote), None) => Some(remote),
         (None, Some(local)) => Some(local),
         (None, None) => None,
     }
+}
+
+fn pick_latest_source(
+    remote: Option<PlatformPackageSource>,
+    local: Option<PlatformPackageSource>,
+) -> Option<PlatformPackageSource> {
+    pick_latest_source_with_preference(remote, local, prefer_local_source_on_equal_version())
 }
 
 fn resolve_package_source(
@@ -3413,7 +3448,7 @@ mod tests {
     }
 
     #[test]
-    fn prefers_local_source_when_remote_version_matches() {
+    fn prefers_remote_source_when_versions_match_by_default() {
         let remote = PlatformPackageSource::Remote {
             package: test_remote_package("1.0.0"),
             manifest: test_manifest("1.0.0"),
@@ -3423,7 +3458,24 @@ mod tests {
             manifest: test_manifest("1.0.0"),
         };
 
-        let picked = pick_latest_source(Some(remote), Some(local)).expect("source");
+        let picked =
+            pick_latest_source_with_preference(Some(remote), Some(local), false).expect("source");
+        assert!(matches!(picked, PlatformPackageSource::Remote { .. }));
+    }
+
+    #[test]
+    fn can_prefer_local_source_when_versions_match() {
+        let remote = PlatformPackageSource::Remote {
+            package: test_remote_package("1.0.0"),
+            manifest: test_manifest("1.0.0"),
+        };
+        let local = PlatformPackageSource::Local {
+            dir: PathBuf::from("/tmp/zed-local"),
+            manifest: test_manifest("1.0.0"),
+        };
+
+        let picked =
+            pick_latest_source_with_preference(Some(remote), Some(local), true).expect("source");
         assert!(matches!(picked, PlatformPackageSource::Local { .. }));
     }
 
@@ -3438,7 +3490,8 @@ mod tests {
             manifest: test_manifest("1.0.0"),
         };
 
-        let picked = pick_latest_source(Some(remote), Some(local)).expect("source");
+        let picked =
+            pick_latest_source_with_preference(Some(remote), Some(local), false).expect("source");
         assert!(matches!(picked, PlatformPackageSource::Remote { .. }));
     }
 }

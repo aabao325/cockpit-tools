@@ -125,6 +125,8 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
 8. `.github/workflows/platform-packages.yml` 是标准跨系统构建入口；CI 每个 runner 只输出当前 OS/arch 的 zip 和 metadata JSON，不直接改写远端 index。
 9. 远端正式索引 `platform-packages/index.json` 与测试索引 `platform-packages/index.test.json` 必须通过 `npm run package:platform-index` 基于各 OS/arch metadata 汇总生成，确认 size、sha256、downloadUrl 和 artifact 覆盖后再发布；zip 统一放在 `platform-packages/dist`，由不同索引控制正式/测试可见性。
 10. 所有 Rust `sidecarAdapter` 的 Windows adapter exe 必须在编译期嵌入 `Microsoft.Windows.Common-Controls` v6 manifest：adapter crate 必须声明 `build = "build.rs"`，通过共享 `crates/adapter-windows-common-controls-build.rs`、`crates/windows-common-controls-v6.rc` 和 `crates/windows-common-controls-v6.manifest` 编译资源。禁止把外置 `*.exe.manifest` 当作正式平台包修复方案；外置 manifest 只能用于临时定位问题，正式 zip 必须依赖已嵌入资源的 exe。
+11. 平台包 zip 必须从临时 staging 目录生成，staging 只复制 manifest、runtime、remote UI、assets 和当前目标 OS/arch 所需 adapter/helper；禁止直接 zip `platform-packages/<platformId>` 源目录，避免把其它系统 adapter、历史 zip、bootstrap、dist 或调试文件带入当前 artifact。
+12. Rust adapter release 构建必须保持体积优先配置：`opt-level=z`、`lto=true`、`codegen-units=1`、`strip=true`、`panic=abort`。如需为了性能放宽某个平台 adapter，必须先记录体积变化和原因。
 
 ### 5.1 单平台升级流程
 
@@ -165,8 +167,9 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
 5. 手动构建测试桌面端时使用 `.github/workflows/build-matrix.yml` 的 `workflow_dispatch channel=test`；需要真实 Tauri updater 验证时再勾选 `publish_test_release`。
 6. 连续验证升级提示时，只允许通过 `test_version` 临时生成测试版本；为兼容 Windows MSI，测试版本 prerelease 标识必须是纯数字且单段不超过 `65535`，例如 `1.0.1-1001`、`1.0.1-1002`。禁止把测试版本写进正式 `package.json`、正式 `CHANGELOG` 或正式 release tag。
 7. 测试通道可以复用正式签名密钥，但必须保持 index/updater endpoint 隔离；正式 `latest.json` 和正式 `platform-packages/index.json` 不得引用测试平台包版本，测试桌面端只读取 `platform-packages/index.test.json`。
-8. 后续新平台迁移完成后，必须先通过 test channel 验证 Windows/macOS/Linux 对应 artifact 的安装、卸载、检查更新、更新弹框、更新日志和包大小，再考虑进入正式通道。
-9. macOS 测试 release 必须上传 `.dmg` 供人工下载安装；真实 updater 仍使用 `.app.tar.gz` 与 `.sig`。
+8. dev 在线调试真实远端包时必须走 `https://raw.githubusercontent.com/jlcodes99/cockpit-tools/platform-test/platform-packages/index.test.json`；禁止继续使用历史 `/platform-packages/test/index.json` 路径。需要临时覆盖时，只能通过 `COCKPIT_PLATFORM_PACKAGE_INDEX_URL` 或数据目录 `platform-package-index.local.json` 明确覆盖，并在测试结束后清理。
+9. 后续新平台迁移完成后，必须先通过 test channel 验证 Windows/macOS/Linux 对应 artifact 的安装、卸载、检查更新、更新弹框、更新日志和包大小，再考虑进入正式通道。
+10. macOS 测试 release 必须上传 `.dmg` 供人工下载安装；真实 updater 仍使用 `.app.tar.gz` 与 `.sig`。
 
 ### 5.3 主应用内置资源边界
 
@@ -179,8 +182,10 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
 5. 允许内置的内容仅限 Core Shell、Host API、平台生命周期、通用未安装页、平台图标/菜单图标、轻量 seed 和通用 helper 脚本；这些内容不能包含平台业务 UI 或平台业务 adapter。
 6. 使用 `scripts/package-platform-package.cjs --update-index` 时，必须同步写回 `platform-packages/index.json` 与 `platform-packages/index.seed.json`。
 7. `npm run verify:platform-packages` 必须检查 seed、Tauri resources 和打包脚本；任何配置重新内置完整平台包目录都必须失败。
-8. 本地 debug 可以从仓库 source 包安装，release/test 安装包不得依赖仓库 source 或 resource 展开包；远端测试必须通过测试 index 下载真实 zip 验证。
-9. 为缩小首包体积，只能选择“内置 seed + 按需下载平台包”。禁止内置全平台 starter 包；如未来需要 starter，也只能内置当前系统、极少数平台、且不包含全系统 artifact，并必须经过包体积评审。
+8. 本地 debug 默认也按远端真实下载路径工作：同版本远端包优先于仓库 source 包；只有显式设置 `COCKPIT_PLATFORM_PACKAGE_PREFER_LOCAL_SOURCE=1` 时才允许同版本选择本地 source 包。
+9. 本地 debug 默认不读取仓库 `platform-packages/index.local.json` / `index.json` 作为远端索引替代；只有显式设置 `COCKPIT_PLATFORM_PACKAGE_WORKSPACE_INDEX=1` 才允许 workspace index 覆盖远端。数据目录里的 `platform-package-index.local.json` 仍作为人工 override，但测试结束必须清理。
+10. 本地 debug 默认不导入 workspace/resource `platform-packages/bootstrap`，防止 Full 包残留污染 Slim/远端测试；只有显式设置 `COCKPIT_PLATFORM_PACKAGE_BOOTSTRAP=1` 才允许测试 Full/Bootstrap 导入。
+11. 为缩小首包体积，只能选择“内置 seed + 按需下载平台包”。禁止内置全平台 starter 包；如未来需要 starter，也只能内置当前系统、极少数平台、且不包含全系统 artifact，并必须经过包体积评审。
 
 ## 6. 新平台迁移流程
 

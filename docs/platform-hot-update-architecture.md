@@ -292,8 +292,9 @@ npm run package:platform-index -- --metadata-dir platform-packages/dist-ci --ver
 8. Bootstrap 不得覆盖本地已安装的同版本或更高版本；如果 registry 记录用户明确卸载过该平台，后续启动不得自动装回。用户重新安装或更新成功后才清除“明确卸载”标记。
 9. `scripts/package-platform-package.cjs --update-index` 必须同时更新 `platform-packages/index.json` 和 `platform-packages/index.seed.json`，保证 seed 与本地开发索引的平台集合一致。
 10. `npm run verify:platform-packages` 必须检查 seed 存在、seed 与 index 的平台集合一致、Tauri 主配置只内置 seed，并拦截正式、dev、test 配置重新内置完整 `platform-packages` 或 `platform-packages/dist`。
-11. debug/dev 模式可以从仓库 `platform-packages/<platformId>` 读取本地 source 包以方便开发和修复旧 dev 安装包；release/test 安装包不得依赖仓库 source 包，也不得用 resource 目录中的展开平台包作为安装源。
-12. 如果担心首次打开体验，优先使用测试/大版本 Full/Bootstrap 包；常规版本继续使用 Slim 包 + seed + 通用未安装页，不能为了“开箱即用”重新内置全平台、全 zip 或全系统 artifact。
+11. debug/dev 模式默认也必须按远端真实下载路径工作：同版本远端包优先于仓库 source 包，且默认不读取 workspace `platform-packages/index.local.json` / `index.json`，也不导入 workspace/resource `platform-packages/bootstrap`。只有显式设置 `COCKPIT_PLATFORM_PACKAGE_PREFER_LOCAL_SOURCE=1`、`COCKPIT_PLATFORM_PACKAGE_WORKSPACE_INDEX=1` 或 `COCKPIT_PLATFORM_PACKAGE_BOOTSTRAP=1` 时，才允许启用对应本地调试能力。
+12. release/test 安装包不得依赖仓库 source 包，也不得用 resource 目录中的展开平台包作为安装源；远端测试索引固定为 `https://raw.githubusercontent.com/jlcodes99/cockpit-tools/platform-test/platform-packages/index.test.json`，禁止继续使用历史 `/platform-packages/test/index.json` 路径。
+13. 如果担心首次打开体验，优先使用测试/大版本 Full/Bootstrap 包；常规版本继续使用 Slim 包 + seed + 通用未安装页，不能为了“开箱即用”重新内置全平台、全 zip 或全系统 artifact。
 
 ## 6. 安装、更新、卸载流程
 

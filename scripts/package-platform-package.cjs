@@ -9,6 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 const INDEX_PATH = path.join(ROOT, 'platform-packages', 'index.json');
 const INDEX_SEED_PATH = path.join(ROOT, 'platform-packages', 'index.seed.json');
 const DEFAULT_DIST_DIR = path.join(ROOT, 'platform-packages', 'dist');
+const STAGING_ROOT = path.join(ROOT, '.tmp', 'platform-package-staging');
 const WORKSPACE_CARGO_TOML_PATH = path.join(ROOT, 'Cargo.toml');
 const WINDOWS_COMMON_CONTROLS_BUILD_RULE_PATH = path.join(ROOT, 'crates', 'adapter-windows-common-controls-build.rs');
 const WINDOWS_COMMON_CONTROLS_RC_PATH = path.join(ROOT, 'crates', 'windows-common-controls-v6.rc');
@@ -172,6 +173,55 @@ function assertIncludes(label, source, expected) {
   }
 }
 
+function createPackageStagingRoot(platformId) {
+  const safeId = platformId.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const stagingRoot = path.join(STAGING_ROOT, `${safeId}-${process.pid}-${Date.now()}`);
+  fs.rmSync(stagingRoot, { recursive: true, force: true });
+  fs.mkdirSync(stagingRoot, { recursive: true });
+  return stagingRoot;
+}
+
+function shouldSkipPackageSourceEntry(relativePath, dirent) {
+  const parts = relativePath.split(path.sep).filter(Boolean);
+  const name = dirent.name;
+  const isTopLevel = parts.length === 1;
+
+  if (parts[0] === 'adapter') return true;
+  if (name === '.DS_Store') return true;
+
+  if (dirent.isDirectory()) {
+    if (['.git', 'node_modules'].includes(name) || name.endsWith('.dSYM')) return true;
+    return isTopLevel && ['bootstrap', 'dist', 'dist-ci', 'test'].includes(name);
+  }
+
+  if (!dirent.isFile()) return true;
+  return (
+    name.endsWith('.map')
+    || name.endsWith('.zip')
+    || name.endsWith('.zip.part')
+    || name.endsWith('.part')
+    || name.endsWith('.pdb')
+  );
+}
+
+function copyPackageSourceToStaging(sourceRoot, targetRoot, relativeRoot = '') {
+  for (const dirent of fs.readdirSync(path.join(sourceRoot, relativeRoot), { withFileTypes: true })) {
+    const relativePath = path.join(relativeRoot, dirent.name);
+    if (shouldSkipPackageSourceEntry(relativePath, dirent)) continue;
+
+    const sourcePath = path.join(sourceRoot, relativePath);
+    const targetPath = path.join(targetRoot, relativePath);
+    if (dirent.isDirectory()) {
+      fs.mkdirSync(targetPath, { recursive: true });
+      copyPackageSourceToStaging(sourceRoot, targetRoot, relativePath);
+    } else if (dirent.isFile()) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+      fs.copyFileSync(sourcePath, targetPath);
+      fs.chmodSync(targetPath, fs.statSync(sourcePath).mode & 0o777);
+    }
+  }
+}
+
 function verifyWindowsAdapterManifestBuild(platformId, crateTomlPath) {
   assertFile(WINDOWS_COMMON_CONTROLS_BUILD_RULE_PATH, 'shared Windows adapter build rule');
   assertFile(WINDOWS_COMMON_CONTROLS_RC_PATH, 'Windows Common Controls v6 resource file');
@@ -210,7 +260,7 @@ function verifyWindowsAdapterManifestBuild(platformId, crateTomlPath) {
   assertIncludes(`${platformId}: adapter build.rs`, buildRs, WINDOWS_ADAPTER_BUILD_RS_INCLUDE);
 }
 
-function copyAdapterIfAvailable(packageRoot, manifest, os, adapterBinDir) {
+function copyAdapterIfAvailable(sourcePackageRoot, stagedPackageRoot, manifest, os, adapterBinDir) {
   if (!manifest.adapter) {
     if (manifest.installKind === 'sidecarAdapter') {
       fail(`${manifest.id}: sidecarAdapter package is missing adapter`);
@@ -219,18 +269,18 @@ function copyAdapterIfAvailable(packageRoot, manifest, os, adapterBinDir) {
   }
 
   const entry = safeRelativePath(adapterEntryForOs(manifest.adapter, os), `${manifest.id}: adapter entry`);
-  const targetPath = path.join(packageRoot, entry);
+  const targetPath = path.join(stagedPackageRoot, entry);
   const targetBasename = path.basename(entry);
+  const sourcePath = adapterBinDir
+    ? path.join(adapterBinDir, targetBasename)
+    : path.join(sourcePackageRoot, entry);
 
-  if (adapterBinDir) {
-    const sourcePath = path.join(adapterBinDir, targetBasename);
-    if (!fs.existsSync(sourcePath)) {
-      fail(`${manifest.id}: built adapter not found at ${path.relative(ROOT, sourcePath)}`);
-    }
-    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.copyFileSync(sourcePath, targetPath);
+  if (!fs.existsSync(sourcePath)) {
+    fail(`${manifest.id}: built adapter not found at ${path.relative(ROOT, sourcePath)}`);
   }
 
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.copyFileSync(sourcePath, targetPath);
   assertFile(targetPath, `${manifest.id}: adapter`);
   if (os !== 'windows') {
     fs.chmodSync(targetPath, 0o755);
@@ -369,56 +419,66 @@ function main() {
     fail(`${args.platformId}: manifest version does not match index version`);
   }
 
-  const ui = manifest.ui || {};
-  if (ui.protocol !== 'react-remote-esm-v1') fail(`${args.platformId}: ui.protocol must be react-remote-esm-v1`);
-  assertFile(path.join(packageRoot, safeRelativePath(ui.entry, `${args.platformId}: ui.entry`)), `${args.platformId}: UI entry`);
-  if (ui.style) {
-    assertFile(path.join(packageRoot, safeRelativePath(ui.style, `${args.platformId}: ui.style`)), `${args.platformId}: UI style`);
-  }
+  let stagedPackageRoot = null;
+  try {
+    stagedPackageRoot = createPackageStagingRoot(args.platformId);
+    copyPackageSourceToStaging(packageRoot, stagedPackageRoot);
 
-  const adapterEntry = copyAdapterIfAvailable(packageRoot, manifest, args.os, args.adapterBinDir);
-  const helperEntries = copyCodexRuntimeHelpers(packageRoot, manifest, args.os, args.arch);
-  if (manifest.adapter) {
-    const cratePath = path.join(ROOT, 'crates', expectedAdapterCrateName(args.platformId), 'Cargo.toml');
-    assertFile(cratePath, `${args.platformId}: adapter crate`);
-    if (args.os === 'windows') {
-      verifyWindowsAdapterManifestBuild(args.platformId, cratePath);
+    const ui = manifest.ui || {};
+    if (ui.protocol !== 'react-remote-esm-v1') fail(`${args.platformId}: ui.protocol must be react-remote-esm-v1`);
+    assertFile(path.join(stagedPackageRoot, safeRelativePath(ui.entry, `${args.platformId}: ui.entry`)), `${args.platformId}: UI entry`);
+    if (ui.style) {
+      assertFile(path.join(stagedPackageRoot, safeRelativePath(ui.style, `${args.platformId}: ui.style`)), `${args.platformId}: UI style`);
+    }
+
+    const adapterEntry = copyAdapterIfAvailable(packageRoot, stagedPackageRoot, manifest, args.os, args.adapterBinDir);
+    const helperEntries = copyCodexRuntimeHelpers(stagedPackageRoot, manifest, args.os, args.arch);
+    if (manifest.adapter) {
+      const cratePath = path.join(ROOT, 'crates', expectedAdapterCrateName(args.platformId), 'Cargo.toml');
+      assertFile(cratePath, `${args.platformId}: adapter crate`);
+      if (args.os === 'windows') {
+        verifyWindowsAdapterManifestBuild(args.platformId, cratePath);
+      }
+    }
+
+    const zipName = zipNameFor(args.platformId, manifest.version, args.os, args.arch, args.filenameTemplate);
+    const zipPath = path.join(args.distDir, zipName);
+    createZip(stagedPackageRoot, zipPath);
+
+    const size = fs.statSync(zipPath).size;
+    const checksum = sha256(zipPath);
+    const firstArtifact = (indexPackage.artifacts || [])[0] || {};
+    const downloadUrl = args.downloadUrl || replaceZipName(firstArtifact.downloadUrl || indexPackage.downloadUrl, zipName);
+    const metadata = {
+      id: args.platformId,
+      platformId: manifest.platformId,
+      version: manifest.version,
+      packageMode: manifest.packageMode,
+      installKind: manifest.installKind,
+      os: args.os,
+      arch: args.arch,
+      zipName,
+      zipPath: displayPath(zipPath),
+      downloadUrl,
+      downloadSizeBytes: size,
+      sha256: checksum,
+      adapterEntry,
+      helperEntries,
+      uiEntry: ui.entry,
+      uiStyle: ui.style || null,
+    };
+
+    if (args.updateIndex) updateIndex(index, args.platformId, args.os, args.arch, metadata, manifest);
+    if (args.metadataOut) {
+      fs.mkdirSync(path.dirname(args.metadataOut), { recursive: true });
+      fs.writeFileSync(args.metadataOut, `${JSON.stringify(metadata, null, 2)}\n`);
+    }
+    console.log(JSON.stringify(metadata, null, 2));
+  } finally {
+    if (stagedPackageRoot) {
+      fs.rmSync(stagedPackageRoot, { recursive: true, force: true });
     }
   }
-
-  const zipName = zipNameFor(args.platformId, manifest.version, args.os, args.arch, args.filenameTemplate);
-  const zipPath = path.join(args.distDir, zipName);
-  createZip(packageRoot, zipPath);
-
-  const size = fs.statSync(zipPath).size;
-  const checksum = sha256(zipPath);
-  const firstArtifact = (indexPackage.artifacts || [])[0] || {};
-  const downloadUrl = args.downloadUrl || replaceZipName(firstArtifact.downloadUrl || indexPackage.downloadUrl, zipName);
-  const metadata = {
-    id: args.platformId,
-    platformId: manifest.platformId,
-    version: manifest.version,
-    packageMode: manifest.packageMode,
-    installKind: manifest.installKind,
-    os: args.os,
-    arch: args.arch,
-    zipName,
-    zipPath: displayPath(zipPath),
-    downloadUrl,
-    downloadSizeBytes: size,
-    sha256: checksum,
-    adapterEntry,
-    helperEntries,
-    uiEntry: ui.entry,
-    uiStyle: ui.style || null,
-  };
-
-  if (args.updateIndex) updateIndex(index, args.platformId, args.os, args.arch, metadata, manifest);
-  if (args.metadataOut) {
-    fs.mkdirSync(path.dirname(args.metadataOut), { recursive: true });
-    fs.writeFileSync(args.metadataOut, `${JSON.stringify(metadata, null, 2)}\n`);
-  }
-  console.log(JSON.stringify(metadata, null, 2));
 }
 
 main();
