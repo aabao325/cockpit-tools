@@ -275,6 +275,8 @@ function getProgressPhaseText(phase: PlatformPackageProgressPhase, t: TFunction)
       return t('platformLayout.packageProgressExtracting', '正在解压平台包');
     case 'installing':
       return t('platformLayout.packageProgressInstalling', '正在切换运行组件');
+    case 'uninstalling':
+      return t('platformLayout.packageProgressUninstalling', '正在移除平台包');
     case 'completed':
       return t('platformLayout.packageProgressCompleted', '已完成');
     case 'failed':
@@ -424,17 +426,15 @@ export function PlatformPackageToolbar({
     const promise = (async () => {
       setActionKey(key);
       setOperationError(null);
-      if (action !== 'uninstall') {
-        dispatchPlatformPackageProgress({
-          platformId,
-          operation: action,
-          phase: 'resolving',
-          percent: 0,
-          downloadedBytes: null,
-          totalBytes: options?.totalBytes ?? null,
-          message: null,
-        });
-      }
+      dispatchPlatformPackageProgress({
+        platformId,
+        operation: action,
+        phase: action === 'uninstall' ? 'uninstalling' : 'resolving',
+        percent: 0,
+        downloadedBytes: null,
+        totalBytes: options?.totalBytes ?? null,
+        message: null,
+      });
       let nextState = action === 'install'
         ? await installPackage(platformId)
         : action === 'update'
@@ -458,33 +458,29 @@ export function PlatformPackageToolbar({
           nextState.errorMessage || t('platformLayout.packageInstallNotReady', '平台包已处理，但运行组件尚未就绪'),
         );
       }
-      if (action !== 'uninstall') {
-        dispatchPlatformPackageProgress({
-          platformId,
-          operation: action,
-          phase: 'completed',
-          percent: 100,
-          downloadedBytes: null,
-          totalBytes: options?.totalBytes ?? null,
-          message: null,
-        });
-      }
+      dispatchPlatformPackageProgress({
+        platformId,
+        operation: action,
+        phase: 'completed',
+        percent: 100,
+        downloadedBytes: null,
+        totalBytes: options?.totalBytes ?? null,
+        message: null,
+      });
       return nextState;
     })()
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
         setOperationError(message);
-        if (action !== 'uninstall') {
-          dispatchPlatformPackageProgress({
-            platformId,
-            operation: action,
-            phase: 'failed',
-            percent: null,
-            downloadedBytes: null,
-            totalBytes: options?.totalBytes ?? null,
-            message,
-          });
-        }
+        dispatchPlatformPackageProgress({
+          platformId,
+          operation: action,
+          phase: 'failed',
+          percent: null,
+          downloadedBytes: null,
+          totalBytes: options?.totalBytes ?? null,
+          message,
+        });
         throw error;
       })
       .finally(() => {
@@ -566,15 +562,13 @@ export function PlatformPackageToolbar({
     showModal({
       title,
       description,
-      content: action === 'uninstall'
-        ? undefined
-        : (
-            <PlatformPackageOperationProgress
-              platformId={platformId}
-              operation={action}
-              fallbackTotalBytes={platformPackage.downloadSizeBytes}
-            />
-          ),
+      content: (
+        <PlatformPackageOperationProgress
+          platformId={platformId}
+          operation={action}
+          fallbackTotalBytes={action === 'uninstall' ? null : platformPackage.downloadSizeBytes}
+        />
+      ),
       width: 'sm',
       actions: [
         {
@@ -589,7 +583,7 @@ export function PlatformPackageToolbar({
           onClick: async () => {
             await runAction(action, {
               requireRuntimeReady: action !== 'uninstall',
-              totalBytes: platformPackage.downloadSizeBytes,
+              totalBytes: action === 'uninstall' ? null : platformPackage.downloadSizeBytes,
             });
           },
         },

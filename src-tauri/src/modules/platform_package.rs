@@ -82,6 +82,7 @@ enum PlatformPackageOperation {
     Install,
     Update,
     Prepare,
+    Uninstall,
 }
 
 impl PlatformPackageOperation {
@@ -90,6 +91,7 @@ impl PlatformPackageOperation {
             PlatformPackageOperation::Install => "install",
             PlatformPackageOperation::Update => "update",
             PlatformPackageOperation::Prepare => "prepare",
+            PlatformPackageOperation::Uninstall => "uninstall",
         }
     }
 }
@@ -101,6 +103,7 @@ enum PlatformPackageProgressPhase {
     Verifying,
     Extracting,
     Installing,
+    Uninstalling,
     Completed,
     Failed,
 }
@@ -113,6 +116,7 @@ impl PlatformPackageProgressPhase {
             PlatformPackageProgressPhase::Verifying => "verifying",
             PlatformPackageProgressPhase::Extracting => "extracting",
             PlatformPackageProgressPhase::Installing => "installing",
+            PlatformPackageProgressPhase::Uninstalling => "uninstalling",
             PlatformPackageProgressPhase::Completed => "completed",
             PlatformPackageProgressPhase::Failed => "failed",
         }
@@ -3310,12 +3314,44 @@ pub fn uninstall_platform_package(
     platform_id: &str,
 ) -> Result<PlatformPackageState, String> {
     ensure_supported_platform(platform_id)?;
+    if let Some(app) = app {
+        emit_platform_package_progress(
+            app,
+            platform_id,
+            PlatformPackageOperation::Uninstall,
+            PlatformPackageProgressPhase::Uninstalling,
+            Some(0),
+            None,
+            None,
+            None,
+        );
+    }
     let result = uninstall_platform_package_inner(app, platform_id);
+    if let Some(app) = app {
+        match &result {
+            Ok(_) => emit_platform_package_progress(
+                app,
+                platform_id,
+                PlatformPackageOperation::Uninstall,
+                PlatformPackageProgressPhase::Completed,
+                Some(100),
+                None,
+                None,
+                None,
+            ),
+            Err(error) => emit_platform_package_failure(
+                app,
+                platform_id,
+                PlatformPackageOperation::Uninstall,
+                error,
+            ),
+        }
+    }
     result
 }
 
 fn uninstall_platform_package_inner(
-    _app: Option<&AppHandle>,
+    app: Option<&AppHandle>,
     platform_id: &str,
 ) -> Result<PlatformPackageState, String> {
     logger::log_info(&format!(
@@ -3360,6 +3396,18 @@ fn uninstall_platform_package_inner(
         platform_id,
         stop_started_at.elapsed().as_millis()
     ));
+    if let Some(app) = app {
+        emit_platform_package_progress(
+            app,
+            platform_id,
+            PlatformPackageOperation::Uninstall,
+            PlatformPackageProgressPhase::Uninstalling,
+            Some(35),
+            None,
+            None,
+            None,
+        );
+    }
 
     let manifest_for_state = read_installed_manifest(platform_id).ok().flatten();
     let platform_dir = package_dir(platform_id)?;
@@ -3385,6 +3433,18 @@ fn uninstall_platform_package_inner(
             platform_dir.display()
         ));
     }
+    if let Some(app) = app {
+        emit_platform_package_progress(
+            app,
+            platform_id,
+            PlatformPackageOperation::Uninstall,
+            PlatformPackageProgressPhase::Uninstalling,
+            Some(80),
+            None,
+            None,
+            None,
+        );
+    }
 
     let registry_started_at = Instant::now();
     let mut registry = read_registry()?;
@@ -3406,6 +3466,18 @@ fn uninstall_platform_package_inner(
         platform_id,
         registry_started_at.elapsed().as_millis()
     ));
+    if let Some(app) = app {
+        emit_platform_package_progress(
+            app,
+            platform_id,
+            PlatformPackageOperation::Uninstall,
+            PlatformPackageProgressPhase::Uninstalling,
+            Some(95),
+            None,
+            None,
+            None,
+        );
+    }
     logger::log_info(&format!(
         "[PlatformPackage] 卸载平台包完成: platform={}, elapsed={}ms",
         platform_id,

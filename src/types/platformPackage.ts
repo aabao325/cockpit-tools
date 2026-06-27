@@ -21,6 +21,7 @@ export type PlatformPackageProgressPhase =
   | 'verifying'
   | 'extracting'
   | 'installing'
+  | 'uninstalling'
   | 'completed'
   | 'failed';
 
