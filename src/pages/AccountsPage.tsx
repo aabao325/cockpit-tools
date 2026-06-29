@@ -93,7 +93,8 @@ import { QuickSettingsPopover } from '../components/QuickSettingsPopover'
 import {
   isPrivacyModeEnabledByDefault,
   maskSensitiveValue,
-  persistPrivacyModeEnabled
+  persistPrivacyModeEnabled,
+  PRIVACY_MODE_CHANGED_EVENT
 } from '../utils/privacy'
 import { useExportJsonModal } from '../hooks/useExportJsonModal'
 import { MultiSelectFilterDropdown, type MultiSelectFilterOption } from '../components/MultiSelectFilterDropdown'
@@ -142,6 +143,7 @@ import { useAntigravityRuntimeTarget } from '../hooks/useAntigravityRuntimeTarge
 
 interface AccountsPageProps {
   onNavigate?: (page: Page) => void
+  hideHeader?: boolean
 }
 
 type AntigravitySwitchHistoryItem = accountService.AntigravitySwitchHistoryItem
@@ -216,14 +218,14 @@ const ANTIGRAVITY_FILTER_FIELD_TAG_FILTER = 'tag_filter'
 const ANTIGRAVITY_FILTER_FIELD_GROUP_BY_TAG = 'group_by_tag'
 const ANTIGRAVITY_FILTER_FIELD_ACTIVE_GROUP_ID = 'active_group_id'
 
-export function AccountsPage({ onNavigate }: AccountsPageProps) {
+export function AccountsPage({ onNavigate, hideHeader = false }: AccountsPageProps) {
   const { t, i18n } = useTranslation()
   const antigravityRuntimeTarget = useAntigravityRuntimeTarget()
   const locale = i18n.language || 'zh-CN'
   const untaggedKey = '__untagged__'
   const {
     accounts,
-    currentAccount,
+    currentAccountsByTarget,
     loading,
     error: storeError,
     fetchAccounts,
@@ -235,6 +237,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     switchAccount,
     updateAccountTags
   } = useAccountStore()
+  const currentAccount = currentAccountsByTarget[antigravityRuntimeTarget] ?? null
 
   const formatSwitchError = useCallback((error: unknown) => String(error), [])
 
@@ -287,6 +290,8 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       }
     }
   }, [storeError])
+
+
 
   const initialFilterPersistenceEnabled = readAccountsOverviewFilterPersistenceEnabled(
     ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
@@ -640,7 +645,99 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     return total.toFixed(2).replace(/\.?0+$/, '')
   }
 
+
+
+  const loadPersistedOverviewFilters = useCallback(() => {
+      const savedViewMode = readAccountsOverviewFilterField<unknown>(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+        ANTIGRAVITY_FILTER_FIELD_VIEW_MODE,
+        'grid',
+      )
+      if (savedViewMode === 'grid' || savedViewMode === 'list' || savedViewMode === 'compact') {
+        setViewMode(savedViewMode)
+      }
+
+      setFilterTypes(
+        readAccountsOverviewFilterStringArray(
+          ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+          ANTIGRAVITY_FILTER_FIELD_FILTER_TYPES,
+        ) as AccountsFilterType[]
+      )
+
+      setTagFilter(
+        readAccountsOverviewFilterStringArray(
+          ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+          ANTIGRAVITY_FILTER_FIELD_TAG_FILTER,
+        )
+      )
+
+      setGroupByTag(
+        Boolean(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_GROUP_BY_TAG,
+            false,
+          ),
+        )
+      )
+
+      const savedActiveGroupId = readAccountsOverviewFilterField<string | null>(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+        ANTIGRAVITY_FILTER_FIELD_ACTIVE_GROUP_ID,
+        null,
+      )
+      setActiveGroupId(typeof savedActiveGroupId === 'string' && savedActiveGroupId.trim() ? savedActiveGroupId : null)
+
+      setSortBy(
+        normalizeAntigravitySortBy(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_SORT_BY,
+            DEFAULT_ANTIGRAVITY_SORT_BY,
+          ) as string,
+        )
+      )
+
+      setSortDirection(
+        normalizeAntigravitySortDirection(
+          readAccountsOverviewFilterField<unknown>(
+            ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+            ANTIGRAVITY_FILTER_FIELD_SORT_DIRECTION,
+            'desc',
+          ) as string | null,
+        )
+      )
+  }, [])
+
+  const resetOverviewFilters = useCallback(() => {
+    setViewMode('grid')
+    setFilterTypes([])
+    setTagFilter([])
+    setGroupByTag(false)
+    setActiveGroupId(null)
+    setSortBy(DEFAULT_ANTIGRAVITY_SORT_BY)
+    setSortDirection('desc')
+  }, [])
+
   useEffect(() => {
+    const handleConfigUpdated = () => {
+      const nextFilterPersistenceEnabled = readAccountsOverviewFilterPersistenceEnabled(
+        ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE,
+      )
+      setFilterPersistenceEnabled(nextFilterPersistenceEnabled)
+      if (nextFilterPersistenceEnabled) {
+        loadPersistedOverviewFilters()
+      } else {
+        resetOverviewFilters()
+      }
+      setPrivacyModeEnabled(isPrivacyModeEnabledByDefault())
+    }
+
+    const handlePrivacyModeChanged = (event: Event) => {
+      const isEnabled = (event as CustomEvent<boolean>).detail
+      setPrivacyModeEnabled(isEnabled)
+    }
+
     const handleFilterPersistenceChanged = (event: Event) => {
       const detail = (event as CustomEvent<AccountsOverviewFilterPersistenceChangedDetail>).detail
       if (!detail || detail.scope !== ANTIGRAVITY_FILTER_PERSISTENCE_SCOPE) {
@@ -648,17 +745,23 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       }
       setFilterPersistenceEnabled(Boolean(detail.enabled))
     }
+
+    window.addEventListener('config-updated', handleConfigUpdated)
+    window.addEventListener(PRIVACY_MODE_CHANGED_EVENT, handlePrivacyModeChanged as EventListener)
     window.addEventListener(
       ACCOUNTS_OVERVIEW_FILTER_PERSISTENCE_CHANGED_EVENT,
       handleFilterPersistenceChanged as EventListener,
     )
+
     return () => {
+      window.removeEventListener('config-updated', handleConfigUpdated)
+      window.removeEventListener(PRIVACY_MODE_CHANGED_EVENT, handlePrivacyModeChanged as EventListener)
       window.removeEventListener(
         ACCOUNTS_OVERVIEW_FILTER_PERSISTENCE_CHANGED_EVENT,
         handleFilterPersistenceChanged as EventListener,
       )
     }
-  }, [])
+  }, [loadPersistedOverviewFilters, resetOverviewFilters])
 
   useEffect(() => {
     if (!filterPersistenceEnabled) {
@@ -1112,7 +1215,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
 
   useEffect(() => {
     fetchAccounts()
-    fetchCurrentAccount()
+    fetchCurrentAccount(antigravityRuntimeTarget)
     loadDisplayGroups()
     loadVerificationHistory()
 
@@ -1120,14 +1223,14 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
 
     listen<string>('accounts:refresh', async () => {
       await fetchAccounts()
-      await fetchCurrentAccount()
+      await fetchCurrentAccount(antigravityRuntimeTarget)
       const latestAccounts = useAccountStore.getState().accounts
       const accountsWithoutQuota = latestAccounts.filter(
         (acc) => !acc.quota?.models?.length
       )
       if (accountsWithoutQuota.length > 0) {
         await Promise.allSettled(
-          accountsWithoutQuota.map((acc) => refreshQuota(acc.id))
+          accountsWithoutQuota.map((acc) => refreshQuota(acc.id, antigravityRuntimeTarget))
         )
         await fetchAccounts()
       }
@@ -1139,7 +1242,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     return () => {
       if (unlisten) unlisten()
     }
-  }, [fetchAccounts, fetchCurrentAccount, loadVerificationHistory, refreshQuota])
+  }, [antigravityRuntimeTarget, fetchAccounts, fetchCurrentAccount, loadVerificationHistory, refreshQuota])
 
   // Click outside to close color picker
   useEffect(() => {
@@ -1182,7 +1285,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       try {
         const newAccount = await accountService.completeOAuthLogin()
         await fetchAccounts()
-        await fetchCurrentAccount()
+        await fetchCurrentAccount(antigravityRuntimeTarget)
         // 如果在文件夹内添加，自动归入当前文件夹
         if (activeGroupIdRef.current && newAccount?.id) {
           await assignAccountsToGroup(activeGroupIdRef.current, [newAccount.id])
@@ -1208,7 +1311,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       if (unlistenUrl) unlistenUrl()
       if (unlistenCallback) unlistenCallback()
     }
-  }, [fetchAccounts, fetchCurrentAccount])
+  }, [antigravityRuntimeTarget, fetchAccounts, fetchCurrentAccount])
 
   useEffect(() => {
     if (!showAddModal || addTab !== 'oauth' || oauthUrl) return
@@ -1243,7 +1346,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
   const handleRefresh = async (accountId: string) => {
     setRefreshing((prev) => new Set(prev).add(accountId))
     try {
-      await refreshQuota(accountId)
+      await refreshQuota(accountId, antigravityRuntimeTarget)
       setRefreshResult((prev) => ({ ...prev, [accountId]: 'success' }))
       setTimeout(() => setRefreshResult((prev) => { const next = { ...prev }; delete next[accountId]; return next }), 2000)
     } catch (e) {
@@ -1264,7 +1367,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
         const groupAccountIds = new Set(activeGroup.accountIds)
         const groupAccounts = accounts.filter((acc) => groupAccountIds.has(acc.id))
         await Promise.allSettled(
-          groupAccounts.map((acc) => refreshQuota(acc.id))
+          groupAccounts.map((acc) => refreshQuota(acc.id, antigravityRuntimeTarget))
         )
       } else {
         const stats = await refreshAllQuotas()
@@ -1414,7 +1517,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     await runModalAction(t('modals.import.oauthAction'), async () => {
       await startOAuthLogin()
       await fetchAccounts()
-      await fetchCurrentAccount()
+      await fetchCurrentAccount(antigravityRuntimeTarget)
     })
   }
 
@@ -1422,7 +1525,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     await runModalAction(t('modals.import.oauthAction'), async () => {
       await accountService.completeOAuthLogin()
       await fetchAccounts()
-      await fetchCurrentAccount()
+      await fetchCurrentAccount(antigravityRuntimeTarget)
     })
   }
 
@@ -1431,7 +1534,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     setSwitching(accountId)
     try {
       const account = await switchAccount(accountId, antigravityRuntimeTarget)
-      await fetchCurrentAccount()
+      await fetchCurrentAccount(antigravityRuntimeTarget)
       setMessage({ text: t('messages.switched', { email: maskAccountText(account.email) }) })
     } catch (e) {
       const raw = formatSwitchError(e)
@@ -1597,7 +1700,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     try {
       const imported = await accountService.importFromOldTools()
       await fetchAccounts()
-      await Promise.allSettled(imported.map((acc) => refreshQuota(acc.id)))
+      await Promise.allSettled(imported.map((acc) => refreshQuota(acc.id, antigravityRuntimeTarget)))
       await fetchAccounts()
       if (imported.length === 0) {
         setAddStatus('error')
@@ -1626,7 +1729,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       await fetchAccounts()
       await new Promise((resolve) => setTimeout(resolve, 180))
       await fetchAccounts()
-      await refreshQuota(imported.id)
+      await refreshQuota(imported.id, antigravityRuntimeTarget)
       await fetchAccounts()
       setAddStatus('success')
       setAddMessage(
@@ -1670,7 +1773,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       const result = await accountService.importFromFiles(paths)
       const { imported, failed } = result
       await fetchAccounts()
-      await Promise.allSettled(imported.map((acc) => refreshQuota(acc.id)))
+      await Promise.allSettled(imported.map((acc) => refreshQuota(acc.id, antigravityRuntimeTarget)))
       await fetchAccounts()
       if (imported.length === 0 && failed.length === 0) {
         setAddStatus('error')
@@ -1725,7 +1828,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
       )
       const count = await accountService.syncFromExtension()
       await fetchAccounts()
-      await fetchCurrentAccount()
+      await fetchCurrentAccount(antigravityRuntimeTarget)
       if (count === 0) {
         setAddStatus('error')
         setAddMessage(t('modals.import.noAccountsFound'))
@@ -1830,7 +1933,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
 
     if (importedAccounts.length > 0) {
       await Promise.allSettled(
-        importedAccounts.map((acc) => refreshQuota(acc.id))
+        importedAccounts.map((acc) => refreshQuota(acc.id, antigravityRuntimeTarget))
       )
       await fetchAccounts()
       // 如果在文件夹内添加，自动归入当前文件夹
@@ -3199,12 +3302,14 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
   return (
     <>
       <main className="main-content accounts-page">
-        <OverviewTabsHeader
-          active="overview"
-          onNavigate={onNavigate}
-          onOpenManual={() => onNavigate?.('manual')}
-          subtitle={t('overview.subtitle')}
-        />
+        {!hideHeader && (
+          <OverviewTabsHeader
+            active="overview"
+            onNavigate={onNavigate}
+            onOpenManual={() => onNavigate?.('manual')}
+            subtitle={t('overview.subtitle')}
+          />
+        )}
 
         {/* 面包屑：进入分组后显示 */}
         {activeGroup && (
@@ -4012,7 +4117,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
               <button
                 className="modal-close"
                 onClick={() => {
-                  if (deleting) return
                   setDeleteConfirm(null)
                   setDeleteConfirmError(null)
                 }}
@@ -4032,7 +4136,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                   setDeleteConfirm(null)
                   setDeleteConfirmError(null)
                 }}
-                disabled={deleting}
               >
                 {t('common.cancel')}
               </button>
@@ -4058,7 +4161,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
               <button
                 className="modal-close"
                 onClick={() => {
-                  if (deletingGroup) return
                   setGroupDeleteConfirm(null)
                   setGroupDeleteError(null)
                 }}
@@ -4082,7 +4184,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                   setGroupDeleteConfirm(null)
                   setGroupDeleteError(null)
                 }}
-                disabled={deletingGroup}
               >
                 {t('common.cancel')}
               </button>
@@ -4108,7 +4209,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
               <button
                 className="modal-close"
                 onClick={() => {
-                  if (deletingTag) return
                   setTagDeleteConfirm(null)
                   setTagDeleteConfirmError(null)
                 }}
@@ -4134,7 +4234,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                   setTagDeleteConfirm(null)
                   setTagDeleteConfirmError(null)
                 }}
-                disabled={deletingTag}
               >
                 {t('common.cancel')}
               </button>
