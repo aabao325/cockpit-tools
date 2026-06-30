@@ -10,6 +10,7 @@ const PACKAGE_JSON_PATH = path.join(ROOT, 'package.json');
 const CARGO_TOML_PATH = path.join(ROOT, 'Cargo.toml');
 const INDEX_PATH = path.join(ROOT, 'platform-packages', 'index.json');
 const INDEX_SEED_PATH = path.join(ROOT, 'platform-packages', 'index.seed.json');
+const HISTORY_DIR = path.join(ROOT, 'platform-packages', 'history');
 const DIST_DIR = path.join(ROOT, 'platform-packages', 'dist');
 const PLATFORM_UI_DIR = path.join(ROOT, 'src', 'platform-ui');
 const BUILD_PLATFORM_UI_SCRIPT_PATH = path.join(ROOT, 'scripts', 'build-platform-ui.cjs');
@@ -585,6 +586,61 @@ function verifyNoTrackedPlatformPackageArtifacts() {
   }
 }
 
+function verifyPackageHistory(indexPackage) {
+  if (sourceOnly) return;
+  const packageId = indexPackage.id;
+  const historyPath = path.join(HISTORY_DIR, `${packageId}.json`);
+  if (!fs.existsSync(historyPath)) {
+    fail(`${packageId}: missing platform package history ${relative(historyPath)}`);
+    return;
+  }
+
+  const history = readJson(historyPath, `${packageId} history`);
+  if (!history) return;
+  assertEqual(`${packageId}: history.platformId`, history.platformId, packageId);
+  assertEqual(`${packageId}: history.latestVersion`, history.latestVersion, indexPackage.version);
+  if (!Array.isArray(history.versions) || history.versions.length === 0) {
+    fail(`${packageId}: history.versions must be a non-empty array`);
+    return;
+  }
+
+  const seenVersions = new Set();
+  let currentEntry = null;
+  for (const [versionIndex, entry] of history.versions.entries()) {
+    if (!entry || typeof entry !== 'object') {
+      fail(`${packageId}: history.versions[${versionIndex}] must be an object`);
+      continue;
+    }
+    if (entry.id !== packageId || entry.platformId !== packageId) {
+      fail(`${packageId}: history.versions[${versionIndex}] id/platformId mismatch`);
+    }
+    if (typeof entry.version !== 'string' || !entry.version.trim()) {
+      fail(`${packageId}: history.versions[${versionIndex}].version is required`);
+      continue;
+    }
+    if (seenVersions.has(entry.version)) {
+      fail(`${packageId}: duplicate history version ${entry.version}`);
+    }
+    seenVersions.add(entry.version);
+    if (!Array.isArray(entry.artifacts) || entry.artifacts.length === 0) {
+      fail(`${packageId}@${entry.version}: history entry requires artifacts[]`);
+    } else {
+      entry.artifacts.forEach((artifact, artifactIndex) => {
+        assertArtifactMetadata(`${packageId}@${entry.version}`, artifactIndex, artifact);
+      });
+    }
+    if (entry.version === indexPackage.version) {
+      currentEntry = entry;
+    }
+  }
+
+  if (!currentEntry) {
+    fail(`${packageId}: history is missing current version ${indexPackage.version}`);
+  } else if (jsonStable(currentEntry) !== jsonStable(indexPackage)) {
+    fail(`${packageId}: current history entry must match platform-packages/index.json`);
+  }
+}
+
 function verifyChangelog(packageId, manifest, indexPackage) {
   assertNonEmptyArray(`${packageId}: manifest.changelog`, manifest.changelog);
   if (!sourceOnly) {
@@ -1120,6 +1176,7 @@ function verifyPackagingTooling() {
     'scripts/build-platform-ui.cjs',
     'scripts/package-platform-package.cjs',
     'scripts/build-platform-package-index.cjs',
+    'scripts/build-platform-package-history.cjs',
     'macos-aarch64',
     'macos-x86_64',
     'linux-x86_64',
@@ -1133,8 +1190,12 @@ function verifyPackagingTooling() {
     'platform-packages-main',
     'platform-packages-test',
     'gh release upload',
+    'upload_platform_assets_immutably',
   ]) {
     assertIncludes(relative(PLATFORM_PACKAGES_WORKFLOW_PATH), workflow, expected);
+  }
+  if (workflow.includes('--clobber')) {
+    fail(`${relative(PLATFORM_PACKAGES_WORKFLOW_PATH)} must not clobber immutable platform package release assets`);
   }
   if (workflow.includes('git add -f platform-packages/dist/*.zip')) {
     fail(`${relative(PLATFORM_PACKAGES_WORKFLOW_PATH)} must not commit platform package zip artifacts to git`);
@@ -1402,6 +1463,7 @@ function main() {
 
   const workspaceMembers = extractWorkspaceMembers();
   for (const pkg of packages) {
+    verifyPackageHistory(pkg);
     verifyPackage(pkg, workspaceMembers);
   }
 

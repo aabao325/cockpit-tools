@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
-import { Archive, BookOpenText, Download, MoreHorizontal, RefreshCw, RotateCw, Trash2 } from 'lucide-react';
+import { Archive, BookOpenText, Download, History, MoreHorizontal, RefreshCw, RotateCw, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { PlatformId } from '../types/platform';
@@ -11,6 +11,8 @@ import type {
   PlatformPackageProgressPayload,
   PlatformPackageProgressPhase,
   PlatformPackageState,
+  PlatformPackageVersionEntry,
+  PlatformPackageVersionHistory,
 } from '../types/platformPackage';
 import {
   formatPlatformPackageSize,
@@ -182,6 +184,179 @@ function ChangelogEntryList({
             ) : (
               <p>{t('platformLayout.packageChangelogEntryEmpty', '此版本暂无说明。')}</p>
             )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function getVersionHistoryActionLabel(
+  entry: PlatformPackageVersionEntry,
+  installedVersion: string | null | undefined,
+  t: TFunction,
+): string {
+  if (entry.isInstalled) {
+    return t('platformLayout.packageVersionReinstallAction', '重新安装');
+  }
+  if (!installedVersion) {
+    return t('platformLayout.packageVersionInstallAction', '安装');
+  }
+  const diff = comparePackageVersions(entry.version, installedVersion);
+  if (diff > 0) {
+    return t('platformLayout.packageVersionUpdateAction', '更新');
+  }
+  if (diff < 0) {
+    return t('platformLayout.packageVersionDowngradeAction', '回退');
+  }
+  return t('platformLayout.packageVersionInstallAction', '安装');
+}
+
+function VersionHistoryNotes({
+  entry,
+  language,
+  t,
+}: {
+  entry: PlatformPackageVersionEntry;
+  language: string | undefined;
+  t: TFunction;
+}) {
+  const changelog = entry.changelog || [];
+  const matched = changelog.find((item) => item.version === entry.version) ?? changelog[0];
+  const notes = matched ? getLocalizedChangelogNotes(matched, language) : [];
+  if (notes.length <= 0) {
+    return (
+      <div className="platform-package-version-history-empty-notes">
+        {t('platformLayout.packageChangelogEntryEmpty', '此版本暂无说明。')}
+      </div>
+    );
+  }
+  return (
+    <ul className="platform-package-version-history-notes">
+      {notes.slice(0, 3).map((note, index) => (
+        <li key={`${entry.version}:${index}`}>{note}</li>
+      ))}
+    </ul>
+  );
+}
+
+function PlatformPackageVersionHistoryDialog({
+  platformId,
+  installedVersion,
+  onInstallVersion,
+  disabled,
+}: {
+  platformId: PlatformId;
+  installedVersion?: string | null;
+  onInstallVersion: (entry: PlatformPackageVersionEntry) => void;
+  disabled: boolean;
+}) {
+  const { t, i18n } = useTranslation();
+  const listVersionHistory = usePlatformPackageStore((state) => state.listVersionHistory);
+  const [history, setHistory] = useState<PlatformPackageVersionHistory | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const loadHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    setHistoryError(null);
+    try {
+      setHistory(await listVersionHistory(platformId));
+    } catch (error) {
+      setHistoryError(normalizeErrorMessage(error));
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [listVersionHistory, platformId]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
+
+  const entries = history?.versions ?? [];
+
+  if (loadingHistory) {
+    return (
+      <div className="platform-package-version-history-state">
+        <RefreshCw size={16} className="loading-spinner" />
+        <span>{t('platformLayout.packageVersionHistoryLoading', '正在加载版本历史')}</span>
+      </div>
+    );
+  }
+
+  if (historyError) {
+    const displayError = formatPlatformPackageOperationError(historyError, t);
+    return (
+      <div className="platform-package-version-history-state is-error">
+        <div>
+          <strong>{t('platformLayout.packageVersionHistoryLoadFailed', '版本历史加载失败')}</strong>
+          <p>{displayError.summary}</p>
+        </div>
+        <button type="button" className="btn btn-secondary" onClick={() => void loadHistory()}>
+          {t('platformLayout.packageVersionHistoryRetry', '重试')}
+        </button>
+      </div>
+    );
+  }
+
+  if (entries.length <= 0) {
+    return (
+      <div className="platform-package-version-history-state">
+        {t('platformLayout.packageVersionHistoryEmpty', '暂无可安装版本。')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="platform-package-version-history-list">
+      {entries.map((entry) => {
+        const actionLabel = getVersionHistoryActionLabel(entry, installedVersion, t);
+        const size = formatPlatformPackageSize(entry.downloadSizeBytes);
+        const target = entry.artifactOs && entry.artifactArch
+          ? `${entry.artifactOs}/${entry.artifactArch}`
+          : t('platformLayout.packageVersionCurrentSystem', '当前系统');
+        return (
+          <section className="platform-package-version-history-item" key={entry.version}>
+            <div className="platform-package-version-history-main">
+              <div className="platform-package-version-history-title-row">
+                <strong>v{entry.version}</strong>
+                <div className="platform-package-version-history-badges">
+                  {entry.isInstalled && (
+                    <span>{t('platformLayout.packageVersionInstalledBadge', '已安装')}</span>
+                  )}
+                  {entry.isLatest && (
+                    <span>{t('platformLayout.packageVersionLatestBadge', '最新')}</span>
+                  )}
+                  {!entry.isCompatible && (
+                    <span className="is-danger">
+                      {t('platformLayout.packageVersionIncompatibleBadge', '不兼容')}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="platform-package-version-history-meta">
+                <span>{target}</span>
+                <span>{size}</span>
+                <span>
+                  {t('platformLayout.packageVersionMinCore', {
+                    version: entry.minCoreVersion,
+                    defaultValue: '需要主应用 {{version}}+',
+                  })}
+                </span>
+              </div>
+              {entry.errorMessage && (
+                <div className="platform-package-version-history-error">{entry.errorMessage}</div>
+              )}
+              <VersionHistoryNotes entry={entry} language={i18n.language} t={t} />
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary platform-package-version-history-action"
+              onClick={() => onInstallVersion(entry)}
+              disabled={disabled || !entry.isCompatible}
+            >
+              {actionLabel}
+            </button>
           </section>
         );
       })}
@@ -541,6 +716,7 @@ export function PlatformPackageToolbar({
   const checkUpdate = usePlatformPackageStore((state) => state.checkUpdate);
   const installPackage = usePlatformPackageStore((state) => state.installPackage);
   const installPackageFromLocalZip = usePlatformPackageStore((state) => state.installPackageFromLocalZip);
+  const installPackageVersion = usePlatformPackageStore((state) => state.installPackageVersion);
   const updatePackage = usePlatformPackageStore((state) => state.updatePackage);
   const reloadPackage = usePlatformPackageStore((state) => state.reloadPackage);
   const uninstallPackage = usePlatformPackageStore((state) => state.uninstallPackage);
@@ -720,6 +896,82 @@ export function PlatformPackageToolbar({
     actionPromisesRef.current.set(key, promise);
     return await promise;
   }, [installPackageFromLocalZip, platformId, refreshPackages, t]);
+
+  const runVersionInstall = useCallback(async (
+    entry: PlatformPackageVersionEntry,
+    action: Extract<PackageAction, 'install' | 'update'>,
+  ): Promise<PlatformPackageState> => {
+    const key = `${platformId}:version-${entry.version}`;
+    const existing = actionPromisesRef.current.get(key);
+    if (existing) {
+      return await existing;
+    }
+
+    const promise = (async () => {
+      setActionKey(key);
+      setOperationError(null);
+      dispatchPlatformPackageProgress({
+        platformId,
+        operation: action,
+        phase: 'resolving',
+        percent: 0,
+        downloadedBytes: null,
+        totalBytes: entry.downloadSizeBytes ?? null,
+        message: null,
+      });
+      let nextState = await installPackageVersion(platformId, entry.version);
+      dispatchPlatformPackageChanged(nextState);
+      if (!nextState.runtimeReady) {
+        try {
+          const refreshedPackages = await refreshPackages();
+          const refreshedState = getPlatformPackageFromPackages(refreshedPackages, platformId);
+          if (refreshedState) {
+            nextState = refreshedState;
+            dispatchPlatformPackageChanged(nextState);
+          }
+        } catch {
+          // Keep the version install result; the runtime-ready check below will surface the error.
+        }
+      }
+      if (!nextState.runtimeReady) {
+        throw new Error(
+          nextState.errorMessage || t('platformLayout.packageInstallNotReady', '平台包已处理，但运行组件尚未就绪'),
+        );
+      }
+      dispatchPlatformPackageProgress({
+        platformId,
+        operation: action,
+        phase: 'completed',
+        percent: 100,
+        downloadedBytes: null,
+        totalBytes: entry.downloadSizeBytes ?? null,
+        message: null,
+      });
+      return nextState;
+    })()
+      .catch((error) => {
+        const message = normalizeErrorMessage(error);
+        const displayError = formatPlatformPackageOperationError(message, t);
+        setOperationError(displayError.summary);
+        dispatchPlatformPackageProgress({
+          platformId,
+          operation: action,
+          phase: 'failed',
+          percent: null,
+          downloadedBytes: null,
+          totalBytes: entry.downloadSizeBytes ?? null,
+          message,
+        });
+        throw new Error(displayError.summary);
+      })
+      .finally(() => {
+        actionPromisesRef.current.delete(key);
+        setActionKey((current) => (current === key ? null : current));
+      });
+
+    actionPromisesRef.current.set(key, promise);
+    return await promise;
+  }, [installPackageVersion, platformId, refreshPackages, t]);
 
   const confirmAction = useCallback((action: PackageAction) => {
     if (!platformPackage) {
@@ -911,6 +1163,100 @@ export function PlatformPackageToolbar({
     showModal,
     t,
   ]);
+
+  const confirmVersionInstall = useCallback((entry: PlatformPackageVersionEntry) => {
+    if (!platformPackage || actionKey) {
+      return;
+    }
+    const action: Extract<PackageAction, 'install' | 'update'> = hasInstalledPackage ? 'update' : 'install';
+    const actionLabel = getVersionHistoryActionLabel(entry, platformPackage.installedVersion, t);
+    const size = formatPlatformPackageSize(entry.downloadSizeBytes);
+    const title = t('platformLayout.packageVersionInstallConfirmTitle', {
+      platform: platformName,
+      version: entry.version,
+      defaultValue: '安装 {{platform}} 平台包 {{version}}',
+    });
+    const description = entry.isInstalled
+      ? t('platformLayout.packageVersionReinstallConfirmDesc', {
+          platform: platformName,
+          version: entry.version,
+          size,
+          defaultValue: '将重新下载并校验 {{platform}} 平台包 {{version}}，大小 {{size}}。账号数据不会删除。',
+        })
+      : t('platformLayout.packageVersionInstallConfirmDesc', {
+          platform: platformName,
+          version: entry.version,
+          size,
+          defaultValue: '将切换到 {{platform}} 平台包 {{version}}，大小 {{size}}。账号数据不会删除，后续仍可从版本历史切换回来。',
+        });
+
+    showModal({
+      title,
+      description,
+      content: (
+        <PlatformPackageOperationProgress
+          platformId={platformId}
+          operation={action}
+          fallbackTotalBytes={entry.downloadSizeBytes}
+        />
+      ),
+      width: 'sm',
+      actions: [
+        {
+          id: 'cancel',
+          label: t('common.cancel', '取消'),
+          variant: 'secondary',
+        },
+        {
+          id: `platform-package-version-${entry.version}`,
+          label: actionLabel,
+          variant: 'primary',
+          suppressError: true,
+          onClick: async () => {
+            await runVersionInstall(entry, action);
+          },
+        },
+      ],
+    });
+  }, [
+    actionKey,
+    hasInstalledPackage,
+    platformId,
+    platformName,
+    platformPackage,
+    runVersionInstall,
+    showModal,
+    t,
+  ]);
+
+  const showVersionHistory = useCallback(() => {
+    if (!platformPackage) {
+      return;
+    }
+    setMenuOpen(false);
+    showModal({
+      title: t('platformLayout.packageVersionHistoryTitle', {
+        platform: platformName,
+        defaultValue: '{{platform}} 版本历史',
+      }),
+      width: 'lg',
+      content: (
+        <PlatformPackageVersionHistoryDialog
+          platformId={platformId}
+          installedVersion={platformPackage.installedVersion}
+          onInstallVersion={confirmVersionInstall}
+          disabled={Boolean(actionKey)}
+        />
+      ),
+      actions: [
+        {
+          id: 'close',
+          label: t('common.close', '关闭'),
+          variant: 'primary',
+        },
+      ],
+    });
+  }, [actionKey, confirmVersionInstall, platformId, platformName, platformPackage, showModal, t]);
 
   const handleCheckUpdate = useCallback(async () => {
     if (!platformPackage || actionKey) {
@@ -1361,6 +1707,17 @@ export function PlatformPackageToolbar({
               >
                 <BookOpenText size={14} />
                 <span>{t('platformLayout.packageChangelogShort', '日志')}</span>
+              </button>
+              <button
+                type="button"
+                className="platform-package-menu-action"
+                onClick={showVersionHistory}
+                disabled={operating}
+                role="menuitem"
+                title={t('platformLayout.packageVersionHistory', '版本历史')}
+              >
+                <History size={14} />
+                <span>{t('platformLayout.packageVersionHistoryShort', '版本')}</span>
               </button>
               <button
                 type="button"

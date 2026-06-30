@@ -978,6 +978,8 @@ pub fn run() {
             commands::platform_package::prepare_platform_package_updates,
             commands::platform_package::install_platform_package,
             commands::platform_package::install_platform_package_from_local_zip,
+            commands::platform_package::list_platform_package_version_history,
+            commands::platform_package::install_platform_package_version,
             commands::platform_package::update_platform_package,
             commands::platform_package::reload_platform_package,
             commands::platform_package::uninstall_platform_package,

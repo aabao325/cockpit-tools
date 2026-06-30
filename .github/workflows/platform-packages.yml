@@ -43,6 +43,7 @@ on:
       - "platform-packages/**"
       - "package.json"
       - "scripts/build-platform-ui.cjs"
+      - "scripts/build-platform-package-history.cjs"
       - "scripts/build-platform-package-index.cjs"
       - "scripts/package-platform-package.cjs"
       - "scripts/verify-platform-packages.cjs"
@@ -448,6 +449,80 @@ jobs:
 
           This prerelease stores platform package zip artifacts for the test channel.
           EOF
+
+          upload_platform_assets_immutably() {
+            local release_tag="$1"
+            local upload_args=()
+            for zip_path in "${tmp_dir}"/*.zip; do
+              local asset_name
+              asset_name="$(basename "${zip_path}")"
+              local existing_dir
+              existing_dir="$(mktemp -d)"
+              if gh release download "${release_tag}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --pattern "${asset_name}" \
+                --dir "${existing_dir}" >/dev/null 2>&1; then
+                local existing_path="${existing_dir}/${asset_name}"
+                if [ ! -f "${existing_path}" ]; then
+                  echo "Downloaded release asset is missing: ${asset_name}" >&2
+                  exit 1
+                fi
+                local local_sha remote_sha
+                local_sha="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
+                remote_sha="$(shasum -a 256 "${existing_path}" | awk '{print $1}')"
+                if [ "${local_sha}" != "${remote_sha}" ]; then
+                  echo "Refusing to replace immutable platform package asset ${asset_name}: local=${local_sha}, remote=${remote_sha}" >&2
+                  echo "Bump the platform package version instead of overwriting an existing zip." >&2
+                  exit 1
+                fi
+                echo "Release asset already exists with identical sha256: ${asset_name}"
+              else
+                upload_args+=("${zip_path}")
+              fi
+            done
+            if [ "${#upload_args[@]}" -gt 0 ]; then
+              gh release upload "${release_tag}" "${upload_args[@]}" --repo "${GITHUB_REPOSITORY}"
+            fi
+
+            local verify_dir
+            verify_dir="$(mktemp -d)"
+            for zip_path in "${tmp_dir}"/*.zip; do
+              local asset_name
+              asset_name="$(basename "${zip_path}")"
+              gh release download "${release_tag}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --pattern "${asset_name}" \
+                --dir "${verify_dir}" >/dev/null
+              local local_size remote_size local_sha remote_sha
+              local_size="$(wc -c < "${zip_path}" | tr -d ' ')"
+              remote_size="$(wc -c < "${verify_dir}/${asset_name}" | tr -d ' ')"
+              local_sha="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
+              remote_sha="$(shasum -a 256 "${verify_dir}/${asset_name}" | awk '{print $1}')"
+              if [ "${local_size}" != "${remote_size}" ] || [ "${local_sha}" != "${remote_sha}" ]; then
+                echo "Uploaded release asset verification failed: ${asset_name}" >&2
+                echo "local size=${local_size} sha=${local_sha}" >&2
+                echo "remote size=${remote_size} sha=${remote_sha}" >&2
+                exit 1
+              fi
+              rm -f "${verify_dir}/${asset_name}"
+            done
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "${TEST_BRANCH}" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "${TEST_BRANCH}"
+            git switch -C "${TEST_BRANCH}" FETCH_HEAD
+          else
+            git switch -C "${TEST_BRANCH}"
+          fi
+
+          mkdir -p "${tmp_dir}/history"
+          node scripts/build-platform-package-history.cjs \
+            --index "${tmp_dir}/index.json" \
+            --history-dir platform-packages/history \
+            --output-dir "${tmp_dir}/history"
+
           if gh release view "${TEST_PLATFORM_RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             gh release edit "${TEST_PLATFORM_RELEASE_TAG}" \
               --repo "${GITHUB_REPOSITORY}" \
@@ -463,24 +538,16 @@ jobs:
               --prerelease \
               --latest=false
           fi
-          gh release upload "${TEST_PLATFORM_RELEASE_TAG}" "${tmp_dir}"/*.zip \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --exit-code --heads origin "${TEST_BRANCH}" >/dev/null 2>&1; then
-            git fetch --depth=1 origin "${TEST_BRANCH}:refs/remotes/origin/${TEST_BRANCH}"
-            git switch -C "${TEST_BRANCH}" "origin/${TEST_BRANCH}"
-          else
-            git switch -C "${TEST_BRANCH}"
-          fi
+          upload_platform_assets_immutably "${TEST_PLATFORM_RELEASE_TAG}"
 
           git rm -r --ignore-unmatch platform-packages/dist
+          rm -rf platform-packages/history
+          mkdir -p platform-packages/history
           cp "${tmp_dir}/index.json" platform-packages/index.test.json
+          cp "${tmp_dir}/history"/*.json platform-packages/history/
           echo "Published $(find "${tmp_dir}" -maxdepth 1 -type f -name '*.zip' | wc -l | tr -d ' ') test platform package zip files to release ${TEST_PLATFORM_RELEASE_TAG}."
 
-          git add platform-packages/index.test.json
+          git add platform-packages/index.test.json platform-packages/history
           if git diff --cached --quiet; then
             echo "No test platform package changes to publish."
             exit 0
@@ -504,6 +571,76 @@ jobs:
 
           This prerelease stores platform package zip artifacts for the main channel.
           EOF
+
+          upload_platform_assets_immutably() {
+            local release_tag="$1"
+            local upload_args=()
+            for zip_path in "${tmp_dir}"/*.zip; do
+              local asset_name
+              asset_name="$(basename "${zip_path}")"
+              local existing_dir
+              existing_dir="$(mktemp -d)"
+              if gh release download "${release_tag}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --pattern "${asset_name}" \
+                --dir "${existing_dir}" >/dev/null 2>&1; then
+                local existing_path="${existing_dir}/${asset_name}"
+                if [ ! -f "${existing_path}" ]; then
+                  echo "Downloaded release asset is missing: ${asset_name}" >&2
+                  exit 1
+                fi
+                local local_sha remote_sha
+                local_sha="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
+                remote_sha="$(shasum -a 256 "${existing_path}" | awk '{print $1}')"
+                if [ "${local_sha}" != "${remote_sha}" ]; then
+                  echo "Refusing to replace immutable platform package asset ${asset_name}: local=${local_sha}, remote=${remote_sha}" >&2
+                  echo "Bump the platform package version instead of overwriting an existing zip." >&2
+                  exit 1
+                fi
+                echo "Release asset already exists with identical sha256: ${asset_name}"
+              else
+                upload_args+=("${zip_path}")
+              fi
+            done
+            if [ "${#upload_args[@]}" -gt 0 ]; then
+              gh release upload "${release_tag}" "${upload_args[@]}" --repo "${GITHUB_REPOSITORY}"
+            fi
+
+            local verify_dir
+            verify_dir="$(mktemp -d)"
+            for zip_path in "${tmp_dir}"/*.zip; do
+              local asset_name
+              asset_name="$(basename "${zip_path}")"
+              gh release download "${release_tag}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --pattern "${asset_name}" \
+                --dir "${verify_dir}" >/dev/null
+              local local_size remote_size local_sha remote_sha
+              local_size="$(wc -c < "${zip_path}" | tr -d ' ')"
+              remote_size="$(wc -c < "${verify_dir}/${asset_name}" | tr -d ' ')"
+              local_sha="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
+              remote_sha="$(shasum -a 256 "${verify_dir}/${asset_name}" | awk '{print $1}')"
+              if [ "${local_size}" != "${remote_size}" ] || [ "${local_sha}" != "${remote_sha}" ]; then
+                echo "Uploaded release asset verification failed: ${asset_name}" >&2
+                echo "local size=${local_size} sha=${local_sha}" >&2
+                echo "remote size=${remote_size} sha=${remote_sha}" >&2
+                exit 1
+              fi
+              rm -f "${verify_dir}/${asset_name}"
+            done
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --depth=1 origin main
+          git switch -C main FETCH_HEAD
+
+          mkdir -p "${tmp_dir}/history"
+          node scripts/build-platform-package-history.cjs \
+            --index "${tmp_dir}/index.json" \
+            --history-dir platform-packages/history \
+            --output-dir "${tmp_dir}/history"
+
           if gh release view "${MAIN_PLATFORM_RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             gh release edit "${MAIN_PLATFORM_RELEASE_TAG}" \
               --repo "${GITHUB_REPOSITORY}" \
@@ -519,21 +656,17 @@ jobs:
               --prerelease \
               --latest=false
           fi
-          gh release upload "${MAIN_PLATFORM_RELEASE_TAG}" "${tmp_dir}"/*.zip \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch --depth=1 origin main:refs/remotes/origin/main
-          git switch -C main origin/main
+          upload_platform_assets_immutably "${MAIN_PLATFORM_RELEASE_TAG}"
 
           git rm -r --ignore-unmatch platform-packages/dist
+          rm -rf platform-packages/history
+          mkdir -p platform-packages/history
           cp "${tmp_dir}/index.json" platform-packages/index.json
           cp "${tmp_dir}/index.json" platform-packages/index.seed.json
+          cp "${tmp_dir}/history"/*.json platform-packages/history/
           echo "Published $(find "${tmp_dir}" -maxdepth 1 -type f -name '*.zip' | wc -l | tr -d ' ') platform package zip files to release ${MAIN_PLATFORM_RELEASE_TAG}."
 
-          git add platform-packages/index.json platform-packages/index.seed.json
+          git add platform-packages/index.json platform-packages/index.seed.json platform-packages/history
           if git diff --cached --quiet; then
             echo "No main platform package changes to publish."
             exit 0

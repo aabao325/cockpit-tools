@@ -101,7 +101,7 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
 4. 平台布局弹框只管理入口显示和排序，不执行安装、更新、卸载或修复。
 5. 平台页必须始终可打开。
 6. 平台页右上角使用不参与页面布局的紧凑平台包操作区，已安装态默认提供“检查更新 + 卸载 + 更多”三个入口；可更新态提供“更新 + 卸载 + 更多”；未安装或需修复态提供“下载/修复 + 更多”。入口不得显示平台名、平台图标或版本号，避免与业务页标题重复。
-7. “更多”菜单只承载常态管理命令，例如检查更新、更新日志、安装、修复、更新、卸载；禁止在菜单里嵌入大块更新日志预览。点击“更新”必须打开与主应用更新体验一致的平台更新弹框，弹框中展示目标版本、包大小、多语言更新日志，并提供跳过/取消与更新操作。
+7. “更多”菜单只承载常态管理命令，例如检查更新、更新日志、版本历史、本地包安装/更新、安装、修复、更新、卸载；禁止在菜单里嵌入大块更新日志预览。点击“更新”必须打开与主应用更新体验一致的平台更新弹框，弹框中展示目标版本、包大小、多语言更新日志，并提供跳过/取消与更新操作。点击“版本历史”必须按需读取 `platform-packages/history/<platformId>.json`，允许用户安装、回退或重新安装已发布版本；历史版本安装必须复用平台包下载、校验、解压、切换和进度弹框，账号数据不得删除。
 8. 平台更新日志属于平台包元数据，应放在 manifest/runtime/远端 index 可同步的数据里。`changelog[].notes` 是默认文案；如需多语言，必须在 `changelog[].locales[locale].notes` 提供对应语言，Core Shell 按当前语言、同语系、英文、默认 notes 的顺序回退。禁止把平台包更新日志写死到主应用 locale。
 9. 未安装或 `runtimeReady=false` 时，平台页显示通用不可用页；不可用页可以提供安装或修复主按钮，但必须复用平台包生命周期逻辑和二次确认弹框。
 10. 未安装或 `runtimeReady=false` 时，不加载 remote UI，不读取账号，不启动 OAuth，不切号，不后台刷新配额。
@@ -127,6 +127,9 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
 10. 所有 Rust `sidecarAdapter` 的 Windows adapter exe 必须在编译期嵌入 `Microsoft.Windows.Common-Controls` v6 manifest：adapter crate 必须声明 `build = "build.rs"`，通过共享 `crates/adapter-windows-common-controls-build.rs`、`crates/windows-common-controls-v6.rc` 和 `crates/windows-common-controls-v6.manifest` 编译资源。禁止把外置 `*.exe.manifest` 当作正式平台包修复方案；外置 manifest 只能用于临时定位问题，正式 zip 必须依赖已嵌入资源的 exe。
 11. 平台包 zip 必须从临时 staging 目录生成，staging 只复制 manifest、runtime、remote UI、assets 和当前目标 OS/arch 所需 adapter/helper；禁止直接 zip `platform-packages/<platformId>` 源目录，避免把其它系统 adapter、历史 zip、bootstrap、dist 或调试文件带入当前 artifact。
 12. Rust adapter release 构建必须保持体积优先配置：`opt-level=z`、`lto=true`、`codegen-units=1`、`strip=true`、`panic=abort`。如需为了性能放宽某个平台 adapter，必须先记录体积变化和原因。
+13. 平台包 Release asset 必须不可变：同名 zip 已存在时禁止 `--clobber` 覆盖；CI 必须下载远端同名资产并比较 sha256，相同则跳过上传，不同则失败并要求提升平台包版本。
+14. `platform-packages/history/<platformId>.json` 是平台历史版本索引，必须由 `scripts/build-platform-package-history.cjs` 基于当前发布 index 生成或合并；同一版本号只能对应同一份 metadata 和 zip sha，禁止手动改历史索引指向不同 zip。
+15. 用户安装最新版本、历史版本、本地包或 bootstrap 包都必须校验 `downloadSizeBytes` 与 `sha256`；历史版本能力不得成为绕过校验或执行未校验 remote UI 的入口。
 
 ### 5.1 单平台升级流程
 
@@ -151,10 +154,14 @@ Core Shell + Platform Package + Remote React UI + Sidecar Adapter + runtimeReady
    ```bash
    npm run package:platform-index -- --metadata-dir platform-packages/dist-ci --verify-zip-dir platform-packages/dist-ci --require-os-arch macos/aarch64,macos/x86_64,linux/x86_64,linux/aarch64,windows/x86_64 --output platform-packages/dist-ci/index.json
    ```
-6. 带 `--update-index` 的本地索引写入必须串行执行，禁止多个平台并行写 `platform-packages/index.json`。
-7. 正式发布前必须先走 test channel 验证真实远端下载、安装、卸载、检查更新、更新弹框、更新日志、包大小和当前系统 artifact 匹配。
-8. 平台 zip 统一发布到平台包 Release asset，不再按正式/测试拆 Git 目录；正式通道只更新 `platform-packages/index.json` / `platform-packages/index.seed.json`，测试通道只更新 `platform-packages/index.test.json`。禁止执行 `npm run sync-version`、`npm run release:preflight`、创建主应用 release commit、创建或推送主应用 tag。
-9. 单平台升级至少执行 `npm run verify:platform-packages`、`node scripts/check_locales.cjs`、`git diff --check`；涉及 adapter、remote UI 或类型风险时，补充对应平台包构建、smoke 或类型检查。
+6. 用发布 index 合并历史索引：
+   ```bash
+   node scripts/build-platform-package-history.cjs --index platform-packages/dist-ci/index.json --history-dir platform-packages/history --output-dir platform-packages/dist-ci/history
+   ```
+7. 带 `--update-index` 的本地索引写入必须串行执行，禁止多个平台并行写 `platform-packages/index.json`。
+8. 正式发布前必须先走 test channel 验证真实远端下载、安装、卸载、检查更新、更新弹框、版本历史、历史版本安装/回退、更新日志、包大小和当前系统 artifact 匹配。
+9. 平台 zip 统一发布到平台包 Release asset，不再按正式/测试拆 Git 目录；正式通道只更新 `platform-packages/index.json` / `platform-packages/index.seed.json` / `platform-packages/history/*.json`，测试通道只更新 `platform-packages/index.test.json` / `platform-packages/history/*.json`。禁止执行 `npm run sync-version`、`npm run release:preflight`、创建主应用 release commit、创建或推送主应用 tag。
+10. 单平台升级至少执行 `npm run verify:platform-packages`、`node scripts/check_locales.cjs`、`git diff --check`；涉及 adapter、remote UI 或类型风险时，补充对应平台包构建、smoke 或类型检查。
 
 ### 5.2 远端测试通道
 

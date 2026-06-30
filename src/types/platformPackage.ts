@@ -55,6 +55,26 @@ export interface PlatformPackageState {
   changelog: PlatformPackageChangelogEntry[];
 }
 
+export interface PlatformPackageVersionEntry {
+  platformId: PlatformId;
+  version: string;
+  minCoreVersion: string;
+  downloadSizeBytes?: number | null;
+  artifactOs?: string | null;
+  artifactArch?: string | null;
+  isInstalled: boolean;
+  isLatest: boolean;
+  isCompatible: boolean;
+  errorMessage?: string | null;
+  changelog: PlatformPackageChangelogEntry[];
+}
+
+export interface PlatformPackageVersionHistory {
+  platformId: PlatformId;
+  latestVersion?: string | null;
+  versions: PlatformPackageVersionEntry[];
+}
+
 export interface PlatformPackageChangelogEntry {
   version: string;
   date?: string | null;

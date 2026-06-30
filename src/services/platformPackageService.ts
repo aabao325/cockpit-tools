@@ -3,6 +3,7 @@ import { PlatformId } from '../types/platform';
 import {
   PlatformPackageState,
   PlatformPackageUiEntry,
+  PlatformPackageVersionHistory,
   PlatformUiDevConfig,
 } from '../types/platformPackage';
 
@@ -64,6 +65,23 @@ export async function installPlatformPackageFromLocalZip(
 ): Promise<PlatformPackageState> {
   return await invokePlatformPackage('install_platform_package_from_local_zip', () =>
     invoke('install_platform_package_from_local_zip', { platformId, zipPath }),
+  );
+}
+
+export async function listPlatformPackageVersionHistory(
+  platformId: PlatformId,
+): Promise<PlatformPackageVersionHistory> {
+  return await invokePlatformPackage('list_platform_package_version_history', () =>
+    invoke('list_platform_package_version_history', { platformId }),
+  );
+}
+
+export async function installPlatformPackageVersion(
+  platformId: PlatformId,
+  version: string,
+): Promise<PlatformPackageState> {
+  return await invokePlatformPackage('install_platform_package_version', () =>
+    invoke('install_platform_package_version', { platformId, version }),
   );
 }
 

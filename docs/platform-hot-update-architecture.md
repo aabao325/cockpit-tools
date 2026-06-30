@@ -180,7 +180,7 @@ Core Shell 不应继续承载已迁移平台的业务 UI：
 
 ## 5. 远端索引与 artifact
 
-远端索引只负责发现版本和下载地址。正式桌面端读取 `platform-packages/index.json`，测试桌面端读取 `platform-packages/index.test.json`；平台包 zip 必须发布为 GitHub Release asset 或等价对象存储资产，禁止提交到 `main`、`platform-test` 等 Git 分支。每个平台包必须按 OS/arch 提供 artifact。
+远端索引只负责发现版本和下载地址。正式桌面端读取 `platform-packages/index.json`，测试桌面端读取 `platform-packages/index.test.json`；平台包 zip 必须发布为 GitHub Release asset 或等价对象存储资产，禁止提交到 `main`、`platform-test` 等 Git 分支。每个平台包必须按 OS/arch 提供 artifact。平台版本历史由 `platform-packages/history/<platformId>.json` 维护，App 的“版本历史”从该文件按需读取，允许用户安装、回退或重新安装任一已发布且当前系统 artifact 可用的历史版本。
 
 ```json
 {
@@ -214,6 +214,34 @@ Core Shell 不应继续承载已迁移平台的业务 UI：
 4. GitHub Actions 应分别构建 macOS、Windows、Linux adapter，并分别产出 zip。
 5. 顶层 `downloadUrl` 可以作为旧客户端兼容字段，但新实现必须优先使用 `artifacts[]`。
 6. 所有 Rust `sidecarAdapter` 的 Windows adapter exe 必须在编译期嵌入 Common Controls v6 manifest。标准实现是每个 adapter crate 声明 `build = "build.rs"` 并 include 共享 `crates/adapter-windows-common-controls-build.rs`，由 `crates/windows-common-controls-v6.rc` 和 `crates/windows-common-controls-v6.manifest` 生成资源。正式平台包禁止依赖外置 `*.exe.manifest`，否则 CI 或本地打包必须失败。
+7. 平台包 zip 是不可变发布资产：同名 zip 禁止覆盖；远端已存在同名资产时，CI 必须下载并比较 sha256，相同则跳过上传，不同则失败并要求提升平台包版本。
+8. 用户安装最新版本或历史版本都必须校验 `downloadSizeBytes` 与 `sha256`；历史版本安装不得降低校验强度，也不得直接执行 GitHub raw 上的 JS 或未校验 zip。
+
+历史索引格式：
+
+```json
+{
+  "version": "1",
+  "platformId": "zed",
+  "latestVersion": "0.26.8",
+  "versions": [
+    {
+      "id": "zed",
+      "platformId": "zed",
+      "version": "0.26.8",
+      "artifacts": [
+        {
+          "os": "macos",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/org/repo/releases/download/platform-packages-main/zed-0.26.8-macos-aarch64.zip",
+          "downloadSizeBytes": 5884337,
+          "sha256": "..."
+        }
+      ]
+    }
+  ]
+}
+```
 
 ### 5.1 标准打包脚本与 CI
 
@@ -231,6 +259,8 @@ npm run package:platform -- --platform zed --os macos --arch aarch64 --filename-
 4. 只有明确需要刷新本地索引时才允许给脚本传 `--update-index`；更新后必须继续执行 `npm run verify:platform-packages`。
 5. `scripts/build-platform-package-index.cjs` 负责把各 OS/arch metadata 汇总成可发布的远端 index，并校验每个平台的 artifact 覆盖完整。
 6. `.github/workflows/platform-packages.yml` 是平台包跨系统 artifact 的标准构建入口，必须分别构建 remote UI、sidecar adapter，上传各 OS/arch 的 zip 与 metadata，并在 aggregate job 生成合并后的 `index.json`。
+7. `scripts/build-platform-package-history.cjs` 负责把当前发布索引合并进 `platform-packages/history/<platformId>.json`；同版本内容必须完全一致，否则脚本失败，要求提升平台包版本。
+8. 发布 workflow 必须先生成 index/history，再按不可变资产规则上传 zip 并远端校验 size/sha，最后提交 `index.json` / `index.seed.json` / `history/*.json`。禁止先 `--clobber` 覆盖 zip 后再尝试提交索引。
 
 示例：
 
@@ -254,10 +284,11 @@ npm run package:platform-index -- --metadata-dir platform-packages/dist-ci --ver
 2. 提升 `manifest.json` 与 `runtime/index.json` 的平台包版本，补平台包 `changelog`；禁止修改 `package.json` 主应用版本、主应用 `CHANGELOG.md` / `CHANGELOG.zh-CN.md`。
 3. 如依赖新的 Core Shell 能力，提高 `minCoreVersion`，让旧主应用不提示可安装。
 4. 使用 `.github/workflows/platform-packages.yml` 或 `npm run package:platform` 分别构建目标 OS/arch 的 zip 与 metadata；`sidecarAdapter` 平台必须覆盖 Windows/macOS/Linux 目标 artifact，不能把单系统 zip 当全平台包发布。
-5. 使用 `npm run package:platform-index` 汇总 metadata，确认 `downloadUrl`、`downloadSizeBytes`、`sha256`、`changelog`、`contributions` 与包内 manifest/runtime 一致。
+5. 使用 `npm run package:platform-index` 汇总 metadata，确认 `downloadUrl`、`downloadSizeBytes`、`sha256`、`changelog`、`contributions` 与包内 manifest/runtime 一致；再使用 `node scripts/build-platform-package-history.cjs --index <index> --history-dir platform-packages/history --output-dir <history>` 合并历史索引。
 6. 先发布到 test channel 验证真实远端下载、安装、卸载、检查更新、更新弹框、更新日志、包大小和当前系统 artifact 匹配。
-7. 平台 zip 统一发布到平台包 Release asset；发布正式通道时只更新 `platform-packages/index.json` / `platform-packages/index.seed.json`，发布测试通道时只更新 `platform-packages/index.test.json`。禁止执行 `npm run sync-version`、`npm run release:preflight`、创建主应用 release commit 或主应用 tag。
+7. 平台 zip 统一发布到平台包 Release asset；发布正式通道时只更新 `platform-packages/index.json` / `platform-packages/index.seed.json` / `platform-packages/history/*.json`，发布测试通道时只更新 `platform-packages/index.test.json` / `platform-packages/history/*.json`。禁止执行 `npm run sync-version`、`npm run release:preflight`、创建主应用 release commit 或主应用 tag。
 8. 单平台升级至少执行 `npm run verify:platform-packages`、`node scripts/check_locales.cjs`、`git diff --check`；涉及 adapter 或 remote UI 时补充对应构建、smoke 或类型检查。
+9. 修复已发布平台包时必须提升平台包版本。禁止用同一版本号重新上传不同 zip，也禁止手动修改历史索引指向未验证的 zip。
 
 ### 5.3 远端测试通道
 

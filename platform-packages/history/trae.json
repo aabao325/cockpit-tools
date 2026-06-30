@@ -1,0 +1,157 @@
+{
+  "version": "1",
+  "platformId": "trae",
+  "latestVersion": "0.26.7",
+  "versions": [
+    {
+      "id": "trae",
+      "platformId": "trae",
+      "version": "0.26.7",
+      "apiVersion": 1,
+      "minCoreVersion": "0.26.5",
+      "displayName": "Trae",
+      "entry": "runtime/index.json",
+      "packageMode": "hotUpdate",
+      "installKind": "sidecarAdapter",
+      "adapter": {
+        "protocol": "http-json-v1",
+        "entry": "adapter/macos/cockpit-trae-adapter",
+        "macosEntry": "adapter/macos/cockpit-trae-adapter",
+        "windowsEntry": "adapter/windows/cockpit-trae-adapter.exe",
+        "linuxEntry": "adapter/linux/cockpit-trae-adapter",
+        "methods": [
+          "health.check",
+          "accounts.list",
+          "accounts.current",
+          "accounts.delete",
+          "accounts.deleteMany",
+          "accounts.importJson",
+          "accounts.importLocal",
+          "accounts.addToken",
+          "accounts.export",
+          "accounts.indexPath",
+          "accounts.shouldRefreshToken",
+          "accounts.checkLogin",
+          "accounts.refresh",
+          "accounts.refreshAll",
+          "accounts.updateTags",
+          "quota.alertPayload",
+          "oauth.start",
+          "oauth.complete",
+          "oauth.cancel",
+          "oauth.submitCallbackUrl",
+          "oauth.restorePendingListener",
+          "switch.inject",
+          "switch.injectDefaultProfile",
+          "instances.store.get",
+          "instances.store.replace",
+          "instance.getDefaults",
+          "instance.list",
+          "instance.create",
+          "instance.update",
+          "instance.delete",
+          "instance.start",
+          "instance.stop",
+          "instance.closeAll",
+          "instance.openWindow",
+          "runtime.status",
+          "runtime.startDefault",
+          "runtime.stopDefault",
+          "runtime.restartDefault",
+          "runtime.focusDefault"
+        ]
+      },
+      "ui": {
+        "protocol": "react-remote-esm-v1",
+        "entry": "ui/remoteEntry.js",
+        "style": "ui/style.css",
+        "exports": [
+          "mount",
+          "unmount"
+        ]
+      },
+      "capabilities": [
+        "accounts",
+        "oauth",
+        "switch",
+        "quota",
+        "runtime",
+        "instances"
+      ],
+      "changelog": [
+        {
+          "version": "0.26.7",
+          "date": "2026-06-23",
+          "notes": [
+            "Trae account overview, multi-instance tabs, OAuth, token import, switching, quota refresh, launch commands, and page interactions are now supplied by the Trae platform package.",
+            "Core Shell keeps only Trae platform lifecycle controls, runtime gate, Host API, and adapter runner."
+          ]
+        }
+      ],
+      "contributions": {
+        "platforms": [
+          {
+            "id": "trae",
+            "label": "Trae",
+            "labelKey": "nav.trae",
+            "iconKey": "trae",
+            "page": "trae"
+          }
+        ],
+        "dataPaths": [
+          "trae_accounts.json",
+          "trae_accounts",
+          "trae_instances.json",
+          "trae_oauth_pending.json"
+        ],
+        "localStorageKeys": [
+          "agtools.trae.accounts.cache",
+          "agtools.trae.current_account_id",
+          "agtools.trae.flow_notice_collapsed",
+          "agtools.trae.instances.cache"
+        ],
+        "nativeBoundaries": []
+      },
+      "artifacts": [
+        {
+          "os": "macos",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-macos-aarch64.zip",
+          "downloadSizeBytes": 3946462,
+          "sha256": "34e96e9c4592a980475d281140f77ef6277a51ab285f924213380298e498a68e"
+        },
+        {
+          "os": "macos",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-macos-x86_64.zip",
+          "downloadSizeBytes": 4071254,
+          "sha256": "1c35ae9407460de291c52c5b13b207895b6914f19ae72e79a37ce3e22680b22c"
+        },
+        {
+          "os": "linux",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-linux-x86_64.zip",
+          "downloadSizeBytes": 4285456,
+          "sha256": "25c096090bbd2c73522b5bfa24c1ee7a8069dbdca35e041afdd0870ecc3168c4"
+        },
+        {
+          "os": "linux",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-linux-aarch64.zip",
+          "downloadSizeBytes": 4223329,
+          "sha256": "37f4c33b7d5463e57f3f6b537c1eca849c7adc98cf887404e96278cf4eb1d560"
+        },
+        {
+          "os": "windows",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-windows-x86_64.zip",
+          "downloadSizeBytes": 4058667,
+          "sha256": "3b63125e835c1db27063da51d45e6648463c34c67414c0beee0968553a9bc463"
+        }
+      ],
+      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/trae-0.26.7-macos-aarch64.zip",
+      "downloadSizeBytes": 3946462,
+      "sha256": "34e96e9c4592a980475d281140f77ef6277a51ab285f924213380298e498a68e"
+    }
+  ]
+}

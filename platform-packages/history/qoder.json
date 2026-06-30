@@ -1,0 +1,153 @@
+{
+  "version": "1",
+  "platformId": "qoder",
+  "latestVersion": "0.26.7",
+  "versions": [
+    {
+      "id": "qoder",
+      "platformId": "qoder",
+      "version": "0.26.7",
+      "apiVersion": 1,
+      "minCoreVersion": "0.26.5",
+      "displayName": "Qoder",
+      "entry": "runtime/index.json",
+      "packageMode": "hotUpdate",
+      "installKind": "sidecarAdapter",
+      "adapter": {
+        "protocol": "http-json-v1",
+        "entry": "adapter/macos/cockpit-qoder-adapter",
+        "macosEntry": "adapter/macos/cockpit-qoder-adapter",
+        "windowsEntry": "adapter/windows/cockpit-qoder-adapter.exe",
+        "linuxEntry": "adapter/linux/cockpit-qoder-adapter",
+        "methods": [
+          "health.check",
+          "accounts.list",
+          "accounts.current",
+          "accounts.delete",
+          "accounts.deleteMany",
+          "accounts.importJson",
+          "accounts.importLocal",
+          "accounts.export",
+          "accounts.indexPath",
+          "accounts.refresh",
+          "accounts.refreshAll",
+          "accounts.updateTags",
+          "quota.alertPayload",
+          "oauth.start",
+          "oauth.peek",
+          "oauth.complete",
+          "oauth.cancel",
+          "oauth.restorePendingListener",
+          "switch.inject",
+          "switch.injectDefaultProfile",
+          "instances.store.get",
+          "instances.store.replace",
+          "instance.getDefaults",
+          "instance.list",
+          "instance.create",
+          "instance.update",
+          "instance.delete",
+          "instance.start",
+          "instance.stop",
+          "instance.closeAll",
+          "instance.openWindow",
+          "runtime.status",
+          "runtime.startDefault",
+          "runtime.stopDefault",
+          "runtime.restartDefault",
+          "runtime.focusDefault"
+        ]
+      },
+      "ui": {
+        "protocol": "react-remote-esm-v1",
+        "entry": "ui/remoteEntry.js",
+        "style": "ui/style.css",
+        "exports": [
+          "mount",
+          "unmount"
+        ]
+      },
+      "artifacts": [
+        {
+          "os": "macos",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-macos-aarch64.zip",
+          "downloadSizeBytes": 3723022,
+          "sha256": "9634a1d03870066d794f43b6b3cea4981d9beae68d9e8b829768dd287f1fda0f"
+        },
+        {
+          "os": "macos",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-macos-x86_64.zip",
+          "downloadSizeBytes": 3829432,
+          "sha256": "9783325e7c3a3333d36da21cd5a624342f9e7bdd55c26d7173fbabd7269abfaa"
+        },
+        {
+          "os": "linux",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-linux-x86_64.zip",
+          "downloadSizeBytes": 4034596,
+          "sha256": "5ced758c2f1acdd2af9088a74b2b5fbde0d5b5eed827b27269c9f8631ed9916a"
+        },
+        {
+          "os": "linux",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-linux-aarch64.zip",
+          "downloadSizeBytes": 3991066,
+          "sha256": "1547e27326ac7682667f686c030517e05062adbae4d9cb84258d443315abf7ce"
+        },
+        {
+          "os": "windows",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-windows-x86_64.zip",
+          "downloadSizeBytes": 3818050,
+          "sha256": "ca15a9debc5927993ab6ea082df37d7a5d44aa28c4e80d0f4f874a9ec7fb15db"
+        }
+      ],
+      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/qoder-0.26.7-macos-aarch64.zip",
+      "downloadSizeBytes": 3723022,
+      "capabilities": [
+        "accounts",
+        "oauth",
+        "switch",
+        "quota",
+        "runtime",
+        "instances"
+      ],
+      "changelog": [
+        {
+          "version": "0.26.7",
+          "date": "2026-06-23",
+          "notes": [
+            "Qoder account overview, multi-instance tabs, OAuth, switching, quota refresh, launch commands, and page interactions are now supplied by the Qoder platform package.",
+            "Core Shell keeps only Qoder platform lifecycle controls, runtime gate, Host API, and adapter runner."
+          ]
+        }
+      ],
+      "contributions": {
+        "platforms": [
+          {
+            "id": "qoder",
+            "label": "Qoder",
+            "labelKey": "nav.qoder",
+            "iconKey": "qoder",
+            "page": "qoder"
+          }
+        ],
+        "dataPaths": [
+          "qoder_accounts.json",
+          "qoder_accounts",
+          "qoder_instances.json"
+        ],
+        "localStorageKeys": [
+          "agtools.qoder.accounts.cache",
+          "agtools.qoder.current_account_id",
+          "agtools.qoder.flow_notice_collapsed",
+          "agtools.qoder.instances.cache"
+        ],
+        "nativeBoundaries": []
+      },
+      "sha256": "9634a1d03870066d794f43b6b3cea4981d9beae68d9e8b829768dd287f1fda0f"
+    }
+  ]
+}

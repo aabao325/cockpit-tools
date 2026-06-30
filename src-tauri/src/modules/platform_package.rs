@@ -69,6 +69,7 @@ const PLATFORM_PACKAGE_INDEX_URL: &str =
     "https://raw.githubusercontent.com/jlcodes99/cockpit-tools/main/platform-packages/index.json";
 const PLATFORM_PACKAGE_TEST_INDEX_URL: &str =
     "https://raw.githubusercontent.com/jlcodes99/cockpit-tools/platform-test/platform-packages/index.test.json";
+const PLATFORM_PACKAGE_HISTORY_DIR: &str = "history";
 const PLATFORM_PACKAGE_INDEX_CACHE_TTL_MS: i64 = 30 * 60 * 1000;
 const MAX_PLATFORM_PACKAGE_DOWNLOAD_BYTES: u64 = 80 * 1024 * 1024;
 const PLATFORM_PACKAGE_DOWNLOAD_MAX_ATTEMPTS: usize = 3;
@@ -347,6 +348,43 @@ struct PlatformPackageRemotePackage {
     sha256: Option<String>,
     #[serde(default)]
     signature: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlatformPackageRemoteHistory {
+    #[serde(default)]
+    version: String,
+    platform_id: String,
+    latest_version: String,
+    #[serde(default)]
+    versions: Vec<PlatformPackageRemotePackage>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformPackageVersionEntry {
+    pub platform_id: String,
+    pub version: String,
+    pub min_core_version: String,
+    pub download_size_bytes: Option<u64>,
+    pub artifact_os: Option<String>,
+    pub artifact_arch: Option<String>,
+    pub is_installed: bool,
+    pub is_latest: bool,
+    pub is_compatible: bool,
+    pub error_message: Option<String>,
+    #[serde(default)]
+    pub changelog: Vec<PlatformPackageChangelogEntry>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformPackageVersionHistory {
+    pub platform_id: String,
+    pub latest_version: Option<String>,
+    #[serde(default)]
+    pub versions: Vec<PlatformPackageVersionEntry>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1776,6 +1814,166 @@ fn fetch_remote_index() -> Result<PlatformPackageRemoteIndex, String> {
         .map_err(|err| format!("解析平台包索引响应失败: {}", err))
 }
 
+fn platform_package_history_url(platform_id: &str) -> Result<String, String> {
+    ensure_supported_platform(platform_id)?;
+    let index_url = platform_package_index_url();
+    let mut url = Url::parse(&index_url).map_err(|err| {
+        format!(
+            "平台包历史索引 URL 无法从远端索引推导: index={}, error={}",
+            index_url, err
+        )
+    })?;
+    let mut segments = url
+        .path_segments()
+        .ok_or_else(|| format!("平台包远端索引 URL 缺少路径: {}", index_url))?
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let Some(file_name) = segments.pop() else {
+        return Err(format!("平台包远端索引 URL 缺少文件名: {}", index_url));
+    };
+    if file_name != "index.json" && file_name != "index.test.json" {
+        return Err(format!(
+            "平台包远端索引 URL 文件名不支持历史版本推导: {}",
+            index_url
+        ));
+    }
+    segments.push(PLATFORM_PACKAGE_HISTORY_DIR.to_string());
+    segments.push(format!("{}.json", platform_id));
+    url.set_path(&format!("/{}", segments.join("/")));
+    Ok(url.to_string())
+}
+
+fn fetch_remote_version_history(platform_id: &str) -> Result<PlatformPackageRemoteHistory, String> {
+    let url = platform_package_history_url(platform_id)?;
+    validate_remote_download_url(&url)?;
+    logger::log_info(&format!(
+        "[PlatformPackage] 拉取平台包版本历史: platform={}, url={}",
+        platform_id, url
+    ));
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("Cockpit-Tools")
+        .timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|err| format!("创建平台包历史 HTTP 客户端失败: {}", err))?;
+    let response = client
+        .get(&url)
+        .header("Cache-Control", "no-cache")
+        .header("Pragma", "no-cache")
+        .send()
+        .map_err(|err| format!("拉取平台包版本历史失败: {}", err))?;
+    if !response.status().is_success() {
+        return Err(format!(
+            "平台包版本历史返回异常状态: HTTP {} ({})",
+            response.status(),
+            url
+        ));
+    }
+    response
+        .json::<PlatformPackageRemoteHistory>()
+        .map_err(|err| format!("解析平台包版本历史响应失败: {}", err))
+}
+
+fn local_version_history_candidates(platform_id: &str) -> Vec<PathBuf> {
+    if !cfg!(debug_assertions) {
+        return Vec::new();
+    }
+
+    let mut candidates = Vec::new();
+    if let Ok(data_dir) = data_dir() {
+        candidates.push(
+            data_dir
+                .join(PLATFORM_PACKAGE_DIR)
+                .join(PLATFORM_PACKAGE_HISTORY_DIR)
+                .join(format!("{}.json", platform_id)),
+        );
+    }
+    if env_flag_enabled(PLATFORM_PACKAGE_WORKSPACE_INDEX_ENV) {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if let Some(repo_root) = manifest_dir.parent() {
+            candidates.push(
+                repo_root
+                    .join(PLATFORM_PACKAGE_DIR)
+                    .join(PLATFORM_PACKAGE_HISTORY_DIR)
+                    .join(format!("{}.json", platform_id)),
+            );
+        }
+    }
+    candidates
+}
+
+fn parse_version_history_file(path: &Path) -> Result<PlatformPackageRemoteHistory, String> {
+    let content = fs::read_to_string(path).map_err(|err| {
+        format!(
+            "读取平台包版本历史失败: path={}, error={}",
+            path.display(),
+            err
+        )
+    })?;
+    atomic_write::parse_json_with_auto_restore(path, &content)
+        .map_err(|err| format!("解析平台包版本历史失败: {}", err))
+}
+
+fn load_local_version_history(
+    platform_id: &str,
+) -> Result<Option<PlatformPackageRemoteHistory>, String> {
+    for candidate in local_version_history_candidates(platform_id) {
+        if candidate.exists() {
+            logger::log_info(&format!(
+                "[PlatformPackage] 使用本地平台包版本历史: platform={}, path={}",
+                platform_id,
+                candidate.display()
+            ));
+            return parse_version_history_file(&candidate).map(Some);
+        }
+    }
+    Ok(None)
+}
+
+fn current_index_history_fallback(
+    app: &AppHandle,
+    platform_id: &str,
+    force_refresh: bool,
+) -> Result<Option<PlatformPackageRemoteHistory>, String> {
+    let Some(index) = load_remote_index(app, force_refresh)? else {
+        return Ok(None);
+    };
+    let Some(package) = index
+        .packages
+        .into_iter()
+        .find(|item| item.platform_id == platform_id || item.id == platform_id)
+    else {
+        return Ok(None);
+    };
+    Ok(Some(PlatformPackageRemoteHistory {
+        version: "1".to_string(),
+        platform_id: platform_id.to_string(),
+        latest_version: package.version.clone(),
+        versions: vec![package],
+    }))
+}
+
+fn load_version_history_packages(
+    app: &AppHandle,
+    platform_id: &str,
+    force_refresh: bool,
+) -> Result<PlatformPackageRemoteHistory, String> {
+    ensure_supported_platform(platform_id)?;
+    if let Some(history) = load_local_version_history(platform_id)? {
+        return Ok(history);
+    }
+    match fetch_remote_version_history(platform_id) {
+        Ok(history) => Ok(history),
+        Err(error) => {
+            logger::log_warn(&format!(
+                "[PlatformPackage] 平台包版本历史不可用，回退到当前索引: platform={}, error={}",
+                platform_id, error
+            ));
+            current_index_history_fallback(app, platform_id, force_refresh)?
+                .ok_or_else(|| format!("未找到平台包版本历史: {}", platform_id))
+        }
+    }
+}
+
 fn load_remote_index(
     app: &AppHandle,
     force_refresh: bool,
@@ -1977,6 +2175,61 @@ fn manifest_from_remote_package(
     };
     validate_manifest_metadata(platform_id, &manifest)?;
     Ok(manifest)
+}
+
+fn version_entry_from_remote_package(
+    platform_id: &str,
+    package: &PlatformPackageRemotePackage,
+    installed_version: Option<&str>,
+    latest_version: Option<&str>,
+) -> PlatformPackageVersionEntry {
+    let artifact = selected_remote_artifact(platform_id, package);
+    let compatibility_error =
+        (compare_versions(env!("CARGO_PKG_VERSION"), &package.min_core_version) == Ordering::Less)
+            .then(|| {
+                format!(
+                    "主应用版本不兼容，平台包需要 {} 或更高版本",
+                    package.min_core_version
+                )
+            });
+    let artifact_error = artifact.as_ref().err().cloned();
+    let is_compatible = compatibility_error.is_none() && artifact_error.is_none();
+    let selected = artifact.ok();
+    PlatformPackageVersionEntry {
+        platform_id: package.platform_id.clone(),
+        version: package.version.clone(),
+        min_core_version: package.min_core_version.clone(),
+        download_size_bytes: selected
+            .as_ref()
+            .and_then(|artifact| artifact.download_size_bytes)
+            .or(package.download_size_bytes),
+        artifact_os: selected.as_ref().map(|artifact| artifact.os.clone()),
+        artifact_arch: selected.as_ref().map(|artifact| artifact.arch.clone()),
+        is_installed: installed_version
+            .map(|version| version == package.version)
+            .unwrap_or(false),
+        is_latest: latest_version
+            .map(|version| version == package.version)
+            .unwrap_or(false),
+        is_compatible,
+        error_message: compatibility_error.or(artifact_error),
+        changelog: package.changelog.clone(),
+    }
+}
+
+fn sort_remote_history_versions(packages: &mut [PlatformPackageRemotePackage]) {
+    packages.sort_by(|left, right| compare_versions(&right.version, &left.version));
+}
+
+fn latest_version_from_history(history: &PlatformPackageRemoteHistory) -> Option<String> {
+    if !history.latest_version.trim().is_empty() {
+        return Some(history.latest_version.clone());
+    }
+    history
+        .versions
+        .iter()
+        .max_by(|left, right| compare_versions(&left.version, &right.version))
+        .map(|package| package.version.clone())
 }
 
 fn read_remote_source(
@@ -3514,6 +3767,197 @@ pub fn check_platform_package_update(
         source_manifest,
         source_root,
         validation_error,
+    )
+}
+
+pub fn list_platform_package_version_history(
+    app: &AppHandle,
+    platform_id: &str,
+) -> Result<PlatformPackageVersionHistory, String> {
+    ensure_supported_platform(platform_id)?;
+    let history = load_version_history_packages(app, platform_id, true)?;
+    if history.platform_id != platform_id {
+        return Err(format!(
+            "平台包版本历史 ID 不匹配: expected={}, actual={}",
+            platform_id, history.platform_id
+        ));
+    }
+
+    let installed_version = read_installed_manifest(platform_id)?
+        .map(|manifest| manifest.version)
+        .or_else(|| {
+            read_registry()
+                .ok()
+                .and_then(|registry| get_record(&registry, platform_id).cloned())
+                .and_then(|record| record.installed_version)
+        });
+    let latest_version = latest_version_from_history(&history);
+    let mut packages = history
+        .versions
+        .into_iter()
+        .filter(|package| package.id == platform_id && package.platform_id == platform_id)
+        .collect::<Vec<_>>();
+    sort_remote_history_versions(&mut packages);
+
+    Ok(PlatformPackageVersionHistory {
+        platform_id: platform_id.to_string(),
+        latest_version: latest_version.clone(),
+        versions: packages
+            .iter()
+            .map(|package| {
+                version_entry_from_remote_package(
+                    platform_id,
+                    package,
+                    installed_version.as_deref(),
+                    latest_version.as_deref(),
+                )
+            })
+            .collect(),
+    })
+}
+
+pub fn install_platform_package_version(
+    app: &AppHandle,
+    platform_id: &str,
+    version: &str,
+) -> Result<PlatformPackageState, String> {
+    ensure_supported_platform(platform_id)?;
+    let target_version = version.trim();
+    if target_version.is_empty() {
+        return Err("平台包版本为空".to_string());
+    }
+
+    let history = load_version_history_packages(app, platform_id, true)?;
+    let package = history
+        .versions
+        .iter()
+        .find(|package| {
+            package.version == target_version
+                && package.id == platform_id
+                && package.platform_id == platform_id
+        })
+        .cloned()
+        .ok_or_else(|| {
+            format!(
+                "未找到平台包版本: platform={}, version={}",
+                platform_id, target_version
+            )
+        })?;
+
+    let operation = if package_current_dir(platform_id)?
+        .join(MANIFEST_FILE)
+        .exists()
+    {
+        PlatformPackageOperation::Update
+    } else {
+        PlatformPackageOperation::Install
+    };
+    logger::log_info(&format!(
+        "[PlatformPackage] 安装指定平台包版本开始: platform={}, version={}, operation={}",
+        platform_id,
+        target_version,
+        operation.as_str()
+    ));
+    emit_platform_package_progress(
+        app,
+        platform_id,
+        operation,
+        PlatformPackageProgressPhase::Resolving,
+        Some(0),
+        None,
+        None,
+        None,
+    );
+
+    let source_manifest = manifest_from_remote_package(platform_id, &package)?;
+    emit_platform_package_progress(
+        app,
+        platform_id,
+        operation,
+        PlatformPackageProgressPhase::Verifying,
+        Some(5),
+        None,
+        source_manifest.download_size_bytes,
+        None,
+    );
+    stop_platform_runtime_before_package_mutation(platform_id, operation);
+
+    let installed_manifest = match install_remote_source(app, platform_id, &package, operation) {
+        Ok(manifest) => manifest,
+        Err(error) => {
+            let mut registry = read_registry()?;
+            upsert_record(
+                &mut registry,
+                PersistedPlatformPackage {
+                    platform_id: platform_id.to_string(),
+                    installed: true,
+                    runtime_ready: false,
+                    installed_version: None,
+                    last_checked_at: Some(now_ts_ms()),
+                    error_message: Some(error.clone()),
+                    explicitly_uninstalled: false,
+                },
+            );
+            write_registry(&registry)?;
+            emit_platform_package_failure(app, platform_id, operation, &error);
+            return Err(error);
+        }
+    };
+
+    let mut registry = read_registry()?;
+    upsert_record(
+        &mut registry,
+        PersistedPlatformPackage {
+            platform_id: platform_id.to_string(),
+            installed: true,
+            runtime_ready: true,
+            installed_version: Some(installed_manifest.version.clone()),
+            last_checked_at: Some(now_ts_ms()),
+            error_message: None,
+            explicitly_uninstalled: false,
+        },
+    );
+    write_registry(&registry)?;
+    if let Err(error) = cleanup_platform_package_cache(platform_id, None) {
+        logger::log_warn(&format!(
+            "[PlatformPackage] 指定版本安装后清理平台包缓存失败: platform={}, error={}",
+            platform_id, error
+        ));
+    }
+
+    emit_platform_package_progress(
+        app,
+        platform_id,
+        operation,
+        PlatformPackageProgressPhase::Completed,
+        Some(100),
+        None,
+        source_manifest.download_size_bytes,
+        None,
+    );
+    logger::log_info(&format!(
+        "[PlatformPackage] 安装指定平台包版本完成: platform={}, version={}",
+        platform_id, installed_manifest.version
+    ));
+
+    let latest_manifest_from_history = latest_version_from_history(&history).and_then(|latest| {
+        history
+            .versions
+            .iter()
+            .find(|item| item.version == latest)
+            .and_then(|item| manifest_from_remote_package(platform_id, item).ok())
+    });
+    let latest_manifest = latest_manifest_from_history
+        .or_else(|| read_latest_source_manifest(app, platform_id, true))
+        .or_else(|| Some(source_manifest.clone()));
+    let refreshed_registry = read_registry()?;
+    build_state(
+        platform_id,
+        get_record(&refreshed_registry, platform_id),
+        Some(installed_manifest),
+        latest_manifest,
+        None,
+        None,
     )
 }
 

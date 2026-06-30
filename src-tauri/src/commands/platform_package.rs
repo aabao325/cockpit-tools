@@ -1,5 +1,6 @@
 use crate::modules::platform_package::{
-    self, PlatformPackageState, PlatformPackageUiEntry, PlatformUiDevConfig,
+    self, PlatformPackageState, PlatformPackageUiEntry, PlatformPackageVersionHistory,
+    PlatformUiDevConfig,
 };
 use tauri::AppHandle;
 
@@ -64,6 +65,39 @@ pub async fn install_platform_package_from_local_zip(
     })
     .await
     .map_err(|err| format!("从本地包安装平台包任务失败: {}", err))??;
+    let _ = crate::modules::tray::update_tray_menu(&app);
+    Ok(state)
+}
+
+#[tauri::command]
+pub async fn list_platform_package_version_history(
+    app: AppHandle,
+    platform_id: String,
+) -> Result<PlatformPackageVersionHistory, String> {
+    let app_for_task = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        platform_package::list_platform_package_version_history(&app_for_task, platform_id.as_str())
+    })
+    .await
+    .map_err(|err| format!("读取平台包版本历史任务失败: {}", err))?
+}
+
+#[tauri::command]
+pub async fn install_platform_package_version(
+    app: AppHandle,
+    platform_id: String,
+    version: String,
+) -> Result<PlatformPackageState, String> {
+    let app_for_task = app.clone();
+    let state = tauri::async_runtime::spawn_blocking(move || {
+        platform_package::install_platform_package_version(
+            &app_for_task,
+            platform_id.as_str(),
+            version.as_str(),
+        )
+    })
+    .await
+    .map_err(|err| format!("安装指定平台包版本任务失败: {}", err))??;
     let _ = crate::modules::tray::update_tray_menu(&app);
     Ok(state)
 }

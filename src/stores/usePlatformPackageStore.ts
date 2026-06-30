@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import type { PlatformId } from '../types/platform';
-import type { PlatformPackageState } from '../types/platformPackage';
+import type { PlatformPackageState, PlatformPackageVersionHistory } from '../types/platformPackage';
 import {
   checkPlatformPackageUpdate,
   installPlatformPackage,
   installPlatformPackageFromLocalZip,
+  installPlatformPackageVersion,
+  listPlatformPackageVersionHistory,
   listPlatformPackages,
   preparePlatformPackageUpdates,
   reloadPlatformPackage,
@@ -335,6 +337,8 @@ interface PlatformPackageStoreState {
   checkUpdate: (platformId: PlatformId) => Promise<PlatformPackageState>;
   installPackage: (platformId: PlatformId) => Promise<PlatformPackageState>;
   installPackageFromLocalZip: (platformId: PlatformId, zipPath: string) => Promise<PlatformPackageState>;
+  installPackageVersion: (platformId: PlatformId, version: string) => Promise<PlatformPackageState>;
+  listVersionHistory: (platformId: PlatformId) => Promise<PlatformPackageVersionHistory>;
   updatePackage: (platformId: PlatformId) => Promise<PlatformPackageState>;
   reloadPackage: (platformId: PlatformId) => Promise<PlatformPackageState>;
   uninstallPackage: (platformId: PlatformId) => Promise<PlatformPackageState>;
@@ -500,6 +504,20 @@ export const usePlatformPackageStore = create<PlatformPackageStoreState>((set, g
       error: null,
     }));
     return nextPackage;
+  },
+
+  installPackageVersion: async (platformId, version) => {
+    const nextPackage = await installPlatformPackageVersion(platformId, version);
+    set((state) => ({
+      packages: upsertPackage(state.packages, nextPackage),
+      initialized: true,
+      error: null,
+    }));
+    return nextPackage;
+  },
+
+  listVersionHistory: async (platformId) => {
+    return await listPlatformPackageVersionHistory(platformId);
   },
 
   updatePackage: async (platformId) => {
