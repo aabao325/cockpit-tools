@@ -1,8 +1,203 @@
 {
   "version": "1",
   "platformId": "windsurf",
-  "latestVersion": "0.26.8",
+  "latestVersion": "0.26.9",
   "versions": [
+    {
+      "id": "windsurf",
+      "platformId": "windsurf",
+      "version": "0.26.9",
+      "apiVersion": 1,
+      "minCoreVersion": "0.26.5",
+      "displayName": "Windsurf",
+      "entry": "runtime/index.json",
+      "packageMode": "hotUpdate",
+      "installKind": "sidecarAdapter",
+      "adapter": {
+        "protocol": "http-json-v1",
+        "entry": "adapter/macos/cockpit-windsurf-adapter",
+        "macosEntry": "adapter/macos/cockpit-windsurf-adapter",
+        "windowsEntry": "adapter/windows/cockpit-windsurf-adapter.exe",
+        "linuxEntry": "adapter/linux/cockpit-windsurf-adapter",
+        "methods": [
+          "health.check",
+          "accounts.list",
+          "accounts.current",
+          "accounts.delete",
+          "accounts.deleteMany",
+          "accounts.importJson",
+          "accounts.importLocal",
+          "accounts.addToken",
+          "accounts.addPassword",
+          "accounts.addPasswordBatch",
+          "accounts.export",
+          "accounts.indexPath",
+          "accounts.refresh",
+          "accounts.refreshAll",
+          "accounts.updateTags",
+          "quota.alertPayload",
+          "oauth.start",
+          "oauth.complete",
+          "oauth.cancel",
+          "oauth.submitCallbackUrl",
+          "oauth.restorePendingListener",
+          "switch.inject",
+          "switch.injectDefaultProfile",
+          "instances.store.get",
+          "instances.store.replace",
+          "instance.getDefaults",
+          "instance.list",
+          "instance.create",
+          "instance.update",
+          "instance.delete",
+          "instance.start",
+          "instance.stop",
+          "instance.closeAll",
+          "instance.openWindow",
+          "runtime.detectLaunchPath",
+          "runtime.status",
+          "runtime.startDefault",
+          "runtime.stopDefault",
+          "runtime.restartDefault",
+          "runtime.focusDefault"
+        ]
+      },
+      "ui": {
+        "protocol": "react-remote-esm-v1",
+        "entry": "ui/remoteEntry.js",
+        "style": "ui/style.css",
+        "exports": [
+          "mount",
+          "unmount"
+        ]
+      },
+      "artifacts": [
+        {
+          "os": "macos",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-aarch64.zip",
+          "downloadSizeBytes": 3784390,
+          "sha256": "b3b331b31defa7a655b30be6d4eaa21fd0128abff040959cfae2bc9b6d74a3f7"
+        },
+        {
+          "os": "macos",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-x86_64.zip",
+          "downloadSizeBytes": 3900400,
+          "sha256": "d18ad58b199b800eb8af8dd0d04f74244afd5c802b11c383eb29ea1e8eb84309"
+        },
+        {
+          "os": "linux",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-linux-x86_64.zip",
+          "downloadSizeBytes": 4113078,
+          "sha256": "8cf83f139812a6f3e18cf1ef45e586adba63d563fe483bf874a08625bf97572d"
+        },
+        {
+          "os": "linux",
+          "arch": "aarch64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-linux-aarch64.zip",
+          "downloadSizeBytes": 4064556,
+          "sha256": "e7871ae4b6a405e3cbea2b101a13589cf382daf186a7926853147c0a10244a3c"
+        },
+        {
+          "os": "windows",
+          "arch": "x86_64",
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-windows-x86_64.zip",
+          "downloadSizeBytes": 3899917,
+          "sha256": "611ecbf6b491b3f30381b6dd36143fa7a9752a7b38040f52e603e2d66b2dd439"
+        }
+      ],
+      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-aarch64.zip",
+      "downloadSizeBytes": 3784390,
+      "capabilities": [
+        "accounts",
+        "oauth",
+        "switch",
+        "quota",
+        "runtime",
+        "instances",
+        "passwordLogin"
+      ],
+      "changelog": [
+        {
+          "version": "0.26.9",
+          "date": "2026-06-30",
+          "notes": [
+            "Hardens Windows adapter startup when an unfinished Windsurf OAuth session is present.",
+            "The adapter now completes its bootstrap handshake before restoring pending OAuth listeners, and restores them inside a Tokio runtime context."
+          ],
+          "locales": {
+            "zh-CN": {
+              "notes": [
+                "加固 Windows 上存在未完成 Windsurf OAuth 会话时的 adapter 启动流程。",
+                "adapter 现在会先完成启动握手，再在 Tokio runtime 上下文中恢复 pending OAuth 监听。"
+              ]
+            },
+            "zh-TW": {
+              "notes": [
+                "加固 Windows 上存在未完成 Windsurf OAuth 工作階段時的 adapter 啟動流程。",
+                "adapter 現在會先完成啟動握手，再於 Tokio runtime 上下文中恢復 pending OAuth 監聽。"
+              ]
+            }
+          }
+        },
+        {
+          "version": "0.26.8",
+          "date": "2026-06-30",
+          "notes": [
+            "Adds immutable platform package version history metadata so users can install, reinstall, update, or roll back to published package versions.",
+            "Refreshes the platform package artifact for the main channel without replacing any previously published zip."
+          ],
+          "locales": {
+            "zh-CN": {
+              "notes": [
+                "新增不可变的平台包版本历史元数据，用户可以安装、重新安装、更新或回退到已发布的平台包版本。",
+                "刷新主通道平台包产物，同时不替换任何已发布过的旧 zip。"
+              ]
+            },
+            "zh-TW": {
+              "notes": [
+                "新增不可變的平台包版本歷史中繼資料，使用者可以安裝、重新安裝、更新或回復到已發布的平台包版本。",
+                "刷新主通道平台包產物，同時不替換任何已發布過的舊 zip。"
+              ]
+            }
+          }
+        },
+        {
+          "version": "0.26.7",
+          "date": "2026-06-23",
+          "notes": [
+            "Windsurf account overview, multi-instance tabs, OAuth, token import, password login, VS Code switching, quota refresh, and page interactions are now supplied by the Windsurf platform package.",
+            "Core Shell keeps only Windsurf platform lifecycle controls, runtime gate, Host API, and adapter runner."
+          ]
+        }
+      ],
+      "contributions": {
+        "platforms": [
+          {
+            "id": "windsurf",
+            "label": "Windsurf",
+            "labelKey": "nav.windsurf",
+            "iconKey": "windsurf",
+            "page": "windsurf"
+          }
+        ],
+        "dataPaths": [
+          "windsurf_accounts.json",
+          "windsurf_accounts",
+          "windsurf_instances.json"
+        ],
+        "localStorageKeys": [
+          "agtools.windsurf.accounts.cache",
+          "agtools.windsurf.current_account_id",
+          "agtools.windsurf.flow_notice_collapsed",
+          "agtools.windsurf.instances.cache"
+        ],
+        "nativeBoundaries": []
+      },
+      "sha256": "b3b331b31defa7a655b30be6d4eaa21fd0128abff040959cfae2bc9b6d74a3f7"
+    },
     {
       "id": "windsurf",
       "platformId": "windsurf",

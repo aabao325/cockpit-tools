@@ -800,7 +800,7 @@
     {
       "id": "kiro",
       "platformId": "kiro",
-      "version": "0.26.8",
+      "version": "0.26.9",
       "apiVersion": 1,
       "minCoreVersion": "0.26.5",
       "displayName": "Kiro",
@@ -867,41 +867,41 @@
         {
           "os": "macos",
           "arch": "aarch64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-macos-aarch64.zip",
-          "downloadSizeBytes": 3776372,
-          "sha256": "53d4c6766da6a74e75a0b06839db72761ed188521eda1cad76fa59ae5cef0eb5"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-macos-aarch64.zip",
+          "downloadSizeBytes": 3775575,
+          "sha256": "bc81b4549a471e45c8fa6766505a90187ea265fe831bf311de679de1a5a43bb2"
         },
         {
           "os": "macos",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-macos-x86_64.zip",
-          "downloadSizeBytes": 3888220,
-          "sha256": "984eabfe1405e0ce800ac2dee4abe5c0ffcb3eb6ceb66c83347bdeee41802d15"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-macos-x86_64.zip",
+          "downloadSizeBytes": 3888787,
+          "sha256": "22b22341e8747ad26c2b94a3f743c7ee13fdd577bd53d046a293b0e53a028f43"
         },
         {
           "os": "linux",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-linux-x86_64.zip",
-          "downloadSizeBytes": 4104596,
-          "sha256": "f606a599b6afc88d9489ba4691bb9f7c25cb6647da83164c926b33e1d6cb2dd3"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-linux-x86_64.zip",
+          "downloadSizeBytes": 4104987,
+          "sha256": "f9810802a0eaa19acbb30198b504a738bc02b5f0dbfd7a9a27baf6cafc4fecb3"
         },
         {
           "os": "linux",
           "arch": "aarch64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-linux-aarch64.zip",
-          "downloadSizeBytes": 4053845,
-          "sha256": "e21a1b09add34aa87178713cdfd4b2ea8ca1f6c7a9e7aa2d107abdc547a31435"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-linux-aarch64.zip",
+          "downloadSizeBytes": 4054333,
+          "sha256": "0ab3209b9f00760e9165b3c19895b941ff2a189462ff1fc88ea2cd64820fa39b"
         },
         {
           "os": "windows",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-windows-x86_64.zip",
-          "downloadSizeBytes": 3885461,
-          "sha256": "bbb8705c2d0e2c927022f2a13224970a6fb8e1d1739f91b15a59557fab45dd8e"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-windows-x86_64.zip",
+          "downloadSizeBytes": 3885874,
+          "sha256": "7f532fda1f0d950277417c4c8fc1f4f26b40bdca7308175f511763541b3c63c5"
         }
       ],
-      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.8-macos-aarch64.zip",
-      "downloadSizeBytes": 3776372,
+      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/kiro-0.26.9-macos-aarch64.zip",
+      "downloadSizeBytes": 3775575,
       "capabilities": [
         "accounts",
         "oauth",
@@ -911,6 +911,28 @@
         "instances"
       ],
       "changelog": [
+        {
+          "version": "0.26.9",
+          "date": "2026-06-30",
+          "notes": [
+            "Fixes the Windows adapter startup crash when an unfinished Kiro OAuth session is present.",
+            "The adapter now completes its bootstrap handshake before restoring pending OAuth listeners, and restores them inside a Tokio runtime context."
+          ],
+          "locales": {
+            "zh-CN": {
+              "notes": [
+                "修复 Windows 上存在未完成 Kiro OAuth 会话时 adapter 启动崩溃的问题。",
+                "adapter 现在会先完成启动握手，再在 Tokio runtime 上下文中恢复 pending OAuth 监听。"
+              ]
+            },
+            "zh-TW": {
+              "notes": [
+                "修復 Windows 上存在未完成 Kiro OAuth 工作階段時 adapter 啟動崩潰的問題。",
+                "adapter 現在會先完成啟動握手，再於 Tokio runtime 上下文中恢復 pending OAuth 監聽。"
+              ]
+            }
+          }
+        },
         {
           "version": "0.26.8",
           "date": "2026-06-30",
@@ -965,7 +987,7 @@
         ],
         "nativeBoundaries": []
       },
-      "sha256": "53d4c6766da6a74e75a0b06839db72761ed188521eda1cad76fa59ae5cef0eb5"
+      "sha256": "bc81b4549a471e45c8fa6766505a90187ea265fe831bf311de679de1a5a43bb2"
     },
     {
       "id": "github-copilot",
@@ -1137,7 +1159,7 @@
     {
       "id": "windsurf",
       "platformId": "windsurf",
-      "version": "0.26.8",
+      "version": "0.26.9",
       "apiVersion": 1,
       "minCoreVersion": "0.26.5",
       "displayName": "Windsurf",
@@ -1206,41 +1228,41 @@
         {
           "os": "macos",
           "arch": "aarch64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-macos-aarch64.zip",
-          "downloadSizeBytes": 3785711,
-          "sha256": "e87a80a5922c0f9acedefdc387d98d98b3e2c8c39b5632c48a41c303900b4827"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-aarch64.zip",
+          "downloadSizeBytes": 3784390,
+          "sha256": "b3b331b31defa7a655b30be6d4eaa21fd0128abff040959cfae2bc9b6d74a3f7"
         },
         {
           "os": "macos",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-macos-x86_64.zip",
-          "downloadSizeBytes": 3900028,
-          "sha256": "ebec24ecfa60518b97976139bfa7e1cc301adb71e68efab14af8ce3d8cb7f776"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-x86_64.zip",
+          "downloadSizeBytes": 3900400,
+          "sha256": "d18ad58b199b800eb8af8dd0d04f74244afd5c802b11c383eb29ea1e8eb84309"
         },
         {
           "os": "linux",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-linux-x86_64.zip",
-          "downloadSizeBytes": 4112863,
-          "sha256": "ec3af9c26fef18fc041025635c07b3f46f14a4531da3d3afc7907d4bb4c4b181"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-linux-x86_64.zip",
+          "downloadSizeBytes": 4113078,
+          "sha256": "8cf83f139812a6f3e18cf1ef45e586adba63d563fe483bf874a08625bf97572d"
         },
         {
           "os": "linux",
           "arch": "aarch64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-linux-aarch64.zip",
-          "downloadSizeBytes": 4063749,
-          "sha256": "9662dddbb0e89376c06715ba18ab716fedab98dcf27a8a6475d9b179422180d7"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-linux-aarch64.zip",
+          "downloadSizeBytes": 4064556,
+          "sha256": "e7871ae4b6a405e3cbea2b101a13589cf382daf186a7926853147c0a10244a3c"
         },
         {
           "os": "windows",
           "arch": "x86_64",
-          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-windows-x86_64.zip",
-          "downloadSizeBytes": 3899541,
-          "sha256": "f0ad2a7b49c9a534a115bdd0c2aebe9c3005a0b6eb0a5e757a21519e63347006"
+          "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-windows-x86_64.zip",
+          "downloadSizeBytes": 3899917,
+          "sha256": "611ecbf6b491b3f30381b6dd36143fa7a9752a7b38040f52e603e2d66b2dd439"
         }
       ],
-      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.8-macos-aarch64.zip",
-      "downloadSizeBytes": 3785711,
+      "downloadUrl": "https://github.com/jlcodes99/cockpit-tools/releases/download/platform-packages-main/windsurf-0.26.9-macos-aarch64.zip",
+      "downloadSizeBytes": 3784390,
       "capabilities": [
         "accounts",
         "oauth",
@@ -1251,6 +1273,28 @@
         "passwordLogin"
       ],
       "changelog": [
+        {
+          "version": "0.26.9",
+          "date": "2026-06-30",
+          "notes": [
+            "Hardens Windows adapter startup when an unfinished Windsurf OAuth session is present.",
+            "The adapter now completes its bootstrap handshake before restoring pending OAuth listeners, and restores them inside a Tokio runtime context."
+          ],
+          "locales": {
+            "zh-CN": {
+              "notes": [
+                "加固 Windows 上存在未完成 Windsurf OAuth 会话时的 adapter 启动流程。",
+                "adapter 现在会先完成启动握手，再在 Tokio runtime 上下文中恢复 pending OAuth 监听。"
+              ]
+            },
+            "zh-TW": {
+              "notes": [
+                "加固 Windows 上存在未完成 Windsurf OAuth 工作階段時的 adapter 啟動流程。",
+                "adapter 現在會先完成啟動握手，再於 Tokio runtime 上下文中恢復 pending OAuth 監聽。"
+              ]
+            }
+          }
+        },
         {
           "version": "0.26.8",
           "date": "2026-06-30",
@@ -1305,7 +1349,7 @@
         ],
         "nativeBoundaries": []
       },
-      "sha256": "e87a80a5922c0f9acedefdc387d98d98b3e2c8c39b5632c48a41c303900b4827"
+      "sha256": "b3b331b31defa7a655b30be6d4eaa21fd0128abff040959cfae2bc9b6d74a3f7"
     },
     {
       "id": "cursor",
