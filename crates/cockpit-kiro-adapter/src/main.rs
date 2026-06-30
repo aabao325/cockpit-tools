@@ -177,6 +177,29 @@ fn path_missing_error(error: &str) -> bool {
     error.starts_with("APP_PATH_NOT_FOUND:") || error.contains("启动 Kiro 失败")
 }
 
+fn panic_payload_message(error: &(dyn std::any::Any + Send)) -> String {
+    if let Some(message) = error.downcast_ref::<&str>() {
+        return (*message).to_string();
+    }
+    if let Some(message) = error.downcast_ref::<String>() {
+        return message.clone();
+    }
+    "unknown panic".to_string()
+}
+
+fn restore_pending_oauth_listener(runtime: &Runtime) {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _guard = runtime.enter();
+        kiro_oauth::restore_pending_oauth_listener();
+    }));
+    if let Err(error) = result {
+        logger::log_warn(&format!(
+            "[Kiro OAuth] 恢复 pending 监听失败，已忽略: {}",
+            panic_payload_message(error.as_ref())
+        ));
+    }
+}
+
 fn default_instance_view(
     default_dir: &Path,
     settings: DefaultInstanceSettings,
@@ -687,7 +710,7 @@ fn handle_rpc(runtime: &Runtime, request: RpcRequest) -> Result<Value, String> {
             Ok(Value::Null)
         }
         "oauth.restorePendingListener" => {
-            kiro_oauth::restore_pending_oauth_listener();
+            restore_pending_oauth_listener(runtime);
             Ok(Value::Null)
         }
         "switch.inject" => switch_inject(request.payload),
@@ -833,8 +856,6 @@ fn main() {
     let token = Uuid::new_v4().simple().to_string();
     let shutdown = Arc::new(AtomicBool::new(false));
 
-    kiro_oauth::restore_pending_oauth_listener();
-
     println!(
         "{}",
         serde_json::json!({
@@ -845,6 +866,7 @@ fn main() {
             "token": token
         })
     );
+    restore_pending_oauth_listener(&runtime);
 
     for request in server.incoming_requests() {
         handle_http_request(&runtime, &shutdown, &token, request);

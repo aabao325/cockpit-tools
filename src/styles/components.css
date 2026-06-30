@@ -194,6 +194,10 @@
 .codex-platform-package-page {
   position: relative;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeUp 0.5s ease;
 }
 
 .codex-platform-package-floating-toolbar {

@@ -71,7 +71,6 @@ export function AntigravitySuitePage({
         onNavigate={onNavigate}
         subtitle=""
         hideTabs
-        hidePlatformSwitcher={!runtimeReady}
         remoteTabsSlotId={runtimeReady ? ANTIGRAVITY_REMOTE_TABS_SLOT_ID : undefined}
         rightSlot={<PlatformPackageToolbar platformId={platformId} />}
       />

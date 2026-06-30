@@ -12,6 +12,29 @@ use uuid::Uuid;
 
 const DEFAULT_INSTANCE_ID: &str = "__default__";
 
+fn panic_payload_message(error: &(dyn std::any::Any + Send)) -> String {
+    if let Some(message) = error.downcast_ref::<&str>() {
+        return (*message).to_string();
+    }
+    if let Some(message) = error.downcast_ref::<String>() {
+        return message.clone();
+    }
+    "unknown panic".to_string()
+}
+
+fn restore_pending_oauth_listener(runtime: &Runtime) {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _guard = runtime.enter();
+        windsurf_oauth::restore_pending_oauth_listener();
+    }));
+    if let Err(error) = result {
+        cockpit_core::modules::logger::log_warn(&format!(
+            "[Windsurf OAuth] 恢复 pending 监听失败，已忽略: {}",
+            panic_payload_message(error.as_ref())
+        ));
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RpcRequest {
@@ -729,7 +752,7 @@ fn handle_rpc(runtime: &Runtime, request: RpcRequest) -> Result<Value, String> {
             Ok(Value::Null)
         }
         "oauth.restorePendingListener" => {
-            windsurf_oauth::restore_pending_oauth_listener();
+            restore_pending_oauth_listener(runtime);
             Ok(Value::Null)
         }
         "switch.inject" => switch_inject(runtime, request.payload),
@@ -878,8 +901,6 @@ fn main() {
     let token = Uuid::new_v4().simple().to_string();
     let shutdown = Arc::new(AtomicBool::new(false));
 
-    windsurf_oauth::restore_pending_oauth_listener();
-
     println!(
         "{}",
         serde_json::json!({
@@ -890,6 +911,7 @@ fn main() {
             "token": token
         })
     );
+    restore_pending_oauth_listener(&runtime);
 
     for request in server.incoming_requests() {
         handle_http_request(&runtime, &shutdown, &token, request);

@@ -1,7 +1,7 @@
 {
   "id": "kiro",
   "platformId": "kiro",
-  "version": "0.26.8",
+  "version": "0.26.9",
   "apiVersion": 1,
   "minCoreVersion": "0.26.5",
   "displayName": "Kiro",
@@ -73,6 +73,28 @@
     "instances"
   ],
   "changelog": [
+    {
+      "version": "0.26.9",
+      "date": "2026-06-30",
+      "notes": [
+        "Fixes the Windows adapter startup crash when an unfinished Kiro OAuth session is present.",
+        "The adapter now completes its bootstrap handshake before restoring pending OAuth listeners, and restores them inside a Tokio runtime context."
+      ],
+      "locales": {
+        "zh-CN": {
+          "notes": [
+            "修复 Windows 上存在未完成 Kiro OAuth 会话时 adapter 启动崩溃的问题。",
+            "adapter 现在会先完成启动握手，再在 Tokio runtime 上下文中恢复 pending OAuth 监听。"
+          ]
+        },
+        "zh-TW": {
+          "notes": [
+            "修復 Windows 上存在未完成 Kiro OAuth 工作階段時 adapter 啟動崩潰的問題。",
+            "adapter 現在會先完成啟動握手，再於 Tokio runtime 上下文中恢復 pending OAuth 監聽。"
+          ]
+        }
+      }
+    },
     {
       "version": "0.26.8",
       "date": "2026-06-30",
