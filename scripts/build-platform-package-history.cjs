@@ -21,6 +21,7 @@ Options:
   --index <path>          Platform package index to append into history.
   --history-dir <path>    Existing history directory. Defaults to platform-packages/history.
   --output-dir <path>     Output history directory. Defaults to --history-dir.
+  --reset                 Ignore existing history and write only versions from --index.
 `);
 }
 
@@ -38,6 +39,10 @@ function parseArgs(argv) {
       process.exit(0);
     }
     const next = argv[index + 1];
+    if (arg === '--reset') {
+      args.reset = true;
+      continue;
+    }
     if (!next || next.startsWith('--')) fail(`Missing value for ${arg}`);
     index += 1;
     if (arg === '--index') args.index = path.resolve(ROOT, next);
@@ -166,7 +171,7 @@ function main() {
     }
     const historyPath = path.join(args.historyDir, `${pkg.id}.json`);
     const outputPath = path.join(args.outputDir, `${pkg.id}.json`);
-    const existingHistory = readJson(historyPath, `${pkg.id} history`, null);
+    const existingHistory = args.reset ? null : readJson(historyPath, `${pkg.id} history`, null);
     const history = mergeHistory(pkg.id, existingHistory, pkg);
     fs.writeFileSync(outputPath, `${JSON.stringify(history, null, 2)}\n`);
     rows.push({

@@ -16,6 +16,11 @@ on:
         required: false
         default: false
         type: boolean
+      reset_history:
+        description: "Publish the generated index as a fresh public history without carrying old platform package history"
+        required: false
+        default: false
+        type: boolean
   pull_request:
     branches:
       - "main"
@@ -369,6 +374,7 @@ jobs:
       contents: write
     env:
       CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'ci' }}
+      RESET_HISTORY: ${{ github.event_name == 'workflow_dispatch' && inputs.reset_history || false }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAIN_PLATFORM_RELEASE_TAG: platform-packages-main
     steps:
@@ -399,7 +405,9 @@ jobs:
           )
           if [ "${CHANNEL}" = "main" ]; then
             args+=(--download-base-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${MAIN_PLATFORM_RELEASE_TAG}")
-            args+=(--history-dir platform-packages/history)
+            if [ "${RESET_HISTORY}" != "true" ]; then
+              args+=(--history-dir platform-packages/history)
+            fi
           fi
           npm run package:platform-index -- "${args[@]}"
 
@@ -530,10 +538,16 @@ jobs:
           git switch -C main FETCH_HEAD
 
           mkdir -p "${tmp_dir}/history"
-          node scripts/build-platform-package-history.cjs \
-            --index "${tmp_dir}/index.json" \
-            --history-dir platform-packages/history \
+          history_args=(
+            --index "${tmp_dir}/index.json"
             --output-dir "${tmp_dir}/history"
+          )
+          if [ "${RESET_HISTORY}" = "true" ]; then
+            history_args+=(--reset)
+          else
+            history_args+=(--history-dir platform-packages/history)
+          fi
+          node scripts/build-platform-package-history.cjs "${history_args[@]}"
 
           if gh release view "${MAIN_PLATFORM_RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             gh release edit "${MAIN_PLATFORM_RELEASE_TAG}" \
